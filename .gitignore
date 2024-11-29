@@ -1,0 +1,30 @@
+# ------------------------ GENERAL SPT IGNORES ---------------------------------------------
+
+# Top level file ignores
+/*.txt
+/*.ini
+/*.log
+/*.exe
+/*.dll
+
+# Ignore these folders pretty much always. Change to <directory>/* if selective include is needed within
+BepinEx/
+EscapeFromTarkov_Data/
+Logs/
+MonoBleedingEdge/
+NLog/
+SPT_Data/
+
+# Selective ignores
+user/*
+
+# Includes
+!user/mods/
+
+# May be needed to allow user PC to handle additional client side mods
+user/mods/order.json
+
+# Ignore used to selectively update config.json
+user/launcher/config.json
+
+# ------------------------ Add additional adjustments below ---------------------------------------------
