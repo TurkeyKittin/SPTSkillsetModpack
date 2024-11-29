@@ -8,7 +8,6 @@
 /*.dll
 
 # Ignore these folders pretty much always. Change to <directory>/* if selective include is needed within
-BepinEx/
 EscapeFromTarkov_Data/
 Logs/
 MonoBleedingEdge/
@@ -17,14 +16,27 @@ SPT_Data/
 
 # Selective ignores
 user/*
+BepinEx/*
 
 # Includes
 !user/mods/
+
 
 # May be needed to allow user PC to handle additional client side mods
 user/mods/order.json
 
 # Ignore used to selectively update config.json
 user/launcher/config.json
+
+# Ignore bepin default spt plugin, but include bepinex plugins
+!BepinEx/plugins/
+BepInEx/plugins/spt/
+
+# Add bepinex configs (Mods store config data here)
+!BepInEx/config/
+
+# FIKA
+!BepInEx/plugins/Fika.Core.dll
+
 
 # ------------------------ Add additional adjustments below ---------------------------------------------
