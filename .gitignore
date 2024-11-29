@@ -16,17 +16,18 @@ SPT_Data/
 
 # Selective ignores
 user/*
-BepinEx/*
 
-# Includes
+# Include all mods
 !user/mods/
-
 
 # May be needed to allow user PC to handle additional client side mods
 user/mods/order.json
 
 # Ignore used to selectively update config.json
 user/launcher/config.json
+
+# BEPINEX selective ignore
+BepinEx/*
 
 # Ignore bepin default spt plugin, but include bepinex plugins
 !BepinEx/plugins/
@@ -37,6 +38,6 @@ BepInEx/plugins/spt/
 
 # FIKA
 !BepInEx/plugins/Fika.Core.dll
-
+user/mods/fika-server/cache
 
 # ------------------------ Add additional adjustments below ---------------------------------------------
