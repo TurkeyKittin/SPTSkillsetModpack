@@ -1,0 +1,17 @@
+{
+  "FirstRun": false,
+  "DefaultLocale": "English",
+  "LauncherStartGameAction": 0,
+  "UseAutoLogin": true,
+  "IsDevMode": false,
+  "GamePath": "C:\\SPT",
+  "ExcludeFromCleanup": [],
+  "Server": {
+    "AutoLoginCreds": {
+      "Username": "",
+      "Password": ""
+    },
+    "Name": "SPT",
+    "Url": "http://127.0.0.1:6969"
+  }
+}
