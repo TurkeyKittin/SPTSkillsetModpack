@@ -6,6 +6,7 @@
 /*.log
 /*.exe
 /*.dll
+ConsistencyInfo
 
 # Ignore these folders pretty much always. Change to <directory>/* if selective include is needed within
 EscapeFromTarkov_Data/
@@ -13,6 +14,7 @@ Logs/
 MonoBleedingEdge/
 NLog/
 SPT_Data/
+BattlEye/
 
 # Selective ignores
 user/*
