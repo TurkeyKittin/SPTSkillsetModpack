@@ -38,6 +38,6 @@ BepInEx/plugins/spt/
 
 # FIKA
 !BepInEx/plugins/Fika.Core.dll
-user/mods/fika-server/cache
+user/mods/fika-server/
 
 # ------------------------ Add additional adjustments below ---------------------------------------------
