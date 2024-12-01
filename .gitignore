@@ -33,7 +33,6 @@ BepinEx/*
 
 # Ignore bepin default spt plugin, but include bepinex plugins
 !BepinEx/plugins/
-BepInEx/plugins/spt/
 
 # Add bepinex configs (Mods store config data here)
 !BepInEx/config/
