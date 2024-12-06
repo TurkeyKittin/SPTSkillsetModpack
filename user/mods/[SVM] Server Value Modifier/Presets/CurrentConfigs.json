@@ -369,10 +369,10 @@
     "ForceSeason": true,
     "RaidStartup": {
       "EnableRaidStartup": true,
-      "TimeBeforeDeployLocal": 30,
-      "AIAmount": 3,
+      "TimeBeforeDeployLocal": 10,
+      "AIAmount": 0,
       "SaveLoot": true,
-      "AIDifficulty": 3,
+      "AIDifficulty": 0,
       "MIAEndofRaid": true,
       "TaggedAndCursed": false,
       "EnableBosses": true,
