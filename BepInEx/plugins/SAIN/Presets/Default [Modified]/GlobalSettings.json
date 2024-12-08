@@ -136,7 +136,7 @@
   },
   "Aiming": {
     "HitEffects": {
-      "HIT_REACTION_TOGGLE": false,
+      "HIT_REACTION_TOGGLE": true,
       "DAMAGE_MANUAL_MODIFIER": 1.0,
       "USE_HIT_POINT_DIRECTION": true,
       "HIT_POINT_DIRECTION_BASE_DISTANCE": 0.5,
