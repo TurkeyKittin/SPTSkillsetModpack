@@ -16,6 +16,9 @@ NLog/
 SPT_Data/
 BattlEye/
 
+# Ignore all .map files
+*.map
+
 # Selective ignores
 user/*
 
