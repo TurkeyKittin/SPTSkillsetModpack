@@ -32,6 +32,9 @@ user/mods/order.json
 # Ignore used to selectively update config.json
 user/launcher/config.json
 
+# Ignore stat track data
+BepInEx/plugins/acidphantasm-stattrack/*.json
+
 # BEPINEX selective ignore
 BepinEx/*
 
