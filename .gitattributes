@@ -1,0 +1,6 @@
+# Enforce Unix-style line endings for shell scripts
+# If I spend another hour debugging a script that doesn't work because of line endings, I will be very upset >:(
+*.sh text eol=lf
+
+# Disable automatic conversion for all other files
+* -text
