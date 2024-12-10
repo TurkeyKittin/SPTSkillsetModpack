@@ -33,9 +33,10 @@ RUN adduser -D -h /home/container container
 VOLUME /home/container
 WORKDIR /home/container
 
-COPY --from=server-builder /spt-server-build/project/build/ /home/container/
-COPY --from=fika-builder /fika-server/output/ /home/container/
-COPY --from=mods-builder /spt-mods/output/ /home/container/
+# Copy files to /opt/spt-server
+COPY --from=server-builder /spt-server-build/project/build/ /opt/spt-server/
+COPY --from=fika-builder /fika-server/output/ /opt/spt-server/
+COPY --from=mods-builder /spt-mods/output/ /opt/spt-server/
 
 EXPOSE 6969
 ENV TZ=America/Chicago
