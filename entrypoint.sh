@@ -30,9 +30,13 @@ cd /home/container
 
 # Determine the backend IP address
 IP=${backendIp:-$(hostname -I | awk '{print $1}')}
+# Overwrite IP if SERVER_IP is set (Pterodactyl)
+IP=${SERVER_IP:-$IP}
 
 # Determine the backend port
 PORT=${backendPort:-6969}
+# Overwrite PORT if SERVER_PORT is set (Pterodactyl)
+PORT=${SERVER_PORT:-$PORT}
 
 # Determine the WebSocket ping delay in milliseconds
 PINGDELAYMS=${webSocketPingDelayMs:-90000}
@@ -44,6 +48,10 @@ tac SPT_Data/Server/configs/http.json | sed "0,/${PORT},/s/${PORT},/$PINGDELAYMS
 
 # Make the SPT.Server.exe file executable
 chmod +x SPT.Server.exe
+
+# Inform the user of the IP and port being used
+echo "Using IP address: $IP and port: $PORT"
+
 
 # Handle Pterodactyl startup commands
 if [ -n "$STARTUP" ]; then
