@@ -1,5 +1,5 @@
 services:
-  spt-server:
+  skillz:
     build:
       context: .
       dockerfile: ./Dockerfile

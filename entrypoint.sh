@@ -31,7 +31,7 @@ cd /home/container
 # Determine the backend IP address
 IP=${backendIp:-$(hostname -I | awk '{print $1}')}
 # Overwrite IP if SERVER_IP is set (Pterodactyl)
-IP=${SERVER_IP:-$IP}
+# IP=${SERVER_IP:-$IP}
 
 # Determine the backend port
 PORT=${backendPort:-6969}
