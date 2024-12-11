@@ -18,8 +18,9 @@ RUN apk add --no-cache git git-lfs && \
 
 # Stage 3: Clone SPTSkillsetModpack
 FROM alpine:latest AS mods-builder
+ARG SKILLSET_BRANCH=skillz
 RUN apk add --no-cache git && \
-    git clone --depth=1 https://github.com/TurkeyKittin/SPTSkillsetModpack.git /spt-mods && \
+    git clone -b ${SKILLSET_BRANCH} --depth=1 https://github.com/TurkeyKittin/SPTSkillsetModpack.git /spt-mods && \
     mkdir -p /spt-mods/output && \
     cp -r /spt-mods/user /spt-mods/output && \
     cp -r /spt-mods/BepInEx /spt-mods/output
@@ -42,6 +43,7 @@ EXPOSE 6969
 ENV TZ=America/Chicago
 ENV FIKA_VERSION=main
 ENV SPT_VERSION=master
+ENV SKILLSET_BRANCH=skillz
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
