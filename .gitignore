@@ -18,23 +18,14 @@ BattlEye/
 *.map
 *.log
 
-# Selective ignores
+# Ignore the user folder ecept for the mods folder
 user/*
-
-# Include all mods
 !user/mods/
-
-# May be needed to allow user PC to handle additional client side mods
-user/mods/order.json
-
-# Ignore used to selectively update config.json
-user/launcher/config.json
 
 # Ignore stat track data
 BepInEx/plugins/acidphantasm-stattrack/*.json
 
-# FIKA
-!BepInEx/plugins/Fika.Core.dll
+# Ignore FIKA server files
 user/mods/fika-server/
 
 # ------------------------ Add additional adjustments below ---------------------------------------------
