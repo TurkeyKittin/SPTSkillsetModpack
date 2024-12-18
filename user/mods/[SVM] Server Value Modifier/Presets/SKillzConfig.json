@@ -593,8 +593,8 @@
         "Filter": false
       },
       "Holodilnick": {
-        "Height": 8,
-        "Width": 8,
+        "Height": 12,
+        "Width": 12,
         "Filter": false
       },
       "PistolCase": {
@@ -618,8 +618,8 @@
         "Filter": false
       },
       "ThiccWeaponCase": {
-        "Height": 18,
-        "Width": 6,
+        "Height": 14,
+        "Width": 8,
         "Filter": false
       },
       "ThiccItemsCase": {
