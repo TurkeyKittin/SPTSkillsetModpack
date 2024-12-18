@@ -2,10 +2,8 @@
 
 # Top level file ignores
 /*.txt
-/*.ini
 /*.log
 /*.exe
-/*.dll
 ConsistencyInfo
 
 # Ignore these folders pretty much always. Change to <directory>/* if selective include is needed within
