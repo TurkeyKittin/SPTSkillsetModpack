@@ -9,7 +9,7 @@
     "AccuracySpeedCoef": 1.0
   },
   "General": {
-    "BotsUseGrenades": true,
+    "BotsUseGrenades": false,
     "BotWeightEffects": true,
     "VanillaBots": {
       "VanillaScavs": false,
@@ -136,7 +136,7 @@
   },
   "Aiming": {
     "HitEffects": {
-      "HIT_REACTION_TOGGLE": true,
+      "HIT_REACTION_TOGGLE": false,
       "DAMAGE_MANUAL_MODIFIER": 1.0,
       "USE_HIT_POINT_DIRECTION": true,
       "HIT_POINT_DIRECTION_BASE_DISTANCE": 0.5,
