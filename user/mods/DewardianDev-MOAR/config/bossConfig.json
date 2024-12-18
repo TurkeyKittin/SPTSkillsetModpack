@@ -1,0 +1,57 @@
+{
+  "ADD_THESE_TO_A_MAP_TO_OVERRIDE_OR_ADD_A_BOSS_TO_A_MAP": {
+    "BOSS_NAME_EXAMPLE": "CHANCE_OF_SPAWNING_PERCENT",
+    "bossKojaniy": 0,
+    "bossGluhar": 0,
+    "bossSanitar": 0,
+    "bossKilla": 0,
+    "bossTagilla": 0,
+    "bossKnight": 0,
+    "bossBoar": 0,
+    "bossKolontay": 0,
+    "bossPartisan": 0,
+    "bossBully": 0
+  },
+  "customs": {
+    "bossKnight": 50,
+    "bossPartisan": 15,
+    "bossBully": 60
+  },
+  "factoryDay": {
+    "bossTagilla": 60
+  },
+  "factoryNight": {
+    "bossTagilla": 60
+  },
+  "interchange": {
+    "bossKilla": 60
+  },
+  "laboratory": {},
+  "lighthouse": {
+    "bossKnight": 50,
+    "bossPartisan": 15
+  },
+  "rezervbase": {
+    "bossGluhar": 60
+  },
+  "shoreline": {
+    "bossKnight": 50,
+    "bossPartisan": 15,
+    "bossSanitar": 60
+  },
+  "tarkovstreets": {
+    "bossBoar": 60,
+    "bossKolontay": 60
+  },
+  "woods": {
+    "bossKojaniy": 60,
+    "bossKnight": 50,
+    "bossPartisan": 15
+  },
+  "gzLow": {
+    "bossKolontay": 60
+  },
+  "gzHigh": {
+    "bossKolontay": 60
+  }
+}
