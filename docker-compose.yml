@@ -6,5 +6,5 @@ services:
     ports:
       - '6969:6969'
     environment:
-      - FIKA_VERSION=2.3.1
-      - SPT_VERSION=3.10.2
+      - FIKA_VERSION=2.3.3
+      - SPT_VERSION=3.10.3
