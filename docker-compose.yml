@@ -6,5 +6,6 @@ services:
     ports:
       - '6969:6969'
     environment:
-      - FIKA_VERSION=2.3.3
+      - FIKA_VERSION=v2.3.3
       - SPT_VERSION=3.10.3
+      - SKILLSET_BRANCH=skillz
