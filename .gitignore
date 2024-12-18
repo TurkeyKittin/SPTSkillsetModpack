@@ -33,15 +33,6 @@ user/launcher/config.json
 # Ignore stat track data
 BepInEx/plugins/acidphantasm-stattrack/*.json
 
-# BEPINEX selective ignore
-BepinEx/*
-
-# Ignore bepin default spt plugin, but include bepinex plugins
-!BepinEx/plugins/
-
-# Add bepinex configs (Mods store config data here)
-!BepInEx/config/
-
 # FIKA
 !BepInEx/plugins/Fika.Core.dll
 user/mods/fika-server/
