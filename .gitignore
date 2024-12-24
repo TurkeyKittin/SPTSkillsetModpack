@@ -25,6 +25,9 @@ user/*
 # Ignore stat track data
 BepInEx/plugins/acidphantasm-stattrack/*.json
 
+# Ignore the BepInEx cache folder
+BepInEx/cache/*
+
 # Ignore FIKA server files
 user/mods/fika-server/
 
