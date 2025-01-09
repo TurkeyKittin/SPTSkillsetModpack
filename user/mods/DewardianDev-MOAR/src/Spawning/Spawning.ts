@@ -7,7 +7,11 @@ import { ConfigServer } from "@spt/servers/ConfigServer";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { DependencyContainer } from "tsyringe";
 import { globalValues } from "../GlobalValues";
-import { cloneDeep, getRandomPresetOrCurrentlySelectedPreset } from "../utils";
+import {
+  cloneDeep,
+  getRandomPresetOrCurrentlySelectedPreset,
+  saveToFile,
+} from "../utils";
 import { ILocationConfig } from "@spt/models/spt/config/ILocationConfig.d";
 import { originalMapList } from "./constants";
 import { buildBossWaves } from "./buildBossWaves";
@@ -16,6 +20,7 @@ import buildScavMarksmanWaves from "./buildScavMarksmanWaves";
 import buildPmcs from "./buildPmcs";
 import { setEscapeTimeOverrides } from "./utils";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
+import updateSpawnLocations from "./updateSpawnLocations";
 
 export const buildWaves = (container: DependencyContainer) => {
   const configServer = container.resolve<ConfigServer>("ConfigServer");
@@ -62,12 +67,12 @@ export const buildWaves = (container: DependencyContainer) => {
     }
   });
 
-  config.debug &&
-    console.log(
-      globalValues.forcedPreset === "custom"
-        ? "custom"
-        : globalValues.currentPreset
-    );
+  // config.debug &&
+  console.log(
+    globalValues.forcedPreset === "custom"
+      ? "custom"
+      : globalValues.currentPreset
+  );
 
   const {
     bigmap: customs,
@@ -125,6 +130,8 @@ export const buildWaves = (container: DependencyContainer) => {
     laboratory: { pmcbot: { min: 0, max: 0 } },
     rezervbase: { pmcbot: { min: 0, max: 0 } },
   };
+
+  updateSpawnLocations(locationList, config);
 
   setEscapeTimeOverrides(locationList, _mapConfig, Logger, config);
 

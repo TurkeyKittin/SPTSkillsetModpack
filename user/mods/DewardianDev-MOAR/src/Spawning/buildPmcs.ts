@@ -24,35 +24,26 @@ export default function buildPmcs(
 
     const { pmcHotZones = [] } = (mapConfig?.[map] as MapSettings) || {};
 
-    const pmcZones = shuffle<string[]>([
+    let pmcZones = shuffle<string[]>([
       ...new Set(
         [...locationList[index].base.SpawnPointParams]
           .filter(
             ({ Categories, BotZoneName }) =>
               !!BotZoneName &&
-              Categories.includes("Player") &&
-              !BotZoneName.includes("snipe")
+              !BotZoneName.includes("snipe") &&
+              (Categories.includes("Player") || Categories.includes("All")) &&
+              !BotZoneName.includes("BotZoneGate")
           )
-          .map(({ BotZoneName }) => BotZoneName)
+          .map(({ BotZoneName, ...rest }) => {
+            return BotZoneName;
+          })
       ),
-      ...pmcHotZones,
     ]);
 
-    // console.log(pmcZones);
-
-    // const pmcZones = shuffle<string[]>([
-    //   ...new Set(
-    //     [...locationList[index].base.BossLocationSpawn]
-    //       .filter(
-    //         ({ BossName }) =>
-    //           BossName && ["pmcBEAR", "pmcUSEC"].includes(BossName)
-    //       )
-    //       .map(({ BossZone }) => BossZone)
-    //   ),
-    //   ...pmcHotZones,
-    // ]);
-
-    const timeLimit = locationList[index].base.EscapeTimeLimit * 60;
+    // Make labs have only named zones
+    if (map === "laboratory") {
+      pmcZones = new Array(10).fill(pmcZones).flat(1);
+    }
 
     const { pmcWaveCount } = mapConfig[map];
 
@@ -64,6 +55,12 @@ export default function buildPmcs(
       pmcWaveCount * config.pmcWaveQuantity * escapeTimeLimitRatio
     );
 
+    const numberOfZoneless = totalWaves - pmcZones.length;
+    if (numberOfZoneless > 0) {
+      const addEmpty = new Array(numberOfZoneless).fill("");
+      pmcZones = shuffle<string[]>([...pmcZones, ...addEmpty]);
+    }
+
     if (config.debug) {
       console.log(`${map} PMC count ${totalWaves} \n`);
 
@@ -73,9 +70,16 @@ export default function buildPmcs(
         );
     }
 
-    const waves = buildPmcWaves(pmcWaveCount, timeLimit, config, pmcZones);
+    const timeLimit = locationList[index].base.EscapeTimeLimit * 60;
 
-    // apply our new waves
+    const waves = buildPmcWaves(
+      totalWaves,
+      timeLimit,
+      config,
+      pmcZones,
+      pmcHotZones
+    );
+    
     locationList[index].base.BossLocationSpawn = [
       ...waves,
       ...locationList[index].base.BossLocationSpawn,
