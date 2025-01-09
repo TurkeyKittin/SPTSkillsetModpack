@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RaidInformation = void 0;
 const tsyringe_1 = require("C:/snapshot/project/node_modules/tsyringe");
+const ModConfig_1 = require("./ModConfig");
 let RaidInformation = class RaidInformation {
     constructor() { }
     freshProfile;
@@ -54,8 +55,8 @@ let RaidInformation = class RaidInformation {
             "ShortRange": 85
         },
         "Woods": {
-            "LongRange": 90,
-            "ShortRange": 10
+            "LongRange": 60,
+            "ShortRange": 40
         },
         "Shoreline": {
             "LongRange": 50,
@@ -70,6 +71,92 @@ let RaidInformation = class RaidInformation {
             "ShortRange": 80
         }
     };
+    alwaysDisabledBots = [
+        "shooterbtr",
+        "skier",
+        "peacemaker",
+        "gifter",
+        "infectedassault",
+        "infectedcivil",
+        "infectedlaborant",
+        "infectedpmc",
+        "infectedtagilla",
+        "bosslegion",
+        "bosspunisher"
+    ];
+    isBotEnabled(botType) {
+        botType = botType.toLowerCase();
+        switch (botType) {
+            case "pmcbear":
+            case "pmcusec":
+                if (ModConfig_1.ModConfig.config.disablePMCTierGeneration)
+                    return false;
+                return true;
+            case "cursedassault":
+            case "marksman":
+            case "assault":
+                if (ModConfig_1.ModConfig.config.disableScavTierGeneration)
+                    return false;
+                return true;
+            case "arenafighterevent":
+            case "exusec":
+                if (ModConfig_1.ModConfig.config.disableRaiderRogueTierGeneration)
+                    return false;
+                return true;
+            case "bossbully":
+            case "bosstagilla":
+            case "bosspartisan":
+            case "bossgluhar":
+            case "bosskilla":
+            case "bosskojaniy":
+            case "bosssanitar":
+            case "bossknight":
+            case "bosszryachiy":
+            case "bosstest":
+            case "bosskolontay":
+            case "bossboar":
+            case "bossboarSniper":
+            case "sectantpriest":
+                if (ModConfig_1.ModConfig.config.disableBossTierGeneration)
+                    return false;
+                return true;
+            case "sectantwarrior":
+            case "followerboarblose1":
+            case "followerboarclose2":
+            case "followerkolontayassault":
+            case "followerkolontaysecurity":
+            case "followerbully":
+            case "followergluharassault":
+            case "followergluharscout":
+            case "followergluharsecurity":
+            case "followergluharsnipe":
+            case "followerkojaniy":
+            case "followersanitar":
+            case "followertagilla":
+            case "followerbirdeye":
+            case "followerbigpipe":
+            case "followerzryachiy":
+            case "followertest":
+            case "followerboar":
+                if (ModConfig_1.ModConfig.config.disableBossFollowerTierGeneration)
+                    return false;
+                return true;
+            case "shooterbtr":
+            case "skier":
+            case "peacemaker":
+            case "gifter":
+            case "infectedassault":
+            case "infectedcivil":
+            case "infectedlaborant":
+            case "infectedpmc":
+            case "infectedtagilla":
+            case "bosslegion":
+            case "bosspunisher":
+                return false;
+            default:
+                return false;
+        }
+    }
 };
 exports.RaidInformation = RaidInformation;
 exports.RaidInformation = RaidInformation = __decorate([

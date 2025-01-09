@@ -11,7 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.APBSBotLootGenerator = void 0;
 const tsyringe_1 = require("C:/snapshot/project/node_modules/tsyringe");
@@ -35,6 +35,9 @@ const RandomUtil_1 = require("C:/snapshot/project/obj/utils/RandomUtil");
 const BotLootGenerator_1 = require("C:/snapshot/project/obj/generators/BotLootGenerator");
 const APBSEquipmentGetter_1 = require("../Utils/APBSEquipmentGetter");
 const APBSTierGetter_1 = require("../Utils/APBSTierGetter");
+const APBSBotLootCacheService_1 = require("./APBSBotLootCacheService");
+const RaidInformation_1 = require("../Globals/RaidInformation");
+const APBSLogger_1 = require("../Utils/APBSLogger");
 /** Handle profile related client events */
 let APBSBotLootGenerator = class APBSBotLootGenerator extends BotLootGenerator_1.BotLootGenerator {
     logger;
@@ -54,7 +57,10 @@ let APBSBotLootGenerator = class APBSBotLootGenerator extends BotLootGenerator_1
     cloner;
     apbsEquipmentGetter;
     apbsTierGetter;
-    constructor(logger, hashUtil, randomUtil, itemHelper, inventoryHelper, databaseService, handbookHelper, botGeneratorHelper, botWeaponGenerator, weightedRandomHelper, botHelper, botLootCacheService, localisationService, configServer, cloner, apbsEquipmentGetter, apbsTierGetter) {
+    raidInformation;
+    apbsBotLootCacheService;
+    apbsLogger;
+    constructor(logger, hashUtil, randomUtil, itemHelper, inventoryHelper, databaseService, handbookHelper, botGeneratorHelper, botWeaponGenerator, weightedRandomHelper, botHelper, botLootCacheService, localisationService, configServer, cloner, apbsEquipmentGetter, apbsTierGetter, raidInformation, apbsBotLootCacheService, apbsLogger) {
         super(logger, hashUtil, randomUtil, itemHelper, inventoryHelper, databaseService, handbookHelper, botGeneratorHelper, botWeaponGenerator, weightedRandomHelper, botHelper, botLootCacheService, localisationService, configServer, cloner);
         this.logger = logger;
         this.hashUtil = hashUtil;
@@ -73,11 +79,20 @@ let APBSBotLootGenerator = class APBSBotLootGenerator extends BotLootGenerator_1
         this.cloner = cloner;
         this.apbsEquipmentGetter = apbsEquipmentGetter;
         this.apbsTierGetter = apbsTierGetter;
+        this.raidInformation = raidInformation;
+        this.apbsBotLootCacheService = apbsBotLootCacheService;
+        this.apbsLogger = apbsLogger;
     }
     generateLoot(sessionId, botJsonTemplate, isPmc, botRole, botInventory, botLevel) {
+        // Limits on item types to be added as loot
         const tierInfo = this.apbsTierGetter.getTierByLevel(botLevel);
         const chances = this.apbsEquipmentGetter.getSpawnChancesByBotRole(botRole, tierInfo);
-        const itemCounts = chances.generation.items;
+        let itemCounts = chances.generation.items;
+        let useOriginalLootCache = false;
+        if (!this.raidInformation.isBotEnabled(botRole)) {
+            itemCounts = botJsonTemplate.generation.items;
+            useOriginalLootCache = true;
+        }
         if (!itemCounts.backpackLoot.weights
             || !itemCounts.pocketLoot.weights
             || !itemCounts.vestLoot.weights
@@ -120,22 +135,38 @@ let APBSBotLootGenerator = class APBSBotLootGenerator extends BotLootGenerator_1
         // generation of the bots by avoiding checking the slots of containers we already know are full
         const containersIdFull = new Set();
         // Special items
-        this.addLootFromPool(this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.SPECIAL, botJsonTemplate), containersBotHasAvailable, specialLootItemCount, botInventory, botRole, botItemLimits, undefined, undefined, containersIdFull);
+        this.addLootFromPool(useOriginalLootCache ?
+            this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.SPECIAL, botJsonTemplate) :
+            this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.SPECIAL, botJsonTemplate, botLevel), containersBotHasAvailable, specialLootItemCount, botInventory, botRole, botItemLimits, undefined, undefined, containersIdFull);
         // Healing items / Meds
-        this.addLootFromPool(this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.HEALING_ITEMS, botJsonTemplate), containersBotHasAvailable, healingItemCount, botInventory, botRole, undefined, 0, isPmc, containersIdFull);
+        this.addLootFromPool(useOriginalLootCache ?
+            this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.HEALING_ITEMS, botJsonTemplate) :
+            this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.HEALING_ITEMS, botJsonTemplate, botLevel), containersBotHasAvailable, healingItemCount, botInventory, botRole, botItemLimits, 0, isPmc, containersIdFull);
         // Drugs
-        this.addLootFromPool(this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.DRUG_ITEMS, botJsonTemplate), containersBotHasAvailable, drugItemCount, botInventory, botRole, undefined, 0, isPmc, containersIdFull);
+        this.addLootFromPool(useOriginalLootCache ?
+            this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.DRUG_ITEMS, botJsonTemplate) :
+            this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.DRUG_ITEMS, botJsonTemplate, botLevel), containersBotHasAvailable, drugItemCount, botInventory, botRole, botItemLimits, 0, isPmc, containersIdFull);
         // Food
-        this.addLootFromPool(this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.FOOD_ITEMS, botJsonTemplate), containersBotHasAvailable, foodItemCount, botInventory, botRole, undefined, 0, isPmc, containersIdFull);
+        this.addLootFromPool(useOriginalLootCache ?
+            this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.FOOD_ITEMS, botJsonTemplate) :
+            this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.FOOD_ITEMS, botJsonTemplate, botLevel), containersBotHasAvailable, foodItemCount, botInventory, botRole, botItemLimits, 0, isPmc, containersIdFull);
         // Drink
-        this.addLootFromPool(this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.DRINK_ITEMS, botJsonTemplate), containersBotHasAvailable, drinkItemCount, botInventory, botRole, undefined, 0, isPmc, containersIdFull);
+        this.addLootFromPool(useOriginalLootCache ?
+            this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.DRINK_ITEMS, botJsonTemplate) :
+            this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.DRINK_ITEMS, botJsonTemplate, botLevel), containersBotHasAvailable, drinkItemCount, botInventory, botRole, botItemLimits, 0, isPmc, containersIdFull);
         // Currency
-        this.addLootFromPool(this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.CURRENCY_ITEMS, botJsonTemplate), containersBotHasAvailable, currencyItemCount, botInventory, botRole, undefined, 0, isPmc, containersIdFull);
+        this.addLootFromPool(useOriginalLootCache ?
+            this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.CURRENCY_ITEMS, botJsonTemplate) :
+            this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.CURRENCY_ITEMS, botJsonTemplate, botLevel), containersBotHasAvailable, currencyItemCount, botInventory, botRole, botItemLimits, 0, isPmc, containersIdFull);
         // Stims
-        this.addLootFromPool(this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.STIM_ITEMS, botJsonTemplate), containersBotHasAvailable, stimItemCount, botInventory, botRole, botItemLimits, 0, isPmc, containersIdFull);
+        this.addLootFromPool(useOriginalLootCache ?
+            this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.STIM_ITEMS, botJsonTemplate) :
+            this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.STIM_ITEMS, botJsonTemplate, botLevel), containersBotHasAvailable, stimItemCount, botInventory, botRole, botItemLimits, 0, isPmc, containersIdFull);
         // Grenades
-        this.addLootFromPool(this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.GRENADE_ITEMS, botJsonTemplate), [EquipmentSlots_1.EquipmentSlots.POCKETS, EquipmentSlots_1.EquipmentSlots.TACTICAL_VEST], // Can't use containersBotHasEquipped as we dont want grenades added to backpack
-        grenadeCount, botInventory, botRole, undefined, 0, isPmc, containersIdFull);
+        this.addLootFromPool(useOriginalLootCache ?
+            this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.GRENADE_ITEMS, botJsonTemplate) :
+            this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.GRENADE_ITEMS, botJsonTemplate, botLevel), [EquipmentSlots_1.EquipmentSlots.POCKETS, EquipmentSlots_1.EquipmentSlots.TACTICAL_VEST], // Can't use containersBotHasEquipped as we dont want grenades added to backpack
+        grenadeCount, botInventory, botRole, botItemLimits, 0, isPmc, containersIdFull);
         // Backpack - generate loot if they have one
         if (containersBotHasAvailable.includes(EquipmentSlots_1.EquipmentSlots.BACKPACK)) {
             // Add randomly generated weapon to PMC backpacks
@@ -143,20 +174,60 @@ let APBSBotLootGenerator = class APBSBotLootGenerator extends BotLootGenerator_1
                 this.addLooseWeaponsToInventorySlot(sessionId, botInventory, EquipmentSlots_1.EquipmentSlots.BACKPACK, botJsonTemplate.inventory, botJsonTemplate.chances.weaponMods, botRole, isPmc, botLevel, containersIdFull);
             }
             const backpackLootRoubleTotal = this.getBackpackRoubleTotalByLevel(botLevel, isPmc);
-            this.addLootFromPool(this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.BACKPACK, botJsonTemplate), [EquipmentSlots_1.EquipmentSlots.BACKPACK], backpackLootCount, botInventory, botRole, botItemLimits, backpackLootRoubleTotal, isPmc, containersIdFull);
+            this.addLootFromPool(useOriginalLootCache ?
+                this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.BACKPACK, botJsonTemplate) :
+                this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.BACKPACK, botJsonTemplate, botLevel), [EquipmentSlots_1.EquipmentSlots.BACKPACK], backpackLootCount, botInventory, botRole, botItemLimits, backpackLootRoubleTotal, isPmc, containersIdFull);
         }
         // TacticalVest - generate loot if they have one
         if (containersBotHasAvailable.includes(EquipmentSlots_1.EquipmentSlots.TACTICAL_VEST)) {
             // Vest
-            this.addLootFromPool(this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.VEST, botJsonTemplate), [EquipmentSlots_1.EquipmentSlots.TACTICAL_VEST], vestLootCount, botInventory, botRole, botItemLimits, this.pmcConfig.maxVestLootTotalRub, isPmc, containersIdFull);
+            this.addLootFromPool(useOriginalLootCache ?
+                this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.VEST, botJsonTemplate) :
+                this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.VEST, botJsonTemplate, botLevel), [EquipmentSlots_1.EquipmentSlots.TACTICAL_VEST], vestLootCount, botInventory, botRole, botItemLimits, this.pmcConfig.maxVestLootTotalRub, isPmc, containersIdFull);
         }
         // Pockets
-        this.addLootFromPool(this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.POCKET, botJsonTemplate), [EquipmentSlots_1.EquipmentSlots.POCKETS], pocketLootCount, botInventory, botRole, botItemLimits, this.pmcConfig.maxPocketLootTotalRub, isPmc, containersIdFull);
+        this.addLootFromPool(useOriginalLootCache ?
+            this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.POCKET, botJsonTemplate) :
+            this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.POCKET, botJsonTemplate, botLevel), [EquipmentSlots_1.EquipmentSlots.POCKETS], pocketLootCount, botInventory, botRole, botItemLimits, this.pmcConfig.maxPocketLootTotalRub, isPmc, containersIdFull);
         // Secure
         // only add if not a pmc or is pmc and flag is true
         if (!isPmc || (isPmc && this.pmcConfig.addSecureContainerLootFromBotConfig)) {
-            this.addLootFromPool(this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.SECURE, botJsonTemplate), [EquipmentSlots_1.EquipmentSlots.SECURED_CONTAINER], 50, botInventory, botRole, undefined, -1, isPmc, containersIdFull);
+            this.addLootFromPool(useOriginalLootCache ?
+                this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.SECURE, botJsonTemplate) :
+                this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.SECURE, botJsonTemplate, botLevel), [EquipmentSlots_1.EquipmentSlots.SECURED_CONTAINER], 50, botInventory, botRole, undefined, -1, isPmc, containersIdFull);
         }
+    }
+    itemHasReachedSpawnLimit(itemTemplate, botRole, itemSpawnLimits) {
+        // PMCs and scavs have different sections of bot config for spawn limits
+        if (!!itemSpawnLimits && Object.keys(itemSpawnLimits.globalLimits).length === 0) {
+            // No items found in spawn limit, drop out
+            return false;
+        }
+        // No spawn limits, skipping
+        if (!itemSpawnLimits) {
+            return false;
+        }
+        const idToCheckFor = this.getMatchingIdFromSpawnLimits(itemTemplate, itemSpawnLimits.globalLimits);
+        if (!idToCheckFor) {
+            // ParentId or tplid not found in spawnLimits, not a spawn limited item, skip
+            return false;
+        }
+        // Increment item count with this bot type
+        itemSpawnLimits.currentLimits[idToCheckFor]++;
+        // Check if over limit
+        if (itemSpawnLimits.currentLimits[idToCheckFor] > itemSpawnLimits.globalLimits[idToCheckFor]) {
+            // Prevent edge-case of small loot pools + code trying to add limited item over and over infinitely
+            if (itemSpawnLimits.currentLimits[idToCheckFor] > itemSpawnLimits.globalLimits[idToCheckFor] * 10) {
+                this.logger.debug(this.localisationService.getText("bot-item_spawn_limit_reached_skipping_item", {
+                    botRole: botRole,
+                    itemName: itemTemplate._name,
+                    attempts: itemSpawnLimits.currentLimits[idToCheckFor]
+                }));
+                return false;
+            }
+            return true;
+        }
+        return false;
     }
 };
 exports.APBSBotLootGenerator = APBSBotLootGenerator;
@@ -179,6 +250,9 @@ exports.APBSBotLootGenerator = APBSBotLootGenerator = __decorate([
     __param(14, (0, tsyringe_1.inject)("PrimaryCloner")),
     __param(15, (0, tsyringe_1.inject)("APBSEquipmentGetter")),
     __param(16, (0, tsyringe_1.inject)("APBSTierGetter")),
-    __metadata("design:paramtypes", [typeof (_a = typeof ILogger_1.ILogger !== "undefined" && ILogger_1.ILogger) === "function" ? _a : Object, typeof (_b = typeof HashUtil_1.HashUtil !== "undefined" && HashUtil_1.HashUtil) === "function" ? _b : Object, typeof (_c = typeof RandomUtil_1.RandomUtil !== "undefined" && RandomUtil_1.RandomUtil) === "function" ? _c : Object, typeof (_d = typeof ItemHelper_1.ItemHelper !== "undefined" && ItemHelper_1.ItemHelper) === "function" ? _d : Object, typeof (_e = typeof InventoryHelper_1.InventoryHelper !== "undefined" && InventoryHelper_1.InventoryHelper) === "function" ? _e : Object, typeof (_f = typeof DatabaseService_1.DatabaseService !== "undefined" && DatabaseService_1.DatabaseService) === "function" ? _f : Object, typeof (_g = typeof HandbookHelper_1.HandbookHelper !== "undefined" && HandbookHelper_1.HandbookHelper) === "function" ? _g : Object, typeof (_h = typeof BotGeneratorHelper_1.BotGeneratorHelper !== "undefined" && BotGeneratorHelper_1.BotGeneratorHelper) === "function" ? _h : Object, typeof (_j = typeof BotWeaponGenerator_1.BotWeaponGenerator !== "undefined" && BotWeaponGenerator_1.BotWeaponGenerator) === "function" ? _j : Object, typeof (_k = typeof WeightedRandomHelper_1.WeightedRandomHelper !== "undefined" && WeightedRandomHelper_1.WeightedRandomHelper) === "function" ? _k : Object, typeof (_l = typeof BotHelper_1.BotHelper !== "undefined" && BotHelper_1.BotHelper) === "function" ? _l : Object, typeof (_m = typeof BotLootCacheService_1.BotLootCacheService !== "undefined" && BotLootCacheService_1.BotLootCacheService) === "function" ? _m : Object, typeof (_o = typeof LocalisationService_1.LocalisationService !== "undefined" && LocalisationService_1.LocalisationService) === "function" ? _o : Object, typeof (_p = typeof ConfigServer_1.ConfigServer !== "undefined" && ConfigServer_1.ConfigServer) === "function" ? _p : Object, typeof (_q = typeof ICloner_1.ICloner !== "undefined" && ICloner_1.ICloner) === "function" ? _q : Object, typeof (_r = typeof APBSEquipmentGetter_1.APBSEquipmentGetter !== "undefined" && APBSEquipmentGetter_1.APBSEquipmentGetter) === "function" ? _r : Object, typeof (_s = typeof APBSTierGetter_1.APBSTierGetter !== "undefined" && APBSTierGetter_1.APBSTierGetter) === "function" ? _s : Object])
+    __param(17, (0, tsyringe_1.inject)("RaidInformation")),
+    __param(18, (0, tsyringe_1.inject)("APBSBotLootCacheService")),
+    __param(19, (0, tsyringe_1.inject)("APBSLogger")),
+    __metadata("design:paramtypes", [typeof (_a = typeof ILogger_1.ILogger !== "undefined" && ILogger_1.ILogger) === "function" ? _a : Object, typeof (_b = typeof HashUtil_1.HashUtil !== "undefined" && HashUtil_1.HashUtil) === "function" ? _b : Object, typeof (_c = typeof RandomUtil_1.RandomUtil !== "undefined" && RandomUtil_1.RandomUtil) === "function" ? _c : Object, typeof (_d = typeof ItemHelper_1.ItemHelper !== "undefined" && ItemHelper_1.ItemHelper) === "function" ? _d : Object, typeof (_e = typeof InventoryHelper_1.InventoryHelper !== "undefined" && InventoryHelper_1.InventoryHelper) === "function" ? _e : Object, typeof (_f = typeof DatabaseService_1.DatabaseService !== "undefined" && DatabaseService_1.DatabaseService) === "function" ? _f : Object, typeof (_g = typeof HandbookHelper_1.HandbookHelper !== "undefined" && HandbookHelper_1.HandbookHelper) === "function" ? _g : Object, typeof (_h = typeof BotGeneratorHelper_1.BotGeneratorHelper !== "undefined" && BotGeneratorHelper_1.BotGeneratorHelper) === "function" ? _h : Object, typeof (_j = typeof BotWeaponGenerator_1.BotWeaponGenerator !== "undefined" && BotWeaponGenerator_1.BotWeaponGenerator) === "function" ? _j : Object, typeof (_k = typeof WeightedRandomHelper_1.WeightedRandomHelper !== "undefined" && WeightedRandomHelper_1.WeightedRandomHelper) === "function" ? _k : Object, typeof (_l = typeof BotHelper_1.BotHelper !== "undefined" && BotHelper_1.BotHelper) === "function" ? _l : Object, typeof (_m = typeof BotLootCacheService_1.BotLootCacheService !== "undefined" && BotLootCacheService_1.BotLootCacheService) === "function" ? _m : Object, typeof (_o = typeof LocalisationService_1.LocalisationService !== "undefined" && LocalisationService_1.LocalisationService) === "function" ? _o : Object, typeof (_p = typeof ConfigServer_1.ConfigServer !== "undefined" && ConfigServer_1.ConfigServer) === "function" ? _p : Object, typeof (_q = typeof ICloner_1.ICloner !== "undefined" && ICloner_1.ICloner) === "function" ? _q : Object, typeof (_r = typeof APBSEquipmentGetter_1.APBSEquipmentGetter !== "undefined" && APBSEquipmentGetter_1.APBSEquipmentGetter) === "function" ? _r : Object, typeof (_s = typeof APBSTierGetter_1.APBSTierGetter !== "undefined" && APBSTierGetter_1.APBSTierGetter) === "function" ? _s : Object, typeof (_t = typeof RaidInformation_1.RaidInformation !== "undefined" && RaidInformation_1.RaidInformation) === "function" ? _t : Object, typeof (_u = typeof APBSBotLootCacheService_1.APBSBotLootCacheService !== "undefined" && APBSBotLootCacheService_1.APBSBotLootCacheService) === "function" ? _u : Object, typeof (_v = typeof APBSLogger_1.APBSLogger !== "undefined" && APBSLogger_1.APBSLogger) === "function" ? _v : Object])
 ], APBSBotLootGenerator);
 //# sourceMappingURL=APBSBotLootGenerator.js.map

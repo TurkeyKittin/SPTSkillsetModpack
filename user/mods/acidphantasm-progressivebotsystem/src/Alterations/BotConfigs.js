@@ -39,6 +39,32 @@ let BotConfigs = class BotConfigs {
     apbsLogger;
     botConfig;
     pmcConfig;
+    pmcLimitedCategories = {
+        "5448e8d04bdc2ddf718b4569": 1,
+        "5448e8d64bdc2dce718b4568": 1,
+        "5448f39d4bdc2d0a728b4568": 1,
+        "5448f3a64bdc2d60728b456a": 2,
+        "5448f3ac4bdc2dce718b4569": 1,
+        "5448f3a14bdc2d27728b4569": 1,
+        "5c99f98d86f7745c314214b3": 1,
+        "5c164d2286f774194c5e69fa": 1,
+        "550aa4cd4bdc2dd8348b456c": 2,
+        "55818add4bdc2d5b648b456f": 1,
+        "55818ad54bdc2ddc698b4569": 1,
+        "55818aeb4bdc2ddc698b456a": 1,
+        "55818ae44bdc2dde698b456c": 1,
+        "55818af64bdc2d5b648b4570": 1,
+        "5448e54d4bdc2dcc718b4568": 1,
+        "5447e1d04bdc2dff2f8b4567": 1,
+        "5a341c4686f77469e155819e": 1,
+        "55818b164bdc2ddc698b456c": 2,
+        "5448bc234bdc2d3c308b4569": 2,
+        "543be5dd4bdc2deb348b4569": 1,
+        "543be5cb4bdc2deb348b4568": 2,
+        "5485a8684bdc2da71d8b4567": 2,
+        "5d650c3e815116009f6201d2": 2,
+        "543be6564bdc2df4348b4568": 4
+    };
     constructor(tables, database, configServer, itemHelper, apbsEquipmentGetter, tierInformation, raidInformation, apbsLogger) {
         this.tables = tables;
         this.database = database;
@@ -52,20 +78,27 @@ let BotConfigs = class BotConfigs {
         this.pmcConfig = this.configServer.getConfig(ConfigTypes_1.ConfigTypes.PMC);
     }
     initialize() {
+        if (!ModConfig_1.ModConfig.config.disablePMCTierGeneration) {
+            this.setPMCItemLimits();
+            this.setPMCLoot();
+            this.setPMCScopeWhitelist();
+            this.setPMCSlotIDsToMakeRequired();
+            if (ModConfig_1.ModConfig.config.gameVersionWeight)
+                this.setPMCGameVersionWeights();
+        }
+        if (!ModConfig_1.ModConfig.config.disableScavTierGeneration) {
+            if (ModConfig_1.ModConfig.config.addAllKeysToScavs || ModConfig_1.ModConfig.config.addOnlyKeyCardsToScavs || ModConfig_1.ModConfig.config.addOnlyMechanicalKeysToScavs)
+                this.pushScavKeys();
+            if (!ModConfig_1.ModConfig.config.scavLoot)
+                this.removeScavLoot();
+        }
         this.clearNoLongerNeededBotDetails();
         this.configureBotExperienceLevels();
         this.configurePlateWeightings();
         this.configureWeaponDurability();
         this.adjustNVG();
         this.setLootItemResourceRandomization();
-        this.setPMCItemLimits();
-        this.setPMCLoot();
-        this.setPMCScopeWhitelist();
-        this.setPMCSlotIDsToMakeRequired();
-        if (ModConfig_1.ModConfig.config.gameVersionWeight)
-            this.setPMCGameVersionWeights();
-        if (ModConfig_1.ModConfig.config.addAllKeysToScavs || ModConfig_1.ModConfig.config.addOnlyKeyCardsToScavs || ModConfig_1.ModConfig.config.addOnlyMechanicalKeysToScavs)
-            this.pushScavKeys();
+        this.removeThermalGoggles(ModConfig_1.ModConfig.config.enableT7Thermals);
         if (ModConfig_1.ModConfig.config.enableCustomPlateChances)
             this.setPlateChances();
         if (ModConfig_1.ModConfig.config.forceStock)
@@ -76,15 +109,14 @@ let BotConfigs = class BotConfigs {
             this.setForceScopes();
         if (ModConfig_1.ModConfig.config.forceWeaponModLimits)
             this.setWeaponModLimits();
-        if (!ModConfig_1.ModConfig.config.scavLoot)
-            this.removeScavLoot();
         if (ModConfig_1.ModConfig.config.enableScavEqualEquipmentTiering)
             this.setIdenticalScavWeights();
-        this.removeThermalGoggles(ModConfig_1.ModConfig.config.enableT7Thermals);
         if (ModConfig_1.ModConfig.config.enableCustomLevelDeltas)
             this.setLevelDeltas();
         if (ModConfig_1.ModConfig.config.enableScavCustomLevelDeltas)
             this.setScavLevelDeltas();
+        if (ModConfig_1.ModConfig.config.forceMuzzle)
+            this.setMuzzleChances();
     }
     configureBotExperienceLevels() {
         const botTypeTable = this.tables.bots.types;
@@ -276,81 +308,37 @@ let BotConfigs = class BotConfigs {
         this.botConfig.lootItemResourceRandomization.pmc = { "food": { "chanceMaxResourcePercent": pmcFoodMaxChance, "resourcePercent": pmcFoodResourcePercent }, "meds": { "chanceMaxResourcePercent": pmcMedMaxChance, "resourcePercent": pmcMedResourcePercent } };
     }
     setPMCItemLimits() {
-        this.botConfig.itemSpawnLimits.pmc["60098ad7c2240c0fe85c570a"] = 1;
-        this.botConfig.itemSpawnLimits.pmc["590c678286f77426c9660122"] = 1;
-        this.botConfig.itemSpawnLimits.pmc["5e831507ea0a7c419c2f9bd9"] = 1;
-        this.botConfig.itemSpawnLimits.pmc["590c661e86f7741e566b646a"] = 1;
-        this.botConfig.itemSpawnLimits.pmc["544fb45d4bdc2dee738b4568"] = 1;
-        this.botConfig.itemSpawnLimits.pmc["5e8488fa988a8701445df1e4"] = 1;
-        this.botConfig.itemSpawnLimits.pmc["544fb37f4bdc2dee738b4567"] = 1;
-        this.botConfig.itemSpawnLimits.pmc["5448e8d04bdc2ddf718b4569"] = 1;
-        this.botConfig.itemSpawnLimits.pmc["5448e8d64bdc2dce718b4568"] = 1;
+        // Clear PMC item limits
+        this.botConfig.itemSpawnLimits.pmc = {};
+        // Go through custom limits and add them
+        for (const [item, count] of Object.entries(this.pmcLimitedCategories)) {
+            this.botConfig.itemSpawnLimits.pmc[item] = count;
+        }
     }
     setPMCLoot() {
+        const allBots = this.database.getTables().bots.types;
         this.pmcConfig.looseWeaponInBackpackLootMinMax.min = 0;
         this.pmcConfig.looseWeaponInBackpackLootMinMax.max = 0;
+        this.botConfig.equipment.pmc.randomisation = [];
         if (ModConfig_1.ModConfig.config.pmcLoot) {
-            for (const level in this.tierInformation.lootRandomization) {
-                this.tierInformation.lootRandomization[level].generation.backpackLoot.weights["0"] = 1;
-                this.tierInformation.lootRandomization[level].generation.backpackLoot.weights["3"] = 2;
-                this.tierInformation.lootRandomization[level].generation.backpackLoot.weights["5"] = 5;
-                this.tierInformation.lootRandomization[level].generation.backpackLoot.weights["8"] = 6;
-                this.tierInformation.lootRandomization[level].generation.backpackLoot.weights["10"] = 5;
-                this.tierInformation.lootRandomization[level].generation.backpackLoot.weights["12"] = 4;
-                this.tierInformation.lootRandomization[level].generation.backpackLoot.weights["15"] = 4;
-                this.tierInformation.lootRandomization[level].generation.backpackLoot.weights["20"] = 3;
-                this.tierInformation.lootRandomization[level].generation.backpackLoot.weights["23"] = 1;
-                this.tierInformation.lootRandomization[level].generation.pocketLoot.weights["0"] = 1;
-                this.tierInformation.lootRandomization[level].generation.pocketLoot.weights["1"] = 3;
-                this.tierInformation.lootRandomization[level].generation.pocketLoot.weights["2"] = 4;
-                this.tierInformation.lootRandomization[level].generation.pocketLoot.weights["3"] = 2;
-                this.tierInformation.lootRandomization[level].generation.pocketLoot.weights["4"] = 1;
-                this.tierInformation.lootRandomization[level].generation.vestLoot.weights["0"] = 1;
-                this.tierInformation.lootRandomization[level].generation.vestLoot.weights["1"] = 2;
-                this.tierInformation.lootRandomization[level].generation.vestLoot.weights["2"] = 3;
-                this.tierInformation.lootRandomization[level].generation.vestLoot.weights["3"] = 2;
-                this.tierInformation.lootRandomization[level].generation.vestLoot.weights["4"] = 1;
+            if (ModConfig_1.ModConfig.config.pmcLootBlacklistItems.length > 0) {
+                for (const item in ModConfig_1.ModConfig.config.pmcLootBlacklistItems) {
+                    this.pmcConfig.backpackLoot.blacklist.push(item);
+                    this.pmcConfig.vestLoot.blacklist.push(item);
+                    this.pmcConfig.pocketLoot.blacklist.push(item);
+                }
             }
-            for (const tierObject in this.tierInformation.tiers) {
-                const tierNumber = this.tierInformation.tiers[tierObject].tier;
-                const tierJson = this.apbsEquipmentGetter.getTierChancesJson(tierNumber);
-                tierJson.pmcUSEC.chances.generation.items.backpackLoot.weights["0"] = 4;
-                tierJson.pmcUSEC.chances.generation.items.backpackLoot.weights["1"] = 15;
-                tierJson.pmcUSEC.chances.generation.items.backpackLoot.weights["2"] = 40;
-                tierJson.pmcUSEC.chances.generation.items.backpackLoot.weights["3"] = 10;
-                tierJson.pmcUSEC.chances.generation.items.backpackLoot.weights["4"] = 8;
-                tierJson.pmcUSEC.chances.generation.items.backpackLoot.weights["5"] = 2;
-                tierJson.pmcUSEC.chances.generation.items.backpackLoot.weights["10"] = 1;
-                tierJson.pmcBEAR.chances.generation.items.backpackLoot.weights["0"] = 4;
-                tierJson.pmcBEAR.chances.generation.items.backpackLoot.weights["1"] = 15;
-                tierJson.pmcBEAR.chances.generation.items.backpackLoot.weights["2"] = 40;
-                tierJson.pmcBEAR.chances.generation.items.backpackLoot.weights["3"] = 10;
-                tierJson.pmcBEAR.chances.generation.items.backpackLoot.weights["4"] = 8;
-                tierJson.pmcBEAR.chances.generation.items.backpackLoot.weights["5"] = 2;
-                tierJson.pmcBEAR.chances.generation.items.backpackLoot.weights["10"] = 1;
-                tierJson.pmcUSEC.chances.generation.items.pocketLoot.weights["0"] = 4;
-                tierJson.pmcUSEC.chances.generation.items.pocketLoot.weights["1"] = 9;
-                tierJson.pmcUSEC.chances.generation.items.pocketLoot.weights["2"] = 1;
-                tierJson.pmcUSEC.chances.generation.items.pocketLoot.weights["3"] = 1;
-                tierJson.pmcBEAR.chances.generation.items.pocketLoot.weights["0"] = 4;
-                tierJson.pmcBEAR.chances.generation.items.pocketLoot.weights["1"] = 9;
-                tierJson.pmcBEAR.chances.generation.items.pocketLoot.weights["2"] = 1;
-                tierJson.pmcBEAR.chances.generation.items.pocketLoot.weights["3"] = 1;
-                tierJson.pmcUSEC.chances.generation.items.vestLoot.weights["0"] = 2;
-                tierJson.pmcUSEC.chances.generation.items.vestLoot.weights["1"] = 12;
-                tierJson.pmcUSEC.chances.generation.items.vestLoot.weights["2"] = 1;
-                tierJson.pmcUSEC.chances.generation.items.vestLoot.weights["3"] = 1;
-                tierJson.pmcUSEC.chances.generation.items.vestLoot.weights["4"] = 1;
-                tierJson.pmcBEAR.chances.generation.items.vestLoot.weights["0"] = 2;
-                tierJson.pmcBEAR.chances.generation.items.vestLoot.weights["1"] = 12;
-                tierJson.pmcBEAR.chances.generation.items.vestLoot.weights["2"] = 1;
-                tierJson.pmcBEAR.chances.generation.items.vestLoot.weights["3"] = 1;
-                tierJson.pmcBEAR.chances.generation.items.vestLoot.weights["4"] = 1;
-            }
-            this.botConfig.equipment.pmc.randomisation = this.tierInformation.lootRandomization;
         }
-        else {
-            this.botConfig.equipment.pmc.randomisation = this.tierInformation.lootRandomization;
+        if (!ModConfig_1.ModConfig.config.pmcLoot) {
+            this.botConfig.disableLootOnBotTypes.push("pmcusec", "pmcbear");
+        }
+        for (const botType in allBots) {
+            if (botType == "pmcbear" || botType == "pmcusec") {
+                allBots[botType].inventory.items.Backpack = {};
+                allBots[botType].inventory.items.Pockets = {};
+                allBots[botType].inventory.items.TacticalVest = {};
+                allBots[botType].inventory.items.SpecialLoot = {};
+            }
         }
     }
     setPMCScopeWhitelist() {
@@ -442,12 +430,7 @@ let BotConfigs = class BotConfigs {
             return BaseClasses_1.BaseClasses.KEYCARD;
     }
     removeScavLoot() {
-        this.tables.bots.types.assault.inventory.items.Backpack = {};
-        this.tables.bots.types.assault.inventory.items.Pockets = {};
-        this.tables.bots.types.assault.inventory.items.TacticalVest = {};
-        this.tables.bots.types.marksman.inventory.items.Backpack = {};
-        this.tables.bots.types.marksman.inventory.items.Pockets = {};
-        this.tables.bots.types.marksman.inventory.items.TacticalVest = {};
+        this.botConfig.disableLootOnBotTypes.push("assault", "marksman", "cursedassault", "assaultgroup", "crazyassaultevent");
     }
     setIdenticalScavWeights() {
         for (const tierObject in this.tierInformation.tiers) {
@@ -525,6 +508,25 @@ let BotConfigs = class BotConfigs {
     }
     setPMCSlotIDsToMakeRequired() {
         this.botConfig.equipment.pmc.weaponSlotIdsToMakeRequired = ["mod_reciever", "mod_stock"];
+    }
+    setMuzzleChances() {
+        for (const tierObject in this.tierInformation.tiers) {
+            const tierNumber = this.tierInformation.tiers[tierObject].tier;
+            const tierJson = this.apbsEquipmentGetter.getTierChancesJson(tierNumber);
+            const usec = tierJson.pmcUSEC.chances;
+            const bear = tierJson.pmcBEAR.chances;
+            for (const type in usec) {
+                if (type == "equipment" || type == "equipmentMods" || type == "generation")
+                    continue;
+                const arrayPosition = tierNumber - 1;
+                usec[type].mod_muzzle = ModConfig_1.ModConfig.config.muzzleChance[arrayPosition];
+                usec[type].mod_muzzle_000 = ModConfig_1.ModConfig.config.muzzleChance[arrayPosition];
+                usec[type].mod_muzzle_000 = ModConfig_1.ModConfig.config.muzzleChance[arrayPosition];
+                bear[type].mod_muzzle = ModConfig_1.ModConfig.config.muzzleChance[arrayPosition];
+                bear[type].mod_muzzle_000 = ModConfig_1.ModConfig.config.muzzleChance[arrayPosition];
+                bear[type].mod_muzzle_000 = ModConfig_1.ModConfig.config.muzzleChance[arrayPosition];
+            }
+        }
     }
 };
 exports.BotConfigs = BotConfigs;

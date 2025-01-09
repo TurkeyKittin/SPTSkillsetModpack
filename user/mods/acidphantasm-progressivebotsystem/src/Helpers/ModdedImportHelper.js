@@ -143,7 +143,7 @@ let ModdedImportHelper = class ModdedImportHelper {
             this.buildVanillaWeaponList();
         if (ModConfig_1.ModConfig.config.enableModdedEquipment)
             this.buildVanillaEquipmentList();
-        if (ModConfig_1.ModConfig.config.enableModdedClothing)
+        if (ModConfig_1.ModConfig.config.enableModdedClothing && !ModConfig_1.ModConfig.config.seasonalPmcAppearance)
             this.buildVanillaClothingList();
     }
     buildVanillaWeaponList() {

@@ -12,7 +12,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e;
+var _a, _b, _c, _d, _e, _f;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.APBSEquipmentGetter = void 0;
 const tsyringe_1 = require("C:/snapshot/project/node_modules/tsyringe");
@@ -23,18 +23,22 @@ const APBSLogger_1 = require("./APBSLogger");
 const TierInformation_1 = require("../Globals/TierInformation");
 const ModConfig_1 = require("../Globals/ModConfig");
 const RandomUtil_1 = require("C:/snapshot/project/obj/utils/RandomUtil");
+const Season_1 = require("C:/snapshot/project/obj/models/enums/Season");
+const SeasonalEventService_1 = require("C:/snapshot/project/obj/services/SeasonalEventService");
 let APBSEquipmentGetter = class APBSEquipmentGetter {
     raidInformation;
     tierInformation;
     weightedRandomHelper;
     apbsLogger;
     randomUtil;
-    constructor(raidInformation, tierInformation, weightedRandomHelper, apbsLogger, randomUtil) {
+    seasonalEventService;
+    constructor(raidInformation, tierInformation, weightedRandomHelper, apbsLogger, randomUtil, seasonalEventService) {
         this.raidInformation = raidInformation;
         this.tierInformation = tierInformation;
         this.weightedRandomHelper = weightedRandomHelper;
         this.apbsLogger = apbsLogger;
         this.randomUtil = randomUtil;
+        this.seasonalEventService = seasonalEventService;
     }
     chadOrChill(tierInfo) {
         if (ModConfig_1.ModConfig.config.onlyChads && ModConfig_1.ModConfig.config.tarkovAndChill) {
@@ -175,6 +179,29 @@ let APBSEquipmentGetter = class APBSEquipmentGetter {
     getModsByBotRole(botRole, tierInfo) {
         const tierJson = this.getTierModsJson(tierInfo);
         switch (botRole) {
+            case "bossboar":
+            case "bossboarsniper":
+            case "bossbully":
+            case "bossgluhar":
+            case "bosskilla":
+            case "bosskojaniy":
+            case "bosskolontay":
+            case "bosssanitar":
+            case "bosstagilla":
+            case "bosspartisan":
+            case "bossknight":
+            case "followerbigpipe":
+            case "followerbirdeye":
+            case "sectantpriest":
+            case "sectantwarrior":
+            case "exusec":
+            case "arenafighterevent":
+            case "arenafighter":
+            case "pmcbot":
+                if (tierInfo < 4)
+                    return this.tierInformation.tier4mods;
+                else
+                    return tierJson;
             case "marksman":
             case "cursedassault":
             case "assault":
@@ -311,12 +338,50 @@ let APBSEquipmentGetter = class APBSEquipmentGetter {
                 return tierJson.bossAmmo;
         }
     }
-    getPmcAppearance(botRole, tierInfo) {
+    getPmcAppearance(botRole, tierInfo, getSeason) {
         const tierJson = this.getAppearanceJson(tierInfo);
         switch (botRole) {
             case "pmcUSEC":
+                if (getSeason && tierInfo != 0) {
+                    const activeSeason = this.seasonalEventService.getActiveWeatherSeason();
+                    switch (activeSeason) {
+                        case Season_1.Season.SPRING_EARLY:
+                            return tierJson.springEarly.pmcUSEC.appearance;
+                        case Season_1.Season.SPRING:
+                            return tierJson.spring.pmcUSEC.appearance;
+                        case Season_1.Season.SUMMER:
+                        case Season_1.Season.STORM:
+                            return tierJson.summer.pmcUSEC.appearance;
+                        case Season_1.Season.AUTUMN:
+                        case Season_1.Season.AUTUMN_LATE:
+                            return tierJson.autumn.pmcUSEC.appearance;
+                        case Season_1.Season.WINTER:
+                            return tierJson.winter.pmcUSEC.appearance;
+                        default:
+                            return tierJson.summer.pmcUSEC.appearance;
+                    }
+                }
                 return tierJson.pmcUSEC.appearance;
             case "pmcBEAR":
+                if (getSeason && tierInfo != 0) {
+                    const activeSeason = this.seasonalEventService.getActiveWeatherSeason();
+                    switch (activeSeason) {
+                        case Season_1.Season.SPRING_EARLY:
+                            return tierJson.springEarly.pmcBEAR.appearance;
+                        case Season_1.Season.SPRING:
+                            return tierJson.spring.pmcBEAR.appearance;
+                        case Season_1.Season.SUMMER:
+                        case Season_1.Season.STORM:
+                            return tierJson.summer.pmcBEAR.appearance;
+                        case Season_1.Season.AUTUMN:
+                        case Season_1.Season.AUTUMN_LATE:
+                            return tierJson.autumn.pmcBEAR.appearance;
+                        case Season_1.Season.WINTER:
+                            return tierJson.winter.pmcBEAR.appearance;
+                        default:
+                            return tierJson.summer.pmcBEAR.appearance;
+                    }
+                }
                 return tierJson.pmcBEAR.appearance;
         }
     }
@@ -333,6 +398,7 @@ exports.APBSEquipmentGetter = APBSEquipmentGetter = __decorate([
     __param(2, (0, tsyringe_1.inject)("WeightedRandomHelper")),
     __param(3, (0, tsyringe_1.inject)("APBSLogger")),
     __param(4, (0, tsyringe_1.inject)("RandomUtil")),
-    __metadata("design:paramtypes", [typeof (_a = typeof RaidInformation_1.RaidInformation !== "undefined" && RaidInformation_1.RaidInformation) === "function" ? _a : Object, typeof (_b = typeof TierInformation_1.TierInformation !== "undefined" && TierInformation_1.TierInformation) === "function" ? _b : Object, typeof (_c = typeof WeightedRandomHelper_1.WeightedRandomHelper !== "undefined" && WeightedRandomHelper_1.WeightedRandomHelper) === "function" ? _c : Object, typeof (_d = typeof APBSLogger_1.APBSLogger !== "undefined" && APBSLogger_1.APBSLogger) === "function" ? _d : Object, typeof (_e = typeof RandomUtil_1.RandomUtil !== "undefined" && RandomUtil_1.RandomUtil) === "function" ? _e : Object])
+    __param(5, (0, tsyringe_1.inject)("SeasonalEventService")),
+    __metadata("design:paramtypes", [typeof (_a = typeof RaidInformation_1.RaidInformation !== "undefined" && RaidInformation_1.RaidInformation) === "function" ? _a : Object, typeof (_b = typeof TierInformation_1.TierInformation !== "undefined" && TierInformation_1.TierInformation) === "function" ? _b : Object, typeof (_c = typeof WeightedRandomHelper_1.WeightedRandomHelper !== "undefined" && WeightedRandomHelper_1.WeightedRandomHelper) === "function" ? _c : Object, typeof (_d = typeof APBSLogger_1.APBSLogger !== "undefined" && APBSLogger_1.APBSLogger) === "function" ? _d : Object, typeof (_e = typeof RandomUtil_1.RandomUtil !== "undefined" && RandomUtil_1.RandomUtil) === "function" ? _e : Object, typeof (_f = typeof SeasonalEventService_1.SeasonalEventService !== "undefined" && SeasonalEventService_1.SeasonalEventService) === "function" ? _f : Object])
 ], APBSEquipmentGetter);
 //# sourceMappingURL=APBSEquipmentGetter.js.map

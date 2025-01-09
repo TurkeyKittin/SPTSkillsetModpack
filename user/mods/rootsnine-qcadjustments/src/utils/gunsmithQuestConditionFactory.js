@@ -7,7 +7,8 @@ function CreateGunsmithCondition(conditionIds, weapon, kills) {
         conditionType: "CounterCreator",
         counter: {
             id: conditionIds.counter.id,
-            conditions: [{
+            conditions: [
+                {
                     id: conditionIds.counter.conditions[0].id,
                     compareMethod: ">=",
                     conditionType: "Kills",
@@ -15,12 +16,13 @@ function CreateGunsmithCondition(conditionIds, weapon, kills) {
                     resetOnSessionEnd: false,
                     target: "Any",
                     value: 1,
-                    weapon: [weapon]
-                }]
+                    weapon: [weapon],
+                },
+            ],
         },
         dynamicLocale: true,
         type: "Elimination",
-        value: kills
+        value: kills,
     };
 }
 //# sourceMappingURL=gunsmithQuestConditionFactory.js.map

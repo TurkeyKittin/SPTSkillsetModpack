@@ -35,6 +35,7 @@ const SeasonalEventService_1 = require("C:/snapshot/project/obj/services/Seasona
 const TimeUtil_1 = require("C:/snapshot/project/obj/utils/TimeUtil");
 const BotNameService_1 = require("C:/snapshot/project/obj/services/BotNameService");
 const BotGeneratorHelper_1 = require("C:/snapshot/project/obj/helpers/BotGeneratorHelper");
+const ModConfig_1 = require("../Globals/ModConfig");
 /** Handle profile related client events */
 let APBSBotGenerator = class APBSBotGenerator extends BotGenerator_1.BotGenerator {
     logger;
@@ -82,11 +83,12 @@ let APBSBotGenerator = class APBSBotGenerator extends BotGenerator_1.BotGenerato
         if (botGenerationDetails.isPmc) {
             const tier = this.apbsTierGetter.getTierByLevel(bot.Info.Level);
             const role = bot.Info.Settings.Role;
-            const appearanceJson = this.apbsEquipmentGetter.getPmcAppearance(role, tier);
+            const getSeasonalAppearance = ModConfig_1.ModConfig.config.seasonalPmcAppearance ? true : false;
+            const appearanceJson = this.apbsEquipmentGetter.getPmcAppearance(role, tier, getSeasonalAppearance);
             bot.Customization.Head = this.weightedRandomHelper.getWeightedValue(appearanceJson.head);
+            bot.Customization.Hands = this.weightedRandomHelper.getWeightedValue(appearanceJson.hands);
             bot.Customization.Body = this.weightedRandomHelper.getWeightedValue(appearanceJson.body);
             bot.Customization.Feet = this.weightedRandomHelper.getWeightedValue(appearanceJson.feet);
-            bot.Customization.Hands = this.weightedRandomHelper.getWeightedValue(appearanceJson.hands);
             const bodyGlobalDict = this.databaseService.getGlobals().config.Customization.SavageBody;
             const chosenBodyTemplate = this.databaseService.getCustomization()[bot.Customization.Body];
             // Find the body/hands mapping

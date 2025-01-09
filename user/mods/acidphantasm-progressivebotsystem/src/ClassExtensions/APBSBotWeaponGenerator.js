@@ -40,6 +40,7 @@ const APBSTester_1 = require("../Utils/APBSTester");
 const ModInformation_1 = require("../Globals/ModInformation");
 const Money_1 = require("C:/snapshot/project/obj/models/enums/Money");
 const APBSBotEquipmentModGenerator_1 = require("./APBSBotEquipmentModGenerator");
+const APBSInventoryMagGen_1 = require("../InventoryMagGen/APBSInventoryMagGen");
 /** Handle profile related client events */
 let APBSBotWeaponGenerator = class APBSBotWeaponGenerator extends BotWeaponGenerator_1.BotWeaponGenerator {
     logger;
@@ -64,7 +65,8 @@ let APBSBotWeaponGenerator = class APBSBotWeaponGenerator extends BotWeaponGener
     apbsTester;
     apbsBotEquipmentModGenerator;
     modInformation;
-    constructor(logger, hashUtil, databaseService, itemHelper, weightedRandomHelper, botGeneratorHelper, randomUtil, configServer, botWeaponGeneratorHelper, botWeaponModLimitService, botEquipmentModGenerator, localisationService, repairService, inventoryMagGenComponents, cloner, apbsLogger, apbsTierGetter, raidInformation, apbsEquipmentGetter, apbsTester, apbsBotEquipmentModGenerator, modInformation) {
+    apbsInventoryMagGenComponents;
+    constructor(logger, hashUtil, databaseService, itemHelper, weightedRandomHelper, botGeneratorHelper, randomUtil, configServer, botWeaponGeneratorHelper, botWeaponModLimitService, botEquipmentModGenerator, localisationService, repairService, inventoryMagGenComponents, cloner, apbsLogger, apbsTierGetter, raidInformation, apbsEquipmentGetter, apbsTester, apbsBotEquipmentModGenerator, modInformation, apbsInventoryMagGenComponents) {
         super(logger, hashUtil, databaseService, itemHelper, weightedRandomHelper, botGeneratorHelper, randomUtil, configServer, botWeaponGeneratorHelper, botWeaponModLimitService, botEquipmentModGenerator, localisationService, repairService, inventoryMagGenComponents, cloner);
         this.logger = logger;
         this.hashUtil = hashUtil;
@@ -88,6 +90,7 @@ let APBSBotWeaponGenerator = class APBSBotWeaponGenerator extends BotWeaponGener
         this.apbsTester = apbsTester;
         this.apbsBotEquipmentModGenerator = apbsBotEquipmentModGenerator;
         this.modInformation = modInformation;
+        this.apbsInventoryMagGenComponents = apbsInventoryMagGenComponents;
     }
     apbsGenerateRandomWeapon(sessionId, equipmentSlot, botTemplateInventory, weaponParentId, modChances, botRole, isPmc, botLevel, hasBothPrimary) {
         // If the profile was just created, then use vanilla weapon gen
@@ -95,28 +98,8 @@ let APBSBotWeaponGenerator = class APBSBotWeaponGenerator extends BotWeaponGener
             const weaponTpl = this.pickWeightedWeaponTplFromPool(equipmentSlot, botTemplateInventory);
             return this.generateWeaponByTpl(sessionId, weaponTpl, equipmentSlot, botTemplateInventory, weaponParentId, modChances, botRole, isPmc, botLevel);
         }
-        // Config disable checks to flip to default weapon gen
-        if ((ModConfig_1.ModConfig.config.disableBossTierGeneration && (botRole.includes("boss") || botRole.includes("sectant") || botRole.includes("arena"))) || botRole == "bosslegion" || botRole == "bosspunisher") {
-            const weaponTpl = this.pickWeightedWeaponTplFromPool(equipmentSlot, botTemplateInventory);
-            return this.generateWeaponByTpl(sessionId, weaponTpl, equipmentSlot, botTemplateInventory, weaponParentId, modChances, botRole, isPmc, botLevel);
-        }
-        if (ModConfig_1.ModConfig.config.disableBossFollowerTierGeneration && botRole.includes("follower")) {
-            const weaponTpl = this.pickWeightedWeaponTplFromPool(equipmentSlot, botTemplateInventory);
-            return this.generateWeaponByTpl(sessionId, weaponTpl, equipmentSlot, botTemplateInventory, weaponParentId, modChances, botRole, isPmc, botLevel);
-        }
-        if (ModConfig_1.ModConfig.config.disableRaiderRogueTierGeneration && (botRole.includes("exusec") || botRole.includes("pmcbot"))) {
-            const weaponTpl = this.pickWeightedWeaponTplFromPool(equipmentSlot, botTemplateInventory);
-            return this.generateWeaponByTpl(sessionId, weaponTpl, equipmentSlot, botTemplateInventory, weaponParentId, modChances, botRole, isPmc, botLevel);
-        }
-        if (ModConfig_1.ModConfig.config.disablePMCTierGeneration && (botRole.includes("pmcusec") || botRole.includes("pmcbear"))) {
-            const weaponTpl = this.pickWeightedWeaponTplFromPool(equipmentSlot, botTemplateInventory);
-            return this.generateWeaponByTpl(sessionId, weaponTpl, equipmentSlot, botTemplateInventory, weaponParentId, modChances, botRole, isPmc, botLevel);
-        }
-        if (ModConfig_1.ModConfig.config.disableScavTierGeneration && (botRole.includes("assault") || botRole.includes("marksman"))) {
-            const weaponTpl = this.pickWeightedWeaponTplFromPool(equipmentSlot, botTemplateInventory);
-            return this.generateWeaponByTpl(sessionId, weaponTpl, equipmentSlot, botTemplateInventory, weaponParentId, modChances, botRole, isPmc, botLevel);
-        }
-        if (botRole.includes("infected") || botRole.includes("spirit") || botRole.includes("skier") || botRole.includes("peacemaker") || botRole.includes("gifter")) {
+        // Check if bot disabled, if it is - use SPT code
+        if (!this.raidInformation.isBotEnabled(botRole)) {
             const weaponTpl = this.pickWeightedWeaponTplFromPool(equipmentSlot, botTemplateInventory);
             return this.generateWeaponByTpl(sessionId, weaponTpl, equipmentSlot, botTemplateInventory, weaponParentId, modChances, botRole, isPmc, botLevel);
         }
@@ -287,6 +270,31 @@ let APBSBotWeaponGenerator = class APBSBotWeaponGenerator extends BotWeaponGener
             weaponTemplate: weaponItemTemplate
         };
     }
+    apbsAddExtraMagazinesToInventory(generatedWeaponResult, magWeights, inventory, botRole, botLevel) {
+        const weaponAndMods = generatedWeaponResult.weapon;
+        const weaponTemplate = generatedWeaponResult.weaponTemplate;
+        const magazineTpl = this.getMagazineTplFromWeaponTemplate(weaponAndMods, weaponTemplate, botRole);
+        const magTemplate = this.itemHelper.getItem(magazineTpl)[1];
+        if (!magTemplate) {
+            this.logger.error(this.localisationService.getText("bot-unable_to_find_magazine_item", magazineTpl));
+            return;
+        }
+        const ammoTemplate = this.itemHelper.getItem(generatedWeaponResult.chosenAmmoTpl)[1];
+        if (!ammoTemplate) {
+            this.logger.error(this.localisationService.getText("bot-unable_to_find_ammo_item", generatedWeaponResult.chosenAmmoTpl));
+            return;
+        }
+        // Has an UBGL
+        if (generatedWeaponResult.chosenUbglAmmoTpl) {
+            this.addUbglGrenadesToBotInventory(weaponAndMods, generatedWeaponResult, inventory);
+        }
+        const apbsInventoryMagGenModel = new APBSInventoryMagGen_1.APBSInventoryMagGen(magWeights, magTemplate, weaponTemplate, ammoTemplate, inventory, botRole, botLevel);
+        this.apbsInventoryMagGenComponents
+            .find((v) => v.canHandleInventoryMagGen(apbsInventoryMagGenModel))
+            .process(apbsInventoryMagGenModel);
+        // Add x stacks of bullets to SecuredContainer (bots use a magic mag packing skill to reload instantly)
+        this.addAmmoToSecureContainer(this.botConfig.secureContainerAmmoStackCount, generatedWeaponResult.chosenAmmoTpl, ammoTemplate._props.StackMaxSize, inventory);
+    }
 };
 exports.APBSBotWeaponGenerator = APBSBotWeaponGenerator;
 exports.APBSBotWeaponGenerator = APBSBotWeaponGenerator = __decorate([
@@ -313,6 +321,7 @@ exports.APBSBotWeaponGenerator = APBSBotWeaponGenerator = __decorate([
     __param(19, (0, tsyringe_1.inject)("APBSTester")),
     __param(20, (0, tsyringe_1.inject)("APBSBotEquipmentModGenerator")),
     __param(21, (0, tsyringe_1.inject)("ModInformation")),
-    __metadata("design:paramtypes", [typeof (_a = typeof ILogger_1.ILogger !== "undefined" && ILogger_1.ILogger) === "function" ? _a : Object, typeof (_b = typeof HashUtil_1.HashUtil !== "undefined" && HashUtil_1.HashUtil) === "function" ? _b : Object, typeof (_c = typeof DatabaseService_1.DatabaseService !== "undefined" && DatabaseService_1.DatabaseService) === "function" ? _c : Object, typeof (_d = typeof ItemHelper_1.ItemHelper !== "undefined" && ItemHelper_1.ItemHelper) === "function" ? _d : Object, typeof (_e = typeof WeightedRandomHelper_1.WeightedRandomHelper !== "undefined" && WeightedRandomHelper_1.WeightedRandomHelper) === "function" ? _e : Object, typeof (_f = typeof BotGeneratorHelper_1.BotGeneratorHelper !== "undefined" && BotGeneratorHelper_1.BotGeneratorHelper) === "function" ? _f : Object, typeof (_g = typeof RandomUtil_1.RandomUtil !== "undefined" && RandomUtil_1.RandomUtil) === "function" ? _g : Object, typeof (_h = typeof ConfigServer_1.ConfigServer !== "undefined" && ConfigServer_1.ConfigServer) === "function" ? _h : Object, typeof (_j = typeof BotWeaponGeneratorHelper_1.BotWeaponGeneratorHelper !== "undefined" && BotWeaponGeneratorHelper_1.BotWeaponGeneratorHelper) === "function" ? _j : Object, typeof (_k = typeof BotWeaponModLimitService_1.BotWeaponModLimitService !== "undefined" && BotWeaponModLimitService_1.BotWeaponModLimitService) === "function" ? _k : Object, typeof (_l = typeof BotEquipmentModGenerator_1.BotEquipmentModGenerator !== "undefined" && BotEquipmentModGenerator_1.BotEquipmentModGenerator) === "function" ? _l : Object, typeof (_m = typeof LocalisationService_1.LocalisationService !== "undefined" && LocalisationService_1.LocalisationService) === "function" ? _m : Object, typeof (_o = typeof RepairService_1.RepairService !== "undefined" && RepairService_1.RepairService) === "function" ? _o : Object, Array, typeof (_p = typeof ICloner_1.ICloner !== "undefined" && ICloner_1.ICloner) === "function" ? _p : Object, typeof (_q = typeof APBSLogger_1.APBSLogger !== "undefined" && APBSLogger_1.APBSLogger) === "function" ? _q : Object, typeof (_r = typeof APBSTierGetter_1.APBSTierGetter !== "undefined" && APBSTierGetter_1.APBSTierGetter) === "function" ? _r : Object, typeof (_s = typeof RaidInformation_1.RaidInformation !== "undefined" && RaidInformation_1.RaidInformation) === "function" ? _s : Object, typeof (_t = typeof APBSEquipmentGetter_1.APBSEquipmentGetter !== "undefined" && APBSEquipmentGetter_1.APBSEquipmentGetter) === "function" ? _t : Object, typeof (_u = typeof APBSTester_1.APBSTester !== "undefined" && APBSTester_1.APBSTester) === "function" ? _u : Object, typeof (_v = typeof APBSBotEquipmentModGenerator_1.APBSBotEquipmentModGenerator !== "undefined" && APBSBotEquipmentModGenerator_1.APBSBotEquipmentModGenerator) === "function" ? _v : Object, typeof (_w = typeof ModInformation_1.ModInformation !== "undefined" && ModInformation_1.ModInformation) === "function" ? _w : Object])
+    __param(22, (0, tsyringe_1.injectAll)("APBSInventoryMagGen")),
+    __metadata("design:paramtypes", [typeof (_a = typeof ILogger_1.ILogger !== "undefined" && ILogger_1.ILogger) === "function" ? _a : Object, typeof (_b = typeof HashUtil_1.HashUtil !== "undefined" && HashUtil_1.HashUtil) === "function" ? _b : Object, typeof (_c = typeof DatabaseService_1.DatabaseService !== "undefined" && DatabaseService_1.DatabaseService) === "function" ? _c : Object, typeof (_d = typeof ItemHelper_1.ItemHelper !== "undefined" && ItemHelper_1.ItemHelper) === "function" ? _d : Object, typeof (_e = typeof WeightedRandomHelper_1.WeightedRandomHelper !== "undefined" && WeightedRandomHelper_1.WeightedRandomHelper) === "function" ? _e : Object, typeof (_f = typeof BotGeneratorHelper_1.BotGeneratorHelper !== "undefined" && BotGeneratorHelper_1.BotGeneratorHelper) === "function" ? _f : Object, typeof (_g = typeof RandomUtil_1.RandomUtil !== "undefined" && RandomUtil_1.RandomUtil) === "function" ? _g : Object, typeof (_h = typeof ConfigServer_1.ConfigServer !== "undefined" && ConfigServer_1.ConfigServer) === "function" ? _h : Object, typeof (_j = typeof BotWeaponGeneratorHelper_1.BotWeaponGeneratorHelper !== "undefined" && BotWeaponGeneratorHelper_1.BotWeaponGeneratorHelper) === "function" ? _j : Object, typeof (_k = typeof BotWeaponModLimitService_1.BotWeaponModLimitService !== "undefined" && BotWeaponModLimitService_1.BotWeaponModLimitService) === "function" ? _k : Object, typeof (_l = typeof BotEquipmentModGenerator_1.BotEquipmentModGenerator !== "undefined" && BotEquipmentModGenerator_1.BotEquipmentModGenerator) === "function" ? _l : Object, typeof (_m = typeof LocalisationService_1.LocalisationService !== "undefined" && LocalisationService_1.LocalisationService) === "function" ? _m : Object, typeof (_o = typeof RepairService_1.RepairService !== "undefined" && RepairService_1.RepairService) === "function" ? _o : Object, Array, typeof (_p = typeof ICloner_1.ICloner !== "undefined" && ICloner_1.ICloner) === "function" ? _p : Object, typeof (_q = typeof APBSLogger_1.APBSLogger !== "undefined" && APBSLogger_1.APBSLogger) === "function" ? _q : Object, typeof (_r = typeof APBSTierGetter_1.APBSTierGetter !== "undefined" && APBSTierGetter_1.APBSTierGetter) === "function" ? _r : Object, typeof (_s = typeof RaidInformation_1.RaidInformation !== "undefined" && RaidInformation_1.RaidInformation) === "function" ? _s : Object, typeof (_t = typeof APBSEquipmentGetter_1.APBSEquipmentGetter !== "undefined" && APBSEquipmentGetter_1.APBSEquipmentGetter) === "function" ? _t : Object, typeof (_u = typeof APBSTester_1.APBSTester !== "undefined" && APBSTester_1.APBSTester) === "function" ? _u : Object, typeof (_v = typeof APBSBotEquipmentModGenerator_1.APBSBotEquipmentModGenerator !== "undefined" && APBSBotEquipmentModGenerator_1.APBSBotEquipmentModGenerator) === "function" ? _v : Object, typeof (_w = typeof ModInformation_1.ModInformation !== "undefined" && ModInformation_1.ModInformation) === "function" ? _w : Object, Array])
 ], APBSBotWeaponGenerator);
 //# sourceMappingURL=APBSBotWeaponGenerator.js.map

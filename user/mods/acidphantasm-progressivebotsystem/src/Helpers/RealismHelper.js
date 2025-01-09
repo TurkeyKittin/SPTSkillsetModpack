@@ -28,11 +28,13 @@ let RealismHelper = class RealismHelper {
         this.apbsEquipmentGetter = apbsEquipmentGetter;
         this.apbsLogger = apbsLogger;
     }
+    realismDetected = false;
     gasMasks = [
         "5b432c305acfc40019478128",
         "60363c0c92ec1c31037959f5"
     ];
     initialize() {
+        this.realismDetected = true;
         this.addGasMasksToBots();
     }
     addGasMasksToBots() {
