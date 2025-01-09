@@ -1,7 +1,6 @@
 # Stage 1: Build FIKA Server
 FROM node:20.11.1-alpine AS fika-builder
 ARG FIKA_VERSION
-ENV FIKA_VERSION=${FIKA_VERSION:-main}
 RUN apk add --no-cache git unzip && \
     git clone --depth=1 --branch ${FIKA_VERSION} https://github.com/project-fika/Fika-Server.git /fika-server && \
     cd /fika-server && \
@@ -11,7 +10,6 @@ RUN apk add --no-cache git unzip && \
 # Stage 2: Build SPT Server
 FROM node:20.11.1-alpine AS server-builder
 ARG SPT_VERSION
-ENV SPT_VERSION=${SPT_VERSION:-master}
 RUN apk add --no-cache git git-lfs && \
     git clone --depth=1 --branch ${SPT_VERSION} https://github.com/sp-tarkov/server.git /spt-server-build && \
     cd /spt-server-build && git lfs pull && \
@@ -21,7 +19,6 @@ RUN apk add --no-cache git git-lfs && \
 # Stage 3: Clone SPTSkillsetModpack
 FROM alpine:latest AS mods-builder
 ARG SKILLSET_BRANCH
-ENV SKILLSET_BRANCH=${SKILLSET_BRANCH:-skillz}
 RUN apk add --no-cache git && \
     git clone --depth=1 --branch ${SKILLSET_BRANCH} https://github.com/TurkeyKittin/SPTSkillsetModpack.git /spt-mods && \
     mkdir -p /spt-mods/output && \

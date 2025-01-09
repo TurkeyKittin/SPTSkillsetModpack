@@ -3,9 +3,9 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
+      args:
+        FIKA_VERSION: v2.3.6
+        SPT_VERSION: 3.10.5
+        SKILLSET_BRANCH: skillz
     ports:
       - '6969:6969'
-    environment:
-      - FIKA_VERSION=v2.3.6
-      - SPT_VERSION=3.10.5
-      - SKILLSET_BRANCH=skillz
