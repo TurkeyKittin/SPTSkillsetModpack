@@ -7,6 +7,7 @@ const ConfigTypes_1 = require("C:/snapshot/project/obj/models/enums/ConfigTypes"
 const LogBackgroundColor_1 = require("C:/snapshot/project/obj/models/spt/logging/LogBackgroundColor");
 const LogTextColor_1 = require("C:/snapshot/project/obj/models/spt/logging/LogTextColor");
 const Traders_1 = require("C:/snapshot/project/obj/models/enums/Traders");
+const BaseClasses_1 = require("C:/snapshot/project/obj/models/enums/BaseClasses");
 const config_json_1 = __importDefault(require("../config/config.json"));
 const tiers_json_1 = __importDefault(require("../config/tiers.json"));
 const translations_json_1 = __importDefault(require("./translations.json"));
@@ -383,12 +384,18 @@ class ItemInfo {
     traderList;
     euroRatio;
     dollarRatio;
+    questRewardsDB;
+    itemHelper;
+    props;
+    // ORM
+    ORMGen;
     init(container) {
         this.database = container.resolve("DatabaseServer");
         this.configServer = container.resolve("ConfigServer");
         this.itemBaseClassService = container.resolve("ItemBaseClassService");
         this.ragfairConfig = this.configServer.getConfig(ConfigTypes_1.ConfigTypes.RAGFAIR);
         this.hideoutConfig = this.configServer.getConfig(ConfigTypes_1.ConfigTypes.HIDEOUT);
+        this.itemHelper = container.resolve("ItemHelper");
         this.logger.info("[Item Info] Database data is loaded, working...");
         this.tables = this.database.getTables();
         this.items = this.tables.templates.items;
@@ -454,6 +461,7 @@ class ItemInfo {
                 }
             }
         }
+        // log(this.hideoutProduction)
         // Description generator for .md
         //const descriptionGen = false
         //if (descriptionGen) {
@@ -474,6 +482,42 @@ class ItemInfo {
         //}
         this.euroRatio = this.handbook.Items.find((x) => x.Id == "569668774bdc2da2298b4568").Price;
         this.dollarRatio = this.handbook.Items.find((x) => x.Id == "5696686a4bdc2da3298b456a").Price;
+        this.questRewardsDB = {};
+        for (const questID in this.quests) {
+            const questRewards = this.quests[questID].rewards.Started.concat(this.quests[questID].rewards.Success).filter((x) => x.type == "AssortmentUnlock");
+            if (questRewards.length > 1) {
+                this.questRewardsDB[questID] = {};
+                questRewards.forEach((i) => {
+                    this.questRewardsDB[questID][i.target] = [];
+                    i.items.forEach((x) => this.questRewardsDB[questID][i.target].push(x._tpl));
+                });
+            }
+            /*
+            if (questRewards.length > 1) {
+                this.questRewardsDB[questID] = {}
+                questRewards.forEach((i) => {
+                    this.questRewardsDB[questID][i.target] = []
+                    i.items.forEach((x) => this.questRewardsDB[questID][i.target].push(x._tpl))
+                })
+            }
+            */
+            /*
+            if (questRewards.length > 1) {
+                this.questRewardsDB[questID] = {}
+                this.questRewardsDB[questID].questID = questID
+                questRewards.forEach((i) => {
+                    // this.questRewardsDB[questID][i.target] = []
+                    this.questRewardsDB[questID].rewards = []
+                    this.questRewardsDB[questID].rewards.push({ rewardBarterID: i.target })
+                    this.questRewardsDB[questID][rewardBarterID][i.target].items = []
+                    // i.items.forEach((x) => this.questRewardsDB[questID].rewardBarterID[i.target].items.push(x._tpl))
+                })
+            }
+            // */
+        }
+        // ORM
+        this.ORMGen = {};
+        // log(this.questRewardsDB)
         for (const itemID in this.items) {
             const item = this.items[itemID];
             const itemInHandbook = this.getItemInHandbook(itemID);
@@ -482,7 +526,7 @@ class ItemInfo {
                 !item._props.QuestItem && // Ignore quest items.
                 item._parent != "543be5dd4bdc2deb348b4569" // Ignore currencies.
             ) {
-                // let name = this.getItemName(itemID, userLocale) // for debug only
+                const name = this.getItemName(itemID, userLocale); // for debug only
                 // item._props.ExaminedByDefault = true // DEBUG!!!
                 // BSG Blacklist generator
                 // if (item._props.CanSellOnRagfair == false) {
@@ -501,24 +545,27 @@ class ItemInfo {
                 let usedForHideoutString = "";
                 let usedForCraftingString = "";
                 let armorDurabilityString = "";
-                let spawnChanceString = "";
                 let slotefficiencyString = "";
                 let headsetDescription = "";
                 let tier = "";
                 let itemRarity = 0;
-                let spawnString = "";
                 let fleaPrice = this.getFleaPrice(itemID);
                 const itemBestVendor = this.getItemBestTrader(itemID, userLocale);
                 let traderPrice = Math.round(itemBestVendor.price);
                 const traderName = itemBestVendor.name;
-                let spawnChance = 10; // DEGUG
-                const slotDensity = this.getItemSlotDensity(itemID);
+                let slotDensity = this.getItemSlotDensity(itemID);
                 const itemBarters = this.bartersResolver(itemID);
                 const barterInfo = this.barterInfoGenerator(itemBarters, userLocale);
                 const barterResourceInfo = this.barterResourceInfoGenerator(itemID, userLocale);
-                const rarityArray = [];
-                rarityArray.push(barterInfo.rarity); // futureprofing, add other rarity calculations
+                const rarityArray = barterInfo.rarity;
+                // rarityArray.push(barterInfo.rarity) // futureprofing, add other rarity calculations
+                const itemQuestInfo = this.QuestInfoGenerator(itemID, userLocale);
+                // if (rarityArray.length > 1) {
+                // 	log(`${this.getItemName(itemID)}, ${itemRarity} | ${rarityArray}`)
+                // }
                 itemRarity = Math.min(...rarityArray);
+                // let RarityPvE = item._props.RarityPvE
+                // log(`${this.getItemName(itemID)} | ${RarityPvE}`)
                 let isBanned = false;
                 if (config_json_1.default.useBSGStaticFleaBanlist) {
                     isBanned = bsgBlacklist.includes(itemID);
@@ -531,6 +578,27 @@ class ItemInfo {
                     if (!itemRarity) {
                         itemRarity = 7;
                     }
+                    else {
+                        // itemRarity += 1
+                        // log(`${this.getItemName(itemID)}, ${itemRarity}`)
+                    }
+                }
+                if ((this.itemHelper.isOfBaseclass(itemID, BaseClasses_1.BaseClasses.MOD) ||
+                    this.itemHelper.isOfBaseclass(itemID, BaseClasses_1.BaseClasses.ARMOR) ||
+                    this.itemHelper.isOfBaseclass(itemID, BaseClasses_1.BaseClasses.AMMO) ||
+                    this.itemHelper.isOfBaseclass(itemID, BaseClasses_1.BaseClasses.ARMOR_PLATE) ||
+                    this.itemHelper.isOfBaseclass(itemID, BaseClasses_1.BaseClasses.VEST) ||
+                    this.itemHelper.isOfBaseclass(itemID, BaseClasses_1.BaseClasses.WEAPON) ||
+                    item._parent == "57bef4c42459772e8d35a53b") && // strictly ARMORED_EQUIPMENT
+                    barterInfo.barters.length == 0 &&
+                    !isBanned) {
+                    itemRarity = 6;
+                    // log(`${this.getItemName(itemID)}, ${this.getItemName(item._parent)}, ${item._parent}`)
+                }
+                if (itemQuestInfo.includes("↺") && !itemQuestInfo.includes("∈") && rarityArray.length < 4) {
+                    // well...
+                    itemRarity += 2;
+                    // log(`${this.getItemName(itemID)}, ${itemRarity} | ${rarityArray}`)
                 }
                 if (item._parent == "543be5cb4bdc2deb348b4568") {
                     // Ammo boxes special case
@@ -539,8 +607,8 @@ class ItemInfo {
                     const value = this.getItemBestTrader(ammo).price;
                     // let value = this.getItemInHandbook(ammo).price
                     traderPrice = value * count;
-                    if (!itemRarity) {
-                        itemRarity = this.barterInfoGenerator(this.bartersResolver(ammo)).rarity;
+                    if (!itemRarity || itemRarity == 7) {
+                        itemRarity = bsgBlacklist.includes(ammo) ? 7 : Math.min(...this.barterInfoGenerator(this.bartersResolver(ammo)).rarity); // my magnum opus
                     }
                 }
                 if (config_json_1.default.BulletStatsInName.enabled) {
@@ -571,6 +639,7 @@ class ItemInfo {
                     if (itemRarity == 7) {
                         tier = i18n.OVERPOWERED;
                         item._props.BackgroundColor = tiers_json_1.default.OVERPOWERED;
+                        // log(`${itemID} | ${this.getItemName(itemID)}`)
                     }
                     else if (itemRarity == 1) {
                         tier = i18n.COMMON;
@@ -592,7 +661,7 @@ class ItemInfo {
                         tier = i18n.UBER;
                         item._props.BackgroundColor = tiers_json_1.default.UBER;
                     }
-                    else if (spawnChance < 2 || itemRarity == 6) {
+                    else if (itemRarity == 6) {
                         // can get 6 from custom rules only
                         tier = i18n.UNOBTAINIUM;
                         item._props.BackgroundColor = tiers_json_1.default.UNOBTAINIUM;
@@ -602,17 +671,13 @@ class ItemInfo {
                         tier = i18n.CUSTOM;
                         item._props.BackgroundColor = tiers_json_1.default.CUSTOM;
                     }
-                    else if (itemRarity == 9) {
+                    else if (itemRarity >= 9) {
                         // 8 is for custom dim orange background
                         // tier = i18n.CUSTOM2
                         item._props.BackgroundColor = tiers_json_1.default.CUSTOM2;
                     }
                     if (config_json_1.default.RarityRecolor.fallbackValueBasedRecolor && itemRarity == 0) {
                         let itemValue = itemInHandbook.Price;
-                        if (item._props.StackMaxSize > 1) {
-                            // log(`"${itemID}", // ${name}`)
-                            itemValue = itemInHandbook.Price * item._props.StackMaxSize;
-                        }
                         const itemSlots = item._props.Width * item._props.Height;
                         if (itemSlots > 1) {
                             itemValue = Math.round(itemValue / itemSlots);
@@ -659,12 +724,12 @@ class ItemInfo {
                     }
                 }
                 if (config_json_1.default.ArmorInfo.enabled) {
-                    if (item._props.armorClass > 0) {
+                    if (Number(item._props.armorClass) > 0) {
                         const armor = this.armors[item._props.ArmorMaterial];
                         // prettier-ignore
                         armorDurabilityString += `${config_json_1.default.ArmorInfo.addArmorClassInfo ? i18n.Armorclass + ": " + item._props?.armorClass + " | " : ""}${i18n.Effectivedurability}: ${Math.round(item._props?.MaxDurability / armor?.Destructibility)} (${i18n.Max}: ${Math.round(item._props?.MaxDurability)} x ${this.locales[userLocale][`Mat${(item._props?.ArmorMaterial)}`]}: ${roundWithPrecision(1 / armor?.Destructibility, 1)}) | ${i18n.Repairdegradation}: ${Math.round(armor?.MinRepairDegradation * 100)}% - ${Math.round(armor?.MaxRepairDegradation * 100)}%` + newLine + newLine;
-                        //log(name)
-                        //log(armorDurabilityString)
+                        // log(name)
+                        // log(armorDurabilityString)
                     }
                 }
                 if (config_json_1.default.ContainerInfo.enabled) {
@@ -681,13 +746,19 @@ class ItemInfo {
                     }
                 }
                 if (config_json_1.default.MarkValueableItems.enabled) {
+                    if (config_json_1.default.SoftcoreAmmoStackMultiFix.enabled && this.itemHelper.isOfBaseclass(itemID, BaseClasses_1.BaseClasses.AMMO) && item._props.StackMaxSize > 1) {
+                        slotDensity *= 10;
+                        // log(`${this.getItemName(itemID)}, ${slotDensity}`)
+                    }
                     const itemvalue = traderPrice / slotDensity;
                     let fleaValue;
                     if (isBanned) {
                         // For banned items, recalculate flea price.
                         fleaValue = this.getFleaPrice(itemID) / slotDensity;
                         if (config_json_1.default.MarkValueableItems.alwaysMarkBannedItems) {
+                            // log(`${itemID} | ${this.getItemName(itemID)}, ${itemvalue}, ${fleaValue}`)
                             fleaValue = config_json_1.default.MarkValueableItems.fleaSlotValueThresholdBest + 1; // always mark flea banned items as best.
+                            // log(`New value ${fleaValue}`)
                         }
                     }
                     else {
@@ -710,6 +781,7 @@ class ItemInfo {
                                 }
                                 if (config_json_1.default.MarkValueableItems.addToName) {
                                     this.addToName(itemID, config_json_1.default.MarkValueableItems.BestValueMark, "append");
+                                    // log(`${itemID} | ${this.getItemName(itemID, "ru")}, ${itemvalue}, ${fleaValue}`)
                                 }
                             }
                         }
@@ -741,10 +813,36 @@ class ItemInfo {
                 if (config_json_1.default.HeadsetInfo.enabled) {
                     if (item._props.Distortion !== undefined) {
                         const gain = item._props.CompressorGain;
-                        const thresh = item._props.CompressorTreshold;
+                        const thresh = item._props.CompressorThreshold;
                         // prettier-ignore
-                        headsetDescription = `${i18n.AmbientVolume}: ${item._props.AmbientVolume}dB | ${i18n.Compressor}: ${i18n.Gain} +${gain}dB × ${i18n.Treshold} ${thresh}dB ≈ ×${Math.abs((gain * thresh) / 100)} ${i18n.Boost} | ${i18n.ResonanceFilter}: ${item._props.Resonance}@${item._props.CutoffFreq}Hz | ${i18n.Distortion}: ${Math.round(item._props.Distortion * 100)}%` + newLine + newLine;
-                        // log(name)
+                        // headsetDescription = `${i18n.AmbientVolume}: ${item._props.AmbientCompressorSendLevel+10}dB | ${i18n.Compressor}: ${i18n.Gain} +${gain}dB × ${i18n.Treshold} ${thresh}dB ≈ ×${Math.abs((gain * (thresh+20)) / 10)} ${i18n.Boost} | ${i18n.ResonanceFilter}: ${item._props.HighpassResonance}@${item._props.HighpassFreq}Hz | ${i18n.Distortion}: ${Math.round(item._props.Distortion * 100)}%` + newLine + newLine;
+                        headsetDescription = `${i18n.AmbientVolume}: ${Math.round((item._props.AmbientCompressorSendLevel + 10 + item._props.EnvCommonCompressorSendLevel + 7 + item._props.EnvNatureCompressorSendLevel + 5 + item._props.EnvTechnicalCompressorSendLevel + 7) * 10) / 10}dB | ${i18n.Boost}: +${((gain + Math.abs(thresh + 20)))}dB  | ${i18n.Distortion}: ${Math.round(item._props.Distortion * 100)}%` + newLine + newLine;
+                        // 						const headsetststs =
+                        // 							`AmbientCompressorSendLevel: ${item._props.AmbientCompressorSendLevel}dB
+                        // AmbientVolume: ${item._props.AmbientVolume}dB
+                        // CompressorAttack: ${item._props.CompressorAttack}ms
+                        // CompressorGain: ${item._props.CompressorGain}dB
+                        // CompressorRelease: ${item._props.CompressorRelease}ms
+                        // CompressorThreshold: ${item._props.CompressorThreshold}dB
+                        // Distortion: ${item._props.Distortion * 100}%
+                        // DryVolume: ${item._props.DryVolume}dB
+                        // EffectsReturnsCompressorSendLevel: ${item._props.EffectsReturnsCompressorSendLevel}dB
+                        // EffectsReturnsGroupVolume: ${item._props.EffectsReturnsGroupVolume}dB
+                        // EnvCommonCompressorSendLevel: ${item._props.EnvCommonCompressorSendLevel}dB
+                        // EnvNatureCompressorSendLevel: ${item._props.EnvNatureCompressorSendLevel}dB
+                        // EnvTechnicalCompressorSendLevel: ${item._props.EnvTechnicalCompressorSendLevel}dB
+                        // GunsCompressorSendLevel: ${item._props.GunsCompressorSendLevel}dB
+                        // HeadphonesMixerVolume: ${item._props.HeadphonesMixerVolume}dB
+                        // HighpassFreq: ${item._props.HighpassFreq}dB
+                        // HighpassResonance: ${item._props.HighpassResonance}dB
+                        // LowpassFreq: ${item._props.LowpassFreq}dB
+                        // NpcCompressorSendLevel: ${item._props.NpcCompressorSendLevel}dB
+                        // ObservedPlayerCompressorSendLevel: ${item._props.ObservedPlayerCompressorSendLevel}dB
+                        // RolloffMultiplier: ${item._props.RolloffMultiplier}dB
+                        // 						` +
+                        // 							newLine +
+                        // 							newLine
+                        // log(this.getItemName(itemID))
                         // log(headsetDescription)
                     }
                 }
@@ -771,7 +869,6 @@ class ItemInfo {
                     }
                 }
                 if (config_json_1.default.QuestInfo.enabled) {
-                    const itemQuestInfo = this.QuestInfoGenerator(itemID, userLocale);
                     if (itemQuestInfo.length > 1) {
                         usedForQuestsString = itemQuestInfo + newLine;
                         // item._props.BackgroundColor = "tracerGreen"
@@ -801,8 +898,6 @@ class ItemInfo {
                 }
                 descriptionString =
                     priceString +
-                        spawnString +
-                        spawnChanceString +
                         headsetDescription +
                         armorDurabilityString +
                         slotefficiencyString +
@@ -820,7 +915,51 @@ class ItemInfo {
                     // log(this.getItemDescription(itemID, userLocale))
                     log("---");
                 }
+                if (false) {
+                    // ORM GEN
+                    if (item._props.Ergonomics || item._props.Recoil || item._props.Accuracy) {
+                        const originalStats = `Ergo: ${item._props.Ergonomics} | Recoil: ${item._props.Recoil} | Accuracy: ${item._props.Accuracy} | Weight: ${item._props.Weight} | Tier: ${itemRarity}`;
+                        const aa = `// ------------------ ${this.getItemName(itemID)} | ${this.getItemShortName(itemID)} ------------------ \n${originalStats}\n${descriptionString}`
+                            .replaceAll(/^\s*[\r\n]/gm, "")
+                            .replaceAll(/\n/g, "\n//")
+                            .replaceAll(/\n\/\/$/g, "") + newLine;
+                        function genPatch() {
+                            let oo = "//\n";
+                            if (item._props.Ergonomics) {
+                                oo += `// items["${itemID}"]._props.Ergonomics = ${item._props.Ergonomics}\n`;
+                            }
+                            if (item._props.Recoil) {
+                                oo += `// items["${itemID}"]._props.Recoil = ${item._props.Recoil}\n`;
+                            }
+                            if (item._props.Accuracy) {
+                                oo += `// items["${itemID}"]._props.Accuracy = ${item._props.Accuracy}\n`;
+                            }
+                            oo += "//\n";
+                            return oo;
+                        }
+                        // log(this.getItemName(itemID, userLocale))
+                        this.ORMGen[item._parent] ??= [];
+                        // this.ORMGen[item._parent][itemID] ??= []
+                        this.ORMGen[item._parent].push(aa + newLine + genPatch());
+                    }
+                }
                 // this.addToName(itemID, "✅✓✔☑🗸⍻√❎❌✖✗✘☒", "append");
+            }
+        }
+        if (false) {
+            function compareNumbers(a, b) {
+                return parse(a) - parse(b);
+            }
+            function parse(i) {
+                const regex = /Tier: (\d+)/g;
+                for (const match of i.matchAll(regex)) {
+                    // log(match[1])
+                    return match[1];
+                }
+            }
+            for (const parent in this.ORMGen) {
+                log(`\n// ------------- ${this.getItemName(parent)} -------------\n`);
+                this.ORMGen[parent].sort(compareNumbers).forEach((x) => log(x));
             }
         }
         this.logger.success("[Item Info] Finished processing items, enjoy!");
@@ -1030,6 +1169,7 @@ class ItemInfo {
                     barterResources: trader.assort.barter_scheme[barter._id][0],
                     barterLoyaltyLevel: trader.assort.loyal_level_items[barter._id],
                     traderID: trader.base._id,
+                    barterID: barter._id,
                 }));
                 itemBarters.push(...barters);
                 function recursion(barter) {
@@ -1106,7 +1246,8 @@ class ItemInfo {
         return {
             prices: prices, //TODO
             barters: barterString,
-            rarity: rarityArray.length == 0 ? 0 : Math.min(...rarityArray),
+            // rarity: rarityArray.length == 0 ? 0 : Math.min(...rarityArray),
+            rarity: rarityArray.length == 0 ? [0] : rarityArray,
         };
     }
     barterResourceInfoGenerator(itemID, locale = "en") {
@@ -1165,72 +1306,84 @@ class ItemInfo {
     productionGenarator(itemID, locale = "en") {
         let craftableString = "";
         const rarityArray = [];
-        for (const recipeId in this.hideoutProduction) {
-            if (itemID === this.hideoutProduction[recipeId].endProduct && this.hideoutProduction[recipeId].areaType !== 21) {
+        for (const recipeId in this.hideoutProduction.recipes) {
+            if (itemID === this.hideoutProduction.recipes[recipeId].endProduct && this.hideoutProduction.recipes[recipeId].areaType !== 21) {
                 // Find every recipe for itemid and don't use Christmas Tree crafts
-                const recipe = this.hideoutProduction[recipeId];
-                let componentsString = "";
-                let recipeAreaString = this.getCraftingAreaName(recipe.areaType, locale);
-                let totalRecipePrice = 0;
-                let recipeDivision = "";
-                let questReq = "";
-                for (const requirement of recipe.requirements) {
-                    if (requirement.type === "Area") {
-                        recipeAreaString = this.getCraftingAreaName(requirement.areaType, locale) + " " + translations_json_1.default[locale].lv + requirement.requiredLevel;
-                        rarityArray.push(this.getCraftingRarity(requirement.areaType, requirement.requiredLevel));
-                    }
-                    if (requirement.type === "Item") {
-                        const craftComponentId = requirement.templateId;
-                        const craftComponentCount = requirement.count;
-                        const craftComponentPrice = this.getFleaPrice(craftComponentId);
-                        componentsString += this.getItemShortName(craftComponentId, locale) + " ×" + craftComponentCount + " + ";
-                        totalRecipePrice += craftComponentPrice * craftComponentCount;
-                    }
-                    if (requirement.type === "Resource") {
-                        // superwater calculation
-                        const craftComponentId = requirement.templateId;
-                        const resourceProportion = requirement.resource / this.items[requirement.templateId]._props.Resource;
-                        const craftComponentPrice = this.getFleaPrice(craftComponentId);
-                        componentsString += this.getItemShortName(craftComponentId, locale) + " ×" + Math.round(resourceProportion * 100) + "%" + " + ";
-                        totalRecipePrice += Math.round(craftComponentPrice * resourceProportion);
-                    }
-                    if (requirement.type === "QuestComplete") {
-                        questReq = ` (${this.locales[locale][`${requirement.questId} name`]}✔)`;
-                    }
-                }
-                if (recipe.count > 1) {
-                    recipeDivision = " " + translations_json_1.default[locale].peritem;
-                }
-                componentsString = componentsString.slice(0, componentsString.length - 3);
-                if (recipe.endProduct === "59faff1d86f7746c51718c9c") {
-                    craftableString += `${translations_json_1.default[locale].Crafted} @ ${recipeAreaString}`;
-                    const bitcoinTime = recipe.productionTime;
-                    // prettier-ignore
-                    craftableString += ` | 1× GPU: ${this.convertTime(this.gpuTime(1, bitcoinTime), locale)}, 10× GPU: ${this.convertTime(this.gpuTime(10, bitcoinTime), locale)}, 25× GPU: ${this.convertTime(this.gpuTime(25, bitcoinTime), locale)}, 50× GPU: ${this.convertTime(this.gpuTime(50, bitcoinTime), locale)}`;
-                    // 					log(`
-                    // // Base time (x${roundWithPrecision(145000/time, 2)}): ${convertTime(time)}, GPU Boost: x${roundWithPrecision(tables.hideout.settings.gpuBoostRate/0.041225, 2)}
-                    // // 2× GPU: ${convertTime(gpuTime(2))} x${roundWithPrecision(time/gpuTime(2), 2)}
-                    // // 10× GPU: ${convertTime(gpuTime(10))} x${roundWithPrecision(time/gpuTime(10), 2)}
-                    // // 25× GPU: ${convertTime(gpuTime(25))} x${roundWithPrecision(time/gpuTime(25), 2)}
-                    // // 50× GPU: ${convertTime(gpuTime(50))} x${roundWithPrecision(time/gpuTime(50), 2)}`)
+                const recipe = this.hideoutProduction.recipes[recipeId];
+                if (recipe.locked && recipe.requirements.every((x) => !Object.hasOwn(x, "questId"))) {
+                    // blocked recipies
+                    // log(this.getItemName(itemID))
                 }
                 else {
-                    craftableString += `${translations_json_1.default[locale].Crafted} ×${recipe.count} @ ${recipeAreaString}${questReq} < `;
-                    craftableString += `${componentsString} | Σ${recipeDivision} ≈ ${this.formatPrice(Math.round(totalRecipePrice / recipe.count))}₽\n`;
+                    let componentsString = "";
+                    let recipeAreaString = this.getCraftingAreaName(recipe.areaType, locale);
+                    let totalRecipePrice = 0;
+                    let recipeDivision = "";
+                    let questReq = "";
+                    for (const requirement of recipe.requirements) {
+                        if (requirement.type === "Area") {
+                            recipeAreaString = this.getCraftingAreaName(requirement.areaType, locale) + " " + translations_json_1.default[locale].lv + requirement.requiredLevel;
+                            rarityArray.push(this.getCraftingRarity(requirement.areaType, requirement.requiredLevel));
+                        }
+                        if (requirement.type === "Item") {
+                            const craftComponentId = requirement.templateId;
+                            const craftComponentCount = requirement.count;
+                            const craftComponentPrice = this.getFleaPrice(craftComponentId);
+                            componentsString += this.getItemShortName(craftComponentId, locale) + " ×" + craftComponentCount + " + ";
+                            totalRecipePrice += craftComponentPrice * craftComponentCount;
+                        }
+                        if (requirement.type === "Resource") {
+                            // superwater calculation
+                            const craftComponentId = requirement.templateId;
+                            const resourceProportion = requirement.resource / this.items[requirement.templateId]._props.Resource;
+                            const craftComponentPrice = this.getFleaPrice(craftComponentId);
+                            componentsString += this.getItemShortName(craftComponentId, locale) + " ×" + Math.round(resourceProportion * 100) + "%" + " + ";
+                            totalRecipePrice += Math.round(craftComponentPrice * resourceProportion);
+                        }
+                        if (requirement.type === "QuestComplete") {
+                            if (this.locales[locale][`${requirement.questId} name`]) {
+                                questReq = ` (${this.locales[locale][`${requirement.questId} name`]}✔)`;
+                            }
+                            else {
+                                // For empty quests
+                                // log(this.locales[locale][`${requirement.questId} name`])
+                            }
+                        }
+                    }
+                    if (recipe.count > 1) {
+                        recipeDivision = " " + translations_json_1.default[locale].peritem;
+                    }
+                    componentsString = componentsString.slice(0, componentsString.length - 3);
+                    if (recipe.endProduct === "59faff1d86f7746c51718c9c") {
+                        craftableString += `${translations_json_1.default[locale].Crafted} @ ${recipeAreaString}`;
+                        const bitcoinTime = recipe.productionTime;
+                        // prettier-ignore
+                        craftableString += ` | 1× GPU: ${this.convertTime(this.gpuTime(1, bitcoinTime), locale)}, 10× GPU: ${this.convertTime(this.gpuTime(10, bitcoinTime), locale)}, 25× GPU: ${this.convertTime(this.gpuTime(25, bitcoinTime), locale)}, 50× GPU: ${this.convertTime(this.gpuTime(50, bitcoinTime), locale)}`;
+                        // 					log(`
+                        // // Base time (x${roundWithPrecision(145000/time, 2)}): ${convertTime(time)}, GPU Boost: x${roundWithPrecision(tables.hideout.settings.gpuBoostRate/0.041225, 2)}
+                        // // 2× GPU: ${convertTime(gpuTime(2))} x${roundWithPrecision(time/gpuTime(2), 2)}
+                        // // 10× GPU: ${convertTime(gpuTime(10))} x${roundWithPrecision(time/gpuTime(10), 2)}
+                        // // 25× GPU: ${convertTime(gpuTime(25))} x${roundWithPrecision(time/gpuTime(25), 2)}
+                        // // 50× GPU: ${convertTime(gpuTime(50))} x${roundWithPrecision(time/gpuTime(50), 2)}`)
+                    }
+                    else {
+                        craftableString += `${translations_json_1.default[locale].Crafted} ×${recipe.count} @ ${recipeAreaString}${questReq} < `;
+                        craftableString += `${componentsString} | Σ${recipeDivision} ≈ ${this.formatPrice(Math.round(totalRecipePrice / recipe.count))}₽\n`;
+                    }
+                    //				function convertTime(time: number, locale = "en"): string {
+                    //					const hours = Math.trunc(time / 60 / 60)
+                    //					const minutes = Math.round((time - hours * 60 * 60) / 60)
+                    //					return `${hours}${this.locales[locale].HOURS} ${minutes}${this.locales[locale].Min}`
+                    //				}
+                    //
+                    //				function gpuTime(gpus: number, time: number): number {
+                    //					return time / (1 + (gpus - 1) * this.tables.hideout.settings.gpuBoostRate)
+                    //				}
+                    // if (fleaPrice > totalRecipePrice/recipe.count) {
+                    // 	let profit = Math.round(fleaPrice-(totalRecipePrice/recipe.count))
+                    // 	console.log("Hava Nagila! Profitable craft at " + profit + " profit detected! " + this.GetItemName(id) + " can be crafted at " + recipeAreaString)
+                    // }
                 }
-                //				function convertTime(time: number, locale = "en"): string {
-                //					const hours = Math.trunc(time / 60 / 60)
-                //					const minutes = Math.round((time - hours * 60 * 60) / 60)
-                //					return `${hours}${this.locales[locale].HOURS} ${minutes}${this.locales[locale].Min}`
-                //				}
-                //
-                //				function gpuTime(gpus: number, time: number): number {
-                //					return time / (1 + (gpus - 1) * this.tables.hideout.settings.gpuBoostRate)
-                //				}
-                // if (fleaPrice > totalRecipePrice/recipe.count) {
-                // 	let profit = Math.round(fleaPrice-(totalRecipePrice/recipe.count))
-                // 	console.log("Hava Nagila! Profitable craft at " + profit + " profit detected! " + this.GetItemName(id) + " can be crafted at " + recipeAreaString)
-                // }
             }
         }
         return craftableString;
@@ -1256,13 +1409,12 @@ class ItemInfo {
                 }
             }
         }
-        // console.log(hideoutString)
         return hideoutString;
     }
     CraftingMaterialInfoGenarator(itemID, locale = "en") {
         let usedForCraftingString = "";
         // let totalCraftingPrice = 0 // Unused
-        for (const recipe of Array.isArray(this.hideoutProduction) ? this.hideoutProduction : []) {
+        for (const recipe of this.hideoutProduction.recipes) {
             for (const s in recipe.requirements) {
                 if (recipe.requirements[s].templateId === itemID) {
                     let usedForCraftingComponentsString = " < … + ";
@@ -1304,11 +1456,12 @@ class ItemInfo {
             }
         }
         // console.log(hideoutString)
-        // log (usedForCraftingString)
         return usedForCraftingString;
     }
     QuestInfoGenerator(itemID, locale = "en") {
         let questString = "";
+        let unlockString = "";
+        let partString = "";
         for (const questID in this.quests) {
             const questName = this.locales[locale][`${questID} name`];
             const questConditions = this.quests[questID].conditions.AvailableForFinish;
@@ -1321,7 +1474,33 @@ class ItemInfo {
                     questString += `${translations_json_1.default[locale].Found} ${condition.onlyFoundInRaid ? "(✔) " : ""}×${condition.value} > ${questName} @ ${traderName}\n`;
                 }
             }
+            const questRewards = this.quests[questID].rewards.Started.concat(this.quests[questID].rewards.Success).filter((x) => x.type == "AssortmentUnlock");
+            if (questRewards.length > 0) {
+                const splitRewardString = this.locales[locale]["AssortmentUnlockReward/Description"].split("{0}");
+                for (const results of questRewards) {
+                    const questGiver = this.quests[questID].traderId;
+                    const trader = results.traderId;
+                    const ll = results.loyaltyLevel;
+                    const traderName = this.locales[locale][`${trader} Nickname`];
+                    const questGiverName = this.locales[locale][`${questGiver} Nickname`];
+                    for (const item of results.items) {
+                        if (item._tpl.includes(itemID)) {
+                            // prettier-ignore
+                            // unlockString += `${splitRewardString[0]}${traderName} ${translations[locale].lv}${ll}${splitRewardString[1]} > "${questName}"\n`
+                            if (item._id != results.target) {
+                                partString = this.getItemName(results.items.find(x => x._id == results.target)._tpl, locale);
+                            }
+                            // prettier-ignore
+                            unlockString += `↺ "${questName}"${traderName == questGiverName ? "" : " " + questGiverName}✔ @ ${traderName} ${translations_json_1.default[locale].lv}${ll}${partString.length > 0 ? " ∈ " + partString : ""}\n`;
+                            // if (trader == "6617beeaa9cfa777ca915b7c") {
+                            // 	log(`${this.getItemName(itemID, locale)}:\n${unlockString}`)
+                            // }
+                        }
+                    }
+                }
+            }
         }
+        questString += unlockString;
         return questString;
     }
 }

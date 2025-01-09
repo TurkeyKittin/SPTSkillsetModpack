@@ -21,6 +21,14 @@
       "add itemID here": "add rarity here",
       "59faff1d86f7746c51718c9c": "6",
       "5c0530ee86f774697952d952": "6",
+      "5efb0c1bd79ff02a1f5e68d9": "7",
+      "601949593ae8f707c4608daa": "7",
+      "59e0d99486f7744a32234762": "6",
+      "601aa3d2b2bcb34913271e6d": "7",
+      "61962b617c6c7b169525f168": "6",
+      "56dff0bed2720bb0668b4567": "2",
+      "59e6920f86f77411d82aa167": "2",
+      "635267f063651329f75a4ee8": "8",
       "": "",
       "": "",
       "": "",
@@ -125,6 +133,10 @@
   "useBSGStaticFleaBanlist": {
     "_description": "For compatibility reasons with other mods that modify flea banned items",
     "enabled": true
+  },
+  "SoftcoreAmmoStackMultiFix": {
+    "_description": "Enable if using Softcore's Bigger_Ammo_Stacks",
+    "enabled": false
   },
   "dummy": {
     "_description": "",
