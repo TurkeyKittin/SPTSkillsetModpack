@@ -17,6 +17,7 @@ RUN apk add --no-cache git git-lfs && \
     npm install && npm run build:release
 
 # Stage 3: Clone SPTSkillsetModpack
+# Consider adding this answer to the Dockerfile: https://stackoverflow.com/a/65762156 
 FROM alpine:latest AS mods-builder
 ARG SKILLSET_BRANCH
 RUN apk add --no-cache git && \
