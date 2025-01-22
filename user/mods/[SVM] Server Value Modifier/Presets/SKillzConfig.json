@@ -29,7 +29,7 @@
       "MarksmanRound": 80,
       "RifleRound": 120,
       "ShotgunRound": 40,
-      "PistolRound": 100
+      "PistolRound": 200
     },
     "AmmoSwitch": true,
     "EnableKeys": false,
@@ -598,8 +598,8 @@
         "Filter": false
       },
       "PistolCase": {
-        "Height": 3,
-        "Width": 4,
+        "Height": 10,
+        "Width": 7,
         "Filter": false
       },
       "DocumentsCase": {
