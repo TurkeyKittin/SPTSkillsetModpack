@@ -223,7 +223,7 @@ let APBSBotInventoryGenerator = class APBSBotInventoryGenerator extends BotInven
     apbsAddWeaponAndMagazinesToInventory(sessionId, weaponSlot, templateInventory, botInventory, equipmentChances, botRole, isPmc, itemGenerationWeights, botLevel, hasBothPrimary) {
         const generatedWeapon = this.apbsBotWeaponGenerator.apbsGenerateRandomWeapon(sessionId, weaponSlot.slot, templateInventory, botInventory.equipment, equipmentChances.weaponMods, botRole, isPmc, botLevel, hasBothPrimary);
         botInventory.items.push(...generatedWeapon.weapon);
-        if (this.raidInformation.isBotEnabled(botRole) && ModConfig_1.ModConfig.config.enableBotsToRollAmmoAgain) {
+        if (this.raidInformation.isBotEnabled(botRole) && ModConfig_1.ModConfig.config.generalConfig.enableBotsToRollAmmoAgain) {
             this.apbsBotWeaponGenerator.apbsAddExtraMagazinesToInventory(generatedWeapon, itemGenerationWeights.items.magazines, botInventory, botRole, botLevel);
             return;
         }

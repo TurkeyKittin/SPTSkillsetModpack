@@ -39,7 +39,7 @@ export class APBSBotLevelGenerator
         {
             result.generateBotLevel = (levelDetails: MinMax, botGenerationDetails: IBotGenerationDetails, bot: APBSIBotBase): IRandomisedBotLevelResult => 
             {                
-                if (this.modInformation.testMode && this.modInformation.testBotRole.includes(botGenerationDetails.role.toLowerCase()))
+                if (this.modInformation.testMode && this.modInformation.testLevelLock && this.modInformation.testBotRole.includes(botGenerationDetails.role.toLowerCase()))
                 {
                     const level = this.profileHelper.getPmcProfile(this.raidInformation.sessionId)?.Info?.Level;
                     const exp = this.profileHelper.getExperience(level);
@@ -75,24 +75,6 @@ export class APBSBotLevelGenerator
                     return result;                    
                 }
 
-                if (!botGenerationDetails.isPmc && !botGenerationDetails.isPlayerScav && ModConfig.config.enableScavCustomLevelDeltas)
-                {
-                    const expTable = this.databaseService.getGlobals().config.exp.level.exp_table;
-                    const botLevelRange = this.apbsGetRelativeBotLevelRange(botGenerationDetails, levelDetails, expTable.length);
-                    const min = botLevelRange.min <= 0 ? 1 : botLevelRange.min;
-                    const max = botLevelRange.max >= 79 ? 79 : botLevelRange.max;
-                    const level = this.randomUtil.getInt(min, max);
-                    const exp = this.profileHelper.getExperience(level);
-                    const tier = this.apbsTierGetter.getTierByLevel(level);
-                    bot.Info.Tier = this.chadOrChill(tier.toString());
-                    
-                    const result: IRandomisedBotLevelResult = {
-                        level,
-                        exp 
-                    };
-                    return result;
-                }
-
                 const expTable = this.databaseService.getGlobals().config.exp.level.exp_table;
                 const botLevelRange = this.apbsGetRelativeBotLevelRange(botGenerationDetails, levelDetails, expTable.length);
                 const min = botLevelRange.min <= 0 ? 1 : botLevelRange.min;
@@ -116,13 +98,13 @@ export class APBSBotLevelGenerator
 
     private chadOrChill(tierInfo: string): string
     {
-        if (ModConfig.config.onlyChads && ModConfig.config.tarkovAndChill)
+        if (ModConfig.config.generalConfig.onlyChads && ModConfig.config.generalConfig.tarkovAndChill)
         {
             return "?";
         }
-        if (ModConfig.config.onlyChads) return "7";
-        if (ModConfig.config.tarkovAndChill) return "1";
-        if (ModConfig.config.blickyMode) return "0";
+        if (ModConfig.config.generalConfig.onlyChads) return "7";
+        if (ModConfig.config.generalConfig.tarkovAndChill) return "1";
+        if (ModConfig.config.generalConfig.blickyMode) return "0";
 
         return tierInfo;
     }
@@ -149,7 +131,7 @@ export class APBSBotLevelGenerator
         let minLevel = botGenerationDetails.playerLevel - this.apbsTierGetter.getTierLowerLevelDeviation(botGenerationDetails.playerLevel);
         let maxLevel = botGenerationDetails.playerLevel + this.apbsTierGetter.getTierUpperLevelDeviation(botGenerationDetails.playerLevel);
 
-        if (ModConfig.config.enableScavCustomLevelDeltas && !botGenerationDetails.isPmc && !botGenerationDetails.isPlayerScav && (botGenerationDetails.role.includes("assault") || botGenerationDetails.role == "marksman"))
+        if (ModConfig.config.customScavLevelDeltas.enable && !botGenerationDetails.isPmc && !botGenerationDetails.isPlayerScav && (botGenerationDetails.role.includes("assault") || botGenerationDetails.role == "marksman"))
         {
             minLevel = botGenerationDetails.playerLevel - this.apbsTierGetter.getScavTierLowerLevelDeviation(botGenerationDetails.playerLevel);
             maxLevel = botGenerationDetails.playerLevel + this.apbsTierGetter.getScavTierUpperLevelDeviation(botGenerationDetails.playerLevel);

@@ -51,7 +51,7 @@ let APBSBotLevelGenerator = class APBSBotLevelGenerator {
     registerBotLevelGenerator(container) {
         container.afterResolution("BotLevelGenerator", (_t, result) => {
             result.generateBotLevel = (levelDetails, botGenerationDetails, bot) => {
-                if (this.modInformation.testMode && this.modInformation.testBotRole.includes(botGenerationDetails.role.toLowerCase())) {
+                if (this.modInformation.testMode && this.modInformation.testLevelLock && this.modInformation.testBotRole.includes(botGenerationDetails.role.toLowerCase())) {
                     const level = this.profileHelper.getPmcProfile(this.raidInformation.sessionId)?.Info?.Level;
                     const exp = this.profileHelper.getExperience(level);
                     const tier = this.apbsTierGetter.getTierByLevel(level);
@@ -79,21 +79,6 @@ let APBSBotLevelGenerator = class APBSBotLevelGenerator {
                     };
                     return result;
                 }
-                if (!botGenerationDetails.isPmc && !botGenerationDetails.isPlayerScav && ModConfig_1.ModConfig.config.enableScavCustomLevelDeltas) {
-                    const expTable = this.databaseService.getGlobals().config.exp.level.exp_table;
-                    const botLevelRange = this.apbsGetRelativeBotLevelRange(botGenerationDetails, levelDetails, expTable.length);
-                    const min = botLevelRange.min <= 0 ? 1 : botLevelRange.min;
-                    const max = botLevelRange.max >= 79 ? 79 : botLevelRange.max;
-                    const level = this.randomUtil.getInt(min, max);
-                    const exp = this.profileHelper.getExperience(level);
-                    const tier = this.apbsTierGetter.getTierByLevel(level);
-                    bot.Info.Tier = this.chadOrChill(tier.toString());
-                    const result = {
-                        level,
-                        exp
-                    };
-                    return result;
-                }
                 const expTable = this.databaseService.getGlobals().config.exp.level.exp_table;
                 const botLevelRange = this.apbsGetRelativeBotLevelRange(botGenerationDetails, levelDetails, expTable.length);
                 const min = botLevelRange.min <= 0 ? 1 : botLevelRange.min;
@@ -112,14 +97,14 @@ let APBSBotLevelGenerator = class APBSBotLevelGenerator {
         this.apbsLogger.log(Logging_1.Logging.DEBUG, "Bot Level Generator registered");
     }
     chadOrChill(tierInfo) {
-        if (ModConfig_1.ModConfig.config.onlyChads && ModConfig_1.ModConfig.config.tarkovAndChill) {
+        if (ModConfig_1.ModConfig.config.generalConfig.onlyChads && ModConfig_1.ModConfig.config.generalConfig.tarkovAndChill) {
             return "?";
         }
-        if (ModConfig_1.ModConfig.config.onlyChads)
+        if (ModConfig_1.ModConfig.config.generalConfig.onlyChads)
             return "7";
-        if (ModConfig_1.ModConfig.config.tarkovAndChill)
+        if (ModConfig_1.ModConfig.config.generalConfig.tarkovAndChill)
             return "1";
-        if (ModConfig_1.ModConfig.config.blickyMode)
+        if (ModConfig_1.ModConfig.config.generalConfig.blickyMode)
             return "0";
         return tierInfo;
     }
@@ -134,7 +119,7 @@ let APBSBotLevelGenerator = class APBSBotLevelGenerator {
             : Math.min(levelDetails.max, maxAvailableLevel); // Not pmc with override or non-pmc
         let minLevel = botGenerationDetails.playerLevel - this.apbsTierGetter.getTierLowerLevelDeviation(botGenerationDetails.playerLevel);
         let maxLevel = botGenerationDetails.playerLevel + this.apbsTierGetter.getTierUpperLevelDeviation(botGenerationDetails.playerLevel);
-        if (ModConfig_1.ModConfig.config.enableScavCustomLevelDeltas && !botGenerationDetails.isPmc && !botGenerationDetails.isPlayerScav && (botGenerationDetails.role.includes("assault") || botGenerationDetails.role == "marksman")) {
+        if (ModConfig_1.ModConfig.config.customScavLevelDeltas.enable && !botGenerationDetails.isPmc && !botGenerationDetails.isPlayerScav && (botGenerationDetails.role.includes("assault") || botGenerationDetails.role == "marksman")) {
             minLevel = botGenerationDetails.playerLevel - this.apbsTierGetter.getScavTierLowerLevelDeviation(botGenerationDetails.playerLevel);
             maxLevel = botGenerationDetails.playerLevel + this.apbsTierGetter.getScavTierUpperLevelDeviation(botGenerationDetails.playerLevel);
         }

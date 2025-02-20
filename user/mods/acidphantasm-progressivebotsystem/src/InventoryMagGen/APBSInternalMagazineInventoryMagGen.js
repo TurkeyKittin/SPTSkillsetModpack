@@ -42,7 +42,7 @@ let APBSInternalMagazineInventoryMagGen = class APBSInternalMagazineInventoryMag
     }
     process(inventoryMagGen) {
         let bulletCount = this.botWeaponGeneratorHelper.getRandomizedBulletCount(inventoryMagGen.getMagCount(), inventoryMagGen.getMagazineTemplate());
-        if (ModConfig_1.ModConfig.config.enableBotsToRollAmmoAgain && this.randomUtil.getChance100(ModConfig_1.ModConfig.config.chanceToRollAmmoAgain)) {
+        if (ModConfig_1.ModConfig.config.generalConfig.enableBotsToRollAmmoAgain && this.randomUtil.getChance100(ModConfig_1.ModConfig.config.generalConfig.chanceToRollAmmoAgain)) {
             const weapon = inventoryMagGen.getWeaponTemplate();
             const tierInfo = this.apbsTierGetter.getTierByLevel(inventoryMagGen.getBotLevel());
             const ammoTable = this.apbsEquipmentGetter.getAmmoByBotRole(inventoryMagGen.getBotRole(), tierInfo);

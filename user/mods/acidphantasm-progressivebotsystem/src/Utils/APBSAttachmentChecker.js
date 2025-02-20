@@ -32,7 +32,7 @@ let APBSAttachmentChecker = class APBSAttachmentChecker {
         this.apbsLogger = apbsLogger;
         this.itemHelper = itemHelper;
     }
-    buildAttachmentList() {
+    buildVanillaAttachmentList() {
         const items = this.database.getTables().templates.items;
         const itemValues = Object.values(items);
         const attachments = itemValues.filter(x => this.itemHelper.isOfBaseclass(x._id, BaseClasses_1.BaseClasses.MOD));
@@ -42,9 +42,10 @@ let APBSAttachmentChecker = class APBSAttachmentChecker {
         this.apbsLogger.log(Logging_1.Logging.DEBUG, `${JSON.stringify(this.vanillaAttachmentList)}`);
     }
     isVanillaItem(itemID) {
-        if (VanillaItemLists_1.vanillaAttachments.includes(itemID)) {
+        if (VanillaItemLists_1.vanillaAttachments.includes(itemID))
             return true;
-        }
+        if (VanillaItemLists_1.vanillaItemsList.includes(itemID))
+            return true;
         return false;
     }
 };

@@ -60,6 +60,9 @@ import { APBSMethodHolder } from "./InventoryMagGen/APBSMethodHolder";
 import { APBSBarrelInventoryMagGen } from "./InventoryMagGen/APBSBarrelInventoryMagGen";
 import { APBSInternalMagazineInventoryMagGen } from "./InventoryMagGen/APBSInternalMagazineInventoryMagGen";
 import { APBSUbglExternalMagGen } from "./InventoryMagGen/APBSUbglExternalMagGen";
+import { APBSBotGeneratorHelper } from "./ClassExtensions/APBSBotGeneratorHelper";
+import { BotEnablementHelper } from "./Helpers/BotEnablementHelper";
+import { BotLogHelper } from "./Helpers/BotLogHelper";
 
 export class InstanceManager 
 {
@@ -107,9 +110,11 @@ export class InstanceManager
     public apbsAttachmentChecker: APBSAttachmentChecker;
     public jsonHelper: JSONHelper;
     public modConfig: ModConfig;
+    public botEnablementHelper: BotEnablementHelper;
     public apbsTester: APBSTester;
     public apbsExternalInventoryMagGen: APBSExternalInventoryMagGen;
     public apbsMethodHolder: APBSMethodHolder;
+    public botLogHelper: BotLogHelper;
     //#endregion
 
     //#region accessible in or after postDBLoad
@@ -159,6 +164,8 @@ export class InstanceManager
         // Custom Classes
         this.container.register<ModInformation>("ModInformation", ModInformation, { lifecycle: Lifecycle.Singleton })
         this.modInformation = container.resolve<ModInformation>("ModInformation");
+        this.container.register<BotEnablementHelper>("BotEnablementHelper", BotEnablementHelper, { lifecycle: Lifecycle.Singleton })
+        this.botEnablementHelper = container.resolve<BotEnablementHelper>("BotEnablementHelper");
         this.container.register<APBSLogger>("APBSLogger", APBSLogger, { lifecycle: Lifecycle.Singleton });
         this.apbsLogger = container.resolve<APBSLogger>("APBSLogger");
         this.container.register<APBSTester>("APBSTester", APBSTester, { lifecycle: Lifecycle.Singleton })
@@ -171,6 +178,8 @@ export class InstanceManager
         this.apbsTierGetter = container.resolve<APBSTierGetter>("APBSTierGetter");
         this.container.register<APBSEquipmentGetter>("APBSEquipmentGetter", APBSEquipmentGetter, { lifecycle: Lifecycle.Singleton })
         this.apbsEquipmentGetter = container.resolve<APBSEquipmentGetter>("APBSEquipmentGetter");
+        this.container.register<BotLogHelper>("BotLogHelper", BotLogHelper, { lifecycle: Lifecycle.Singleton })
+        this.botLogHelper = container.resolve<BotLogHelper>("BotLogHelper");
 
         // Custom Special
         this.container.register<APBSDynamicRouterHooks>("APBSDynamicRouterHooks", APBSDynamicRouterHooks, { lifecycle: Lifecycle.Singleton });
@@ -213,6 +222,8 @@ export class InstanceManager
         this.container.register("BotLootCacheService", { useToken: "APBSBotLootCacheService" });
         this.container.register<APBSBotLootGenerator>("APBSBotLootGenerator", APBSBotLootGenerator);
         this.container.register("BotLootGenerator", { useToken: "APBSBotLootGenerator" });
+        this.container.register<APBSBotGeneratorHelper>("APBSBotGeneratorHelper", APBSBotGeneratorHelper);
+        this.container.register("BotGeneratorHelper", { useToken: "APBSBotGeneratorHelper" });
 
         this.container.register("BotWeaponGenerator", { useToken: "APBSBotWeaponGenerator" });
 

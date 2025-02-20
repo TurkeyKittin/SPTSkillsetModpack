@@ -141,7 +141,7 @@ let APBSBotWeaponGenerator = class APBSBotWeaponGenerator extends BotWeaponGener
         const apbsModChances = this.apbsEquipmentGetter.getSpawnChancesByBotRole(botRole, tierInfo);
         let weaponChances = apbsModChances.weaponMods;
         const weaponItemTemplate = this.itemHelper.getItem(weaponTpl)[1];
-        if (ModConfig_1.ModConfig.config.enablePerWeaponTypeAttachmentChances) {
+        if (ModConfig_1.ModConfig.config.generalConfig.enablePerWeaponTypeAttachmentChances) {
             switch (weaponItemTemplate._parent) {
                 case "5447b5fc4bdc2d87278b4567":
                     weaponChances = apbsModChances.assaultCarbine;
@@ -257,7 +257,7 @@ let APBSBotWeaponGenerator = class APBSBotWeaponGenerator extends BotWeaponGener
             }
             this.apbsTester.createComplexAssortItem(assortWeapon)
                 .addUnlimitedStackCount()
-                .addMoneyCost(Money_1.Money.ROUBLES, 20000)
+                .addMoneyCost(Money_1.Money.ROUBLES, botLevel)
                 .addBuyRestriction(3)
                 .addLoyaltyLevel(1)
                 .export(tables.traders[this.modInformation.testTrader]);
@@ -294,6 +294,30 @@ let APBSBotWeaponGenerator = class APBSBotWeaponGenerator extends BotWeaponGener
             .process(apbsInventoryMagGenModel);
         // Add x stacks of bullets to SecuredContainer (bots use a magic mag packing skill to reload instantly)
         this.addAmmoToSecureContainer(this.botConfig.secureContainerAmmoStackCount, generatedWeaponResult.chosenAmmoTpl, ammoTemplate._props.StackMaxSize, inventory);
+    }
+    // I'm only overriding this so I can get the ID and not the name because most custom item mods don't change this.
+    isWeaponValid(weaponItemArray, botRole) {
+        for (const mod of weaponItemArray) {
+            const modTemplate = this.itemHelper.getItem(mod._tpl)[1];
+            if (!modTemplate._props.Slots?.length) {
+                continue;
+            }
+            // Iterate over required slots in db item, check mod exists for that slot
+            for (const modSlotTemplate of modTemplate._props.Slots.filter((slot) => slot._required)) {
+                const slotName = modSlotTemplate._name;
+                const hasWeaponSlotItem = weaponItemArray.some((weaponItem) => weaponItem.parentId === mod._id && weaponItem.slotId === slotName);
+                if (!hasWeaponSlotItem) {
+                    this.logger.warning(this.localisationService.getText("bot-weapons_required_slot_missing_item", {
+                        modSlot: modSlotTemplate._name,
+                        modName: modTemplate._id,
+                        slotId: mod.slotId,
+                        botRole: botRole
+                    }));
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 };
 exports.APBSBotWeaponGenerator = APBSBotWeaponGenerator;

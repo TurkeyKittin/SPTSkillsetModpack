@@ -75,7 +75,7 @@ let APBSExternalInventoryMagGen = class APBSExternalInventoryMagGen {
         const ammoTable = this.apbsEquipmentGetter.getAmmoByBotRole(inventoryMagGen.getBotRole(), tierInfo);
         for (let i = 0; i < randomizedMagazineCount; i++) {
             let selectedAmmoForMag = inventoryMagGen.getAmmoTemplate()._id;
-            if (ModConfig_1.ModConfig.config.enableBotsToRollAmmoAgain && this.randomUtil.getChance100(ModConfig_1.ModConfig.config.chanceToRollAmmoAgain)) {
+            if (ModConfig_1.ModConfig.config.generalConfig.enableBotsToRollAmmoAgain && this.randomUtil.getChance100(ModConfig_1.ModConfig.config.generalConfig.chanceToRollAmmoAgain)) {
                 selectedAmmoForMag = this.apbsMethodHolder.getWeightedCompatibleAmmo(ammoTable, weapon);
             }
             const magazineWithAmmo = this.botWeaponGeneratorHelper.createMagazineWithAmmo(magazineTpl, selectedAmmoForMag, magTemplate);

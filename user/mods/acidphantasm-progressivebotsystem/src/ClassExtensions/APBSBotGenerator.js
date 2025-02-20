@@ -36,6 +36,8 @@ const TimeUtil_1 = require("C:/snapshot/project/obj/utils/TimeUtil");
 const BotNameService_1 = require("C:/snapshot/project/obj/services/BotNameService");
 const BotGeneratorHelper_1 = require("C:/snapshot/project/obj/helpers/BotGeneratorHelper");
 const ModConfig_1 = require("../Globals/ModConfig");
+const GameEditions_1 = require("C:/snapshot/project/obj/models/enums/GameEditions");
+const MemberCategory_1 = require("C:/snapshot/project/obj/models/enums/MemberCategory");
 /** Handle profile related client events */
 let APBSBotGenerator = class APBSBotGenerator extends BotGenerator_1.BotGenerator {
     logger;
@@ -83,7 +85,7 @@ let APBSBotGenerator = class APBSBotGenerator extends BotGenerator_1.BotGenerato
         if (botGenerationDetails.isPmc) {
             const tier = this.apbsTierGetter.getTierByLevel(bot.Info.Level);
             const role = bot.Info.Settings.Role;
-            const getSeasonalAppearance = ModConfig_1.ModConfig.config.seasonalPmcAppearance ? true : false;
+            const getSeasonalAppearance = ModConfig_1.ModConfig.config.pmcBots.additionalOptions.seasonalPmcAppearance ? true : false;
             const appearanceJson = this.apbsEquipmentGetter.getPmcAppearance(role, tier, getSeasonalAppearance);
             bot.Customization.Head = this.weightedRandomHelper.getWeightedValue(appearanceJson.head);
             bot.Customization.Hands = this.weightedRandomHelper.getWeightedValue(appearanceJson.hands);
@@ -111,6 +113,107 @@ let APBSBotGenerator = class APBSBotGenerator extends BotGenerator_1.BotGenerato
             // Has fixed hands for this body, set them
             bot.Customization.Hands = matchingBody.hands;
         }
+    }
+    setRandomisedGameVersionAndCategory(botInfo) {
+        // Special case
+        if (botInfo.Nickname?.toLowerCase() === "nikita") {
+            botInfo.GameVersion = GameEditions_1.GameEditions.UNHEARD;
+            botInfo.MemberCategory = MemberCategory_1.MemberCategory.DEVELOPER;
+            botInfo.SelectedMemberCategory = botInfo.MemberCategory;
+            return botInfo.GameVersion;
+        }
+        if (ModConfig_1.ModConfig.config.pmcBots.secrets.developerSettings.devNames.enable) {
+            if (ModConfig_1.ModConfig.config.pmcBots.secrets.developerSettings.devNames.nameList.includes(botInfo.Nickname)) {
+                botInfo.GameVersion = GameEditions_1.GameEditions.UNHEARD;
+                botInfo.MemberCategory = MemberCategory_1.MemberCategory.DEVELOPER;
+                if (ModConfig_1.ModConfig.config.pmcBots.secrets.developerSettings.devLevels.enable) {
+                    const min = ModConfig_1.ModConfig.config.pmcBots.secrets.developerSettings.devLevels.min;
+                    const max = ModConfig_1.ModConfig.config.pmcBots.secrets.developerSettings.devLevels.max;
+                    const level = this.randomUtil.getInt(min, max);
+                    const exp = this.profileHelper.getExperience(level);
+                    botInfo.Experience = exp;
+                    botInfo.Level = level;
+                    botInfo.Tier = this.apbsTierGetter.getTierByLevel(level).toString();
+                }
+                botInfo.SelectedMemberCategory = botInfo.MemberCategory;
+                return botInfo.GameVersion;
+            }
+        }
+        // Choose random weighted game version for bot
+        botInfo.GameVersion = this.weightedRandomHelper.getWeightedValue(this.pmcConfig.gameVersionWeight);
+        // Choose appropriate member category value
+        switch (botInfo.GameVersion) {
+            case GameEditions_1.GameEditions.EDGE_OF_DARKNESS:
+                botInfo.MemberCategory = MemberCategory_1.MemberCategory.UNIQUE_ID;
+                break;
+            case GameEditions_1.GameEditions.UNHEARD:
+                botInfo.MemberCategory = MemberCategory_1.MemberCategory.UNHEARD;
+                break;
+            default:
+                // Everyone else gets a weighted randomised category
+                botInfo.MemberCategory = Number.parseInt(this.weightedRandomHelper.getWeightedValue(this.pmcConfig.accountTypeWeight), 10);
+        }
+        // Ensure selected category matches
+        botInfo.SelectedMemberCategory = botInfo.MemberCategory;
+        return botInfo.GameVersion;
+    }
+    generateBot(sessionId, bot, botJsonTemplate, botGenerationDetails) {
+        const botRoleLowercase = botGenerationDetails.role.toLowerCase();
+        const botLevel = this.botLevelGenerator.generateBotLevel(botJsonTemplate.experience.level, botGenerationDetails, bot);
+        // Only filter bot equipment, never players
+        if (!botGenerationDetails.isPlayerScav) {
+            this.botEquipmentFilterService.filterBotEquipment(sessionId, botJsonTemplate, botLevel.level, botGenerationDetails);
+        }
+        bot.Info.Nickname = this.botNameService.generateUniqueBotNickname(botJsonTemplate, botGenerationDetails, botRoleLowercase, this.botConfig.botRolesThatMustHaveUniqueName);
+        // Only run when generating a 'fake' playerscav, not actual player scav
+        if (!botGenerationDetails.isPlayerScav && this.shouldSimulatePlayerScav(botRoleLowercase)) {
+            this.botNameService.addRandomPmcNameToBotMainProfileNicknameProperty(bot);
+            this.setRandomisedGameVersionAndCategory(bot.Info);
+        }
+        if (!this.seasonalEventService.christmasEventEnabled()) {
+            // Process all bots EXCEPT gifter, he needs christmas items
+            if (botGenerationDetails.role !== "gifter") {
+                this.seasonalEventService.removeChristmasItemsFromBotInventory(botJsonTemplate.inventory, botGenerationDetails.role);
+            }
+        }
+        this.removeBlacklistedLootFromBotTemplate(botJsonTemplate.inventory);
+        // Remove hideout data if bot is not a PMC or pscav - match what live sends
+        if (!(botGenerationDetails.isPmc || botGenerationDetails.isPlayerScav)) {
+            bot.Hideout = undefined;
+        }
+        bot.Info.Experience = botLevel.exp;
+        bot.Info.Level = botLevel.level;
+        bot.Info.Settings.Experience = this.getExperienceRewardForKillByDifficulty(botJsonTemplate.experience.reward, botGenerationDetails.botDifficulty, botGenerationDetails.role);
+        bot.Info.Settings.StandingForKill = this.getStandingChangeForKillByDifficulty(botJsonTemplate.experience.standingForKill, botGenerationDetails.botDifficulty, botGenerationDetails.role);
+        bot.Info.Settings.AggressorBonus = this.getAgressorBonusByDifficulty(botJsonTemplate.experience.standingForKill, botGenerationDetails.botDifficulty, botGenerationDetails.role);
+        bot.Info.Settings.UseSimpleAnimator = botJsonTemplate.experience.useSimpleAnimator ?? false;
+        bot.Info.Voice = this.weightedRandomHelper.getWeightedValue(botJsonTemplate.appearance.voice);
+        bot.Health = this.generateHealth(botJsonTemplate.health, botGenerationDetails.isPlayerScav);
+        bot.Skills = this.generateSkills(botJsonTemplate.skills); // TODO: fix bad type, bot jsons store skills in dict, output needs to be array
+        if (botGenerationDetails.isPmc) {
+            bot.Info.IsStreamerModeAvailable = true; // Set to true so client patches can pick it up later - client sometimes alters botrole to assaultGroup
+            this.setRandomisedGameVersionAndCategory(bot.Info);
+            if (bot.Info.GameVersion === GameEditions_1.GameEditions.UNHEARD) {
+                this.addAdditionalPocketLootWeightsForUnheardBot(botJsonTemplate);
+            }
+        }
+        // Add drip
+        this.setBotAppearance(bot, botJsonTemplate.appearance, botGenerationDetails);
+        // Filter out blacklisted gear from the base template
+        this.filterBlacklistedGear(botJsonTemplate, botGenerationDetails);
+        bot.Inventory = this.botInventoryGenerator.generateInventory(sessionId, botJsonTemplate, botRoleLowercase, botGenerationDetails.isPmc, bot.Info.Level, bot.Info.GameVersion);
+        if (this.botConfig.botRolesWithDogTags.includes(botRoleLowercase)) {
+            this.addDogtagToBot(bot);
+        }
+        // Generate new bot ID
+        this.addIdsToBot(bot);
+        // Generate new inventory ID
+        this.generateInventoryId(bot);
+        // Set role back to originally requested now its been generated
+        if (botGenerationDetails.eventRole) {
+            bot.Info.Settings.Role = botGenerationDetails.eventRole;
+        }
+        return bot;
     }
 };
 exports.APBSBotGenerator = APBSBotGenerator;

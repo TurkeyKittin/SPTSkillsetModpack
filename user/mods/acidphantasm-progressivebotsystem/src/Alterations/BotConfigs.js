@@ -28,6 +28,7 @@ const RaidInformation_1 = require("../Globals/RaidInformation");
 const ModConfig_1 = require("../Globals/ModConfig");
 const APBSLogger_1 = require("../Utils/APBSLogger");
 const Logging_1 = require("../Enums/Logging");
+const Bots_1 = require("../Enums/Bots");
 let BotConfigs = class BotConfigs {
     tables;
     database;
@@ -78,45 +79,67 @@ let BotConfigs = class BotConfigs {
         this.pmcConfig = this.configServer.getConfig(ConfigTypes_1.ConfigTypes.PMC);
     }
     initialize() {
-        if (!ModConfig_1.ModConfig.config.disablePMCTierGeneration) {
-            this.setPMCItemLimits();
-            this.setPMCLoot();
-            this.setPMCScopeWhitelist();
-            this.setPMCSlotIDsToMakeRequired();
-            if (ModConfig_1.ModConfig.config.gameVersionWeight)
-                this.setPMCGameVersionWeights();
-        }
-        if (!ModConfig_1.ModConfig.config.disableScavTierGeneration) {
-            if (ModConfig_1.ModConfig.config.addAllKeysToScavs || ModConfig_1.ModConfig.config.addOnlyKeyCardsToScavs || ModConfig_1.ModConfig.config.addOnlyMechanicalKeysToScavs)
-                this.pushScavKeys();
-            if (!ModConfig_1.ModConfig.config.scavLoot)
-                this.removeScavLoot();
-        }
+        // PMC Specific
+        this.setPMCItemLimits();
+        this.setPMCLoot();
+        this.setPMCScopeWhitelist();
+        this.setPMCSlotIDsToMakeRequired();
+        this.setPMCGameVersionWeights();
+        // Scav Specific
+        this.pushScavKeys();
+        this.setScavLoot();
+        this.setIdenticalScavWeights();
+        this.setScavLevelDeltas();
+        // Boss Specific
+        this.setBossLoot();
+        // Follower Specific
+        this.setFollowerLoot();
+        // Special Specific
+        this.setSpecialLoot();
+        // All bots
+        this.setLevelDeltas();
         this.clearNoLongerNeededBotDetails();
         this.configureBotExperienceLevels();
         this.configurePlateWeightings();
         this.configureWeaponDurability();
         this.adjustNVG();
         this.setLootItemResourceRandomization();
-        this.removeThermalGoggles(ModConfig_1.ModConfig.config.enableT7Thermals);
-        if (ModConfig_1.ModConfig.config.enableCustomPlateChances)
-            this.setPlateChances();
-        if (ModConfig_1.ModConfig.config.forceStock)
-            this.setForceStock();
-        if (ModConfig_1.ModConfig.config.forceDustCover)
-            this.setForceDustCover();
-        if (ModConfig_1.ModConfig.config.forceScopeSlot)
-            this.setForceScopes();
-        if (ModConfig_1.ModConfig.config.forceWeaponModLimits)
-            this.setWeaponModLimits();
-        if (ModConfig_1.ModConfig.config.enableScavEqualEquipmentTiering)
-            this.setIdenticalScavWeights();
-        if (ModConfig_1.ModConfig.config.enableCustomLevelDeltas)
-            this.setLevelDeltas();
-        if (ModConfig_1.ModConfig.config.enableScavCustomLevelDeltas)
-            this.setScavLevelDeltas();
-        if (ModConfig_1.ModConfig.config.forceMuzzle)
-            this.setMuzzleChances();
+        this.setWeaponModLimits();
+        // All Bots - Bypasses bot enablement
+        this.normalizeHealthPools();
+        // Special Handling Needed
+        this.removeThermalGoggles(ModConfig_1.ModConfig.config.generalConfig.enableT7Thermals);
+        this.setPlateChances();
+        this.setForceStock();
+        this.setForceDustCover();
+        this.setForceScopes();
+        this.setMuzzleChances();
+    }
+    normalizeHealthPools() {
+        if (!ModConfig_1.ModConfig.config.normalizedHealthPool.enable)
+            return;
+        const botTable = this.tables.bots.types;
+        for (const bot in botTable) {
+            if (ModConfig_1.ModConfig.config.normalizedHealthPool.excludedBots.includes(bot.toLowerCase()))
+                continue;
+            const bodyParts = botTable[bot].health.BodyParts;
+            for (const array in bodyParts) {
+                bodyParts[array].Head.min = ModConfig_1.ModConfig.config.normalizedHealthPool.healthHead > 0 ? ModConfig_1.ModConfig.config.normalizedHealthPool.healthHead : 35;
+                bodyParts[array].Head.max = ModConfig_1.ModConfig.config.normalizedHealthPool.healthHead > 0 ? ModConfig_1.ModConfig.config.normalizedHealthPool.healthHead : 35;
+                bodyParts[array].Chest.min = ModConfig_1.ModConfig.config.normalizedHealthPool.healthChest > 0 ? ModConfig_1.ModConfig.config.normalizedHealthPool.healthChest : 85;
+                bodyParts[array].Chest.max = ModConfig_1.ModConfig.config.normalizedHealthPool.healthChest > 0 ? ModConfig_1.ModConfig.config.normalizedHealthPool.healthChest : 85;
+                bodyParts[array].Stomach.min = ModConfig_1.ModConfig.config.normalizedHealthPool.healthStomach > 0 ? ModConfig_1.ModConfig.config.normalizedHealthPool.healthStomach : 70;
+                bodyParts[array].Stomach.max = ModConfig_1.ModConfig.config.normalizedHealthPool.healthStomach > 0 ? ModConfig_1.ModConfig.config.normalizedHealthPool.healthStomach : 70;
+                bodyParts[array].LeftArm.min = ModConfig_1.ModConfig.config.normalizedHealthPool.healthLeftArm > 0 ? ModConfig_1.ModConfig.config.normalizedHealthPool.healthLeftArm : 60;
+                bodyParts[array].LeftArm.max = ModConfig_1.ModConfig.config.normalizedHealthPool.healthLeftArm > 0 ? ModConfig_1.ModConfig.config.normalizedHealthPool.healthLeftArm : 60;
+                bodyParts[array].RightArm.min = ModConfig_1.ModConfig.config.normalizedHealthPool.healthRightArm > 0 ? ModConfig_1.ModConfig.config.normalizedHealthPool.healthRightArm : 60;
+                bodyParts[array].RightArm.max = ModConfig_1.ModConfig.config.normalizedHealthPool.healthRightArm > 0 ? ModConfig_1.ModConfig.config.normalizedHealthPool.healthRightArm : 60;
+                bodyParts[array].LeftLeg.min = ModConfig_1.ModConfig.config.normalizedHealthPool.healthLeftLeg > 0 ? ModConfig_1.ModConfig.config.normalizedHealthPool.healthLeftLeg : 65;
+                bodyParts[array].LeftLeg.max = ModConfig_1.ModConfig.config.normalizedHealthPool.healthLeftLeg > 0 ? ModConfig_1.ModConfig.config.normalizedHealthPool.healthLeftLeg : 65;
+                bodyParts[array].RightLeg.min = ModConfig_1.ModConfig.config.normalizedHealthPool.healthRightLeg > 0 ? ModConfig_1.ModConfig.config.normalizedHealthPool.healthRightLeg : 65;
+                bodyParts[array].RightLeg.max = ModConfig_1.ModConfig.config.normalizedHealthPool.healthRightLeg > 0 ? ModConfig_1.ModConfig.config.normalizedHealthPool.healthRightLeg : 65;
+            }
+        }
     }
     configureBotExperienceLevels() {
         const botTypeTable = this.tables.bots.types;
@@ -128,6 +151,8 @@ let BotConfigs = class BotConfigs {
     configurePlateWeightings() {
         const botConfigEquipment = this.botConfig.equipment;
         for (const botType in botConfigEquipment) {
+            if (!this.raidInformation.isBotEnabled(botType))
+                continue;
             if (botType.includes("assault") || botType.includes("marksman")) {
                 botConfigEquipment[botType].filterPlatesByLevel = true;
                 botConfigEquipment[botType].armorPlateWeighting = this.tierInformation.scavArmorPlateWeights;
@@ -140,6 +165,8 @@ let BotConfigs = class BotConfigs {
     clearNoLongerNeededBotDetails() {
         const botConfigEquipment = this.botConfig.equipment;
         for (const botType in botConfigEquipment) {
+            if (!this.raidInformation.isBotEnabled(botType))
+                continue;
             botConfigEquipment[botType].randomisation = [];
             botConfigEquipment[botType].weightingAdjustmentsByBotLevel = [];
         }
@@ -148,46 +175,50 @@ let BotConfigs = class BotConfigs {
         // Do this better in the future - this looks like shit. Bad Acid. Bad.
         const botConfigDurability = this.botConfig.durability;
         for (const botType in botConfigDurability) {
-            if (botType == "pmc") {
-                botConfigDurability[botType].weapon.lowestMax = ModConfig_1.ModConfig.config.pmcWeaponDurability[0];
-                botConfigDurability[botType].weapon.highestMax = ModConfig_1.ModConfig.config.pmcWeaponDurability[1];
-                botConfigDurability[botType].weapon.minDelta = ModConfig_1.ModConfig.config.pmcWeaponDurability[2];
-                botConfigDurability[botType].weapon.maxDelta = ModConfig_1.ModConfig.config.pmcWeaponDurability[3];
-                botConfigDurability[botType].weapon.minLimitPercent = 40;
+            if (!this.raidInformation.isBotEnabled(botType))
+                continue;
+            if (Object.values(Bots_1.PMCBots).includes(botType) && ModConfig_1.ModConfig.config.pmcBots.weaponDurability.enable) {
+                botConfigDurability[botType].weapon.lowestMax = ModConfig_1.ModConfig.config.pmcBots.weaponDurability.min;
+                botConfigDurability[botType].weapon.highestMax = ModConfig_1.ModConfig.config.pmcBots.weaponDurability.max;
+                botConfigDurability[botType].weapon.minDelta = ModConfig_1.ModConfig.config.pmcBots.weaponDurability.minDelta;
+                botConfigDurability[botType].weapon.maxDelta = ModConfig_1.ModConfig.config.pmcBots.weaponDurability.maxDelta;
+                botConfigDurability[botType].weapon.minLimitPercent = ModConfig_1.ModConfig.config.pmcBots.weaponDurability.minLimitPercent;
             }
-            if (botType == "boss" || botType == "arenafighterevent" || botType == "arenafighter" || botType == "sectantpriest" || botType == "sectantwarrior") {
-                botConfigDurability[botType].weapon.lowestMax = ModConfig_1.ModConfig.config.bossWeaponDurability[0];
-                botConfigDurability[botType].weapon.highestMax = ModConfig_1.ModConfig.config.bossWeaponDurability[1];
-                botConfigDurability[botType].weapon.minDelta = ModConfig_1.ModConfig.config.bossWeaponDurability[2];
-                botConfigDurability[botType].weapon.maxDelta = ModConfig_1.ModConfig.config.bossWeaponDurability[3];
-                botConfigDurability[botType].weapon.minLimitPercent = 40;
+            if (Object.values(Bots_1.ScavBots).includes(botType) && ModConfig_1.ModConfig.config.scavBots.weaponDurability.enable) {
+                botConfigDurability[botType].weapon.lowestMax = ModConfig_1.ModConfig.config.scavBots.weaponDurability.min;
+                botConfigDurability[botType].weapon.highestMax = ModConfig_1.ModConfig.config.scavBots.weaponDurability.max;
+                botConfigDurability[botType].weapon.minDelta = ModConfig_1.ModConfig.config.scavBots.weaponDurability.minDelta;
+                botConfigDurability[botType].weapon.maxDelta = ModConfig_1.ModConfig.config.scavBots.weaponDurability.maxDelta;
+                botConfigDurability[botType].weapon.minLimitPercent = ModConfig_1.ModConfig.config.scavBots.weaponDurability.minLimitPercent;
             }
-            if (botType == "assault" || botType == "cursedassault" || botType == "marksman" || botType == "crazyassaultevent" || botType == "default") {
-                botConfigDurability[botType].weapon.lowestMax = ModConfig_1.ModConfig.config.scavWeaponDurability[0];
-                botConfigDurability[botType].weapon.highestMax = ModConfig_1.ModConfig.config.scavWeaponDurability[1];
-                botConfigDurability[botType].weapon.minDelta = ModConfig_1.ModConfig.config.scavWeaponDurability[2];
-                botConfigDurability[botType].weapon.maxDelta = ModConfig_1.ModConfig.config.scavWeaponDurability[3];
-                botConfigDurability[botType].weapon.minLimitPercent = 40;
+            if (Object.values(Bots_1.BossBots).includes(botType) && ModConfig_1.ModConfig.config.bossBots.weaponDurability.enable) {
+                botConfigDurability[botType].weapon.lowestMax = ModConfig_1.ModConfig.config.bossBots.weaponDurability.min;
+                botConfigDurability[botType].weapon.highestMax = ModConfig_1.ModConfig.config.bossBots.weaponDurability.max;
+                botConfigDurability[botType].weapon.minDelta = ModConfig_1.ModConfig.config.bossBots.weaponDurability.minDelta;
+                botConfigDurability[botType].weapon.maxDelta = ModConfig_1.ModConfig.config.bossBots.weaponDurability.maxDelta;
+                botConfigDurability[botType].weapon.minLimitPercent = ModConfig_1.ModConfig.config.bossBots.weaponDurability.minLimitPercent;
             }
-            if (botType == "follower") {
-                botConfigDurability[botType].weapon.lowestMax = ModConfig_1.ModConfig.config.guardWeaponDurability[0];
-                botConfigDurability[botType].weapon.highestMax = ModConfig_1.ModConfig.config.guardWeaponDurability[1];
-                botConfigDurability[botType].weapon.minDelta = ModConfig_1.ModConfig.config.guardWeaponDurability[2];
-                botConfigDurability[botType].weapon.maxDelta = ModConfig_1.ModConfig.config.guardWeaponDurability[3];
-                botConfigDurability[botType].weapon.minLimitPercent = 40;
+            if (Object.values(Bots_1.FollowerBots).includes(botType) && ModConfig_1.ModConfig.config.followerBots.weaponDurability.enable) {
+                botConfigDurability[botType].weapon.lowestMax = ModConfig_1.ModConfig.config.followerBots.weaponDurability.min;
+                botConfigDurability[botType].weapon.highestMax = ModConfig_1.ModConfig.config.followerBots.weaponDurability.max;
+                botConfigDurability[botType].weapon.minDelta = ModConfig_1.ModConfig.config.followerBots.weaponDurability.minDelta;
+                botConfigDurability[botType].weapon.maxDelta = ModConfig_1.ModConfig.config.followerBots.weaponDurability.maxDelta;
+                botConfigDurability[botType].weapon.minLimitPercent = ModConfig_1.ModConfig.config.followerBots.weaponDurability.minLimitPercent;
             }
-            if (botType == "pmcbot" || botType == "exusec") {
-                botConfigDurability[botType].weapon.lowestMax = ModConfig_1.ModConfig.config.raiderWeaponDurability[0];
-                botConfigDurability[botType].weapon.highestMax = ModConfig_1.ModConfig.config.raiderWeaponDurability[1];
-                botConfigDurability[botType].weapon.minDelta = ModConfig_1.ModConfig.config.raiderWeaponDurability[2];
-                botConfigDurability[botType].weapon.maxDelta = ModConfig_1.ModConfig.config.raiderWeaponDurability[3];
-                botConfigDurability[botType].weapon.minLimitPercent = 40;
+            if (Object.values(Bots_1.SpecialBots).includes(botType) && ModConfig_1.ModConfig.config.specialBots.weaponDurability.enable) {
+                botConfigDurability[botType].weapon.lowestMax = ModConfig_1.ModConfig.config.specialBots.weaponDurability.min;
+                botConfigDurability[botType].weapon.highestMax = ModConfig_1.ModConfig.config.specialBots.weaponDurability.max;
+                botConfigDurability[botType].weapon.minDelta = ModConfig_1.ModConfig.config.specialBots.weaponDurability.minDelta;
+                botConfigDurability[botType].weapon.maxDelta = ModConfig_1.ModConfig.config.specialBots.weaponDurability.maxDelta;
+                botConfigDurability[botType].weapon.minLimitPercent = ModConfig_1.ModConfig.config.specialBots.weaponDurability.minLimitPercent;
             }
         }
     }
     adjustNVG() {
         const botConfigEquipment = this.botConfig.equipment;
         for (const botType in botConfigEquipment) {
+            if (!this.raidInformation.isBotEnabled(botType))
+                continue;
             botConfigEquipment[botType].faceShieldIsActiveChancePercent = 90;
             botConfigEquipment[botType].lightIsActiveDayChancePercent = 7;
             botConfigEquipment[botType].lightIsActiveNightChancePercent = 25;
@@ -197,6 +228,8 @@ let BotConfigs = class BotConfigs {
         }
     }
     setForceStock() {
+        if (!ModConfig_1.ModConfig.config.generalConfig.forceStock)
+            return;
         for (const tierObject in this.tierInformation.tiers) {
             const tierNumber = this.tierInformation.tiers[tierObject].tier;
             const tierJson = this.apbsEquipmentGetter.getTierChancesJson(tierNumber);
@@ -213,6 +246,8 @@ let BotConfigs = class BotConfigs {
         }
     }
     setForceDustCover() {
+        if (!ModConfig_1.ModConfig.config.generalConfig.forceDustCover)
+            return;
         for (const tierObject in this.tierInformation.tiers) {
             const tierNumber = this.tierInformation.tiers[tierObject].tier;
             const tierJson = this.apbsEquipmentGetter.getTierChancesJson(tierNumber);
@@ -225,6 +260,8 @@ let BotConfigs = class BotConfigs {
         }
     }
     setForceScopes() {
+        if (!ModConfig_1.ModConfig.config.generalConfig.forceScopeSlot)
+            return;
         for (const tierObject in this.tierInformation.tiers) {
             const tierNumber = this.tierInformation.tiers[tierObject].tier;
             const tierJson = this.apbsEquipmentGetter.getTierChancesJson(tierNumber);
@@ -237,36 +274,42 @@ let BotConfigs = class BotConfigs {
         }
     }
     setPlateChances() {
+        if (!ModConfig_1.ModConfig.config.generalConfig.plateChances.enable)
+            return;
         for (const tierObject in this.tierInformation.tiers) {
             const tierNumber = this.tierInformation.tiers[tierObject].tier;
             const tierJson = this.apbsEquipmentGetter.getTierChancesJson(tierNumber);
             for (const botType in this.tierInformation.tier1chances) {
                 if (botType == "pmcUSEC" || botType == "pmcBEAR") {
-                    tierJson[botType].chances.equipmentMods["back_plate"] = tierJson[botType].chances.equipmentMods["front_plate"] = ModConfig_1.ModConfig.config.pmcMainPlateChance[tierObject];
-                    tierJson[botType].chances.equipmentMods["left_side_plate"] = tierJson[botType].chances.equipmentMods["right_side_plate"] = ModConfig_1.ModConfig.config.pmcSidePlateChance[tierObject];
+                    tierJson[botType].chances.equipmentMods["back_plate"] = tierJson[botType].chances.equipmentMods["front_plate"] = ModConfig_1.ModConfig.config.generalConfig.plateChances.pmcMainPlateChance[tierObject];
+                    tierJson[botType].chances.equipmentMods["left_side_plate"] = tierJson[botType].chances.equipmentMods["right_side_plate"] = ModConfig_1.ModConfig.config.generalConfig.plateChances.pmcSidePlateChance[tierObject];
                 }
-                if (botType == "followerbirdeye" || botType == "followerbigpipe" || botType.includes("boss") || botType.includes("sectant")) {
-                    tierJson[botType].chances.equipmentMods["back_plate"] = tierJson[botType].chances.equipmentMods["front_plate"] = ModConfig_1.ModConfig.config.bossMainPlateChance[tierObject];
-                    tierJson[botType].chances.equipmentMods["left_side_plate"] = tierJson[botType].chances.equipmentMods["right_side_plate"] = ModConfig_1.ModConfig.config.bossSidePlateChance[tierObject];
+                if (botType == "followerbirdeye" || botType == "followerbigpipe" || botType.includes("boss")) {
+                    tierJson[botType].chances.equipmentMods["back_plate"] = tierJson[botType].chances.equipmentMods["front_plate"] = ModConfig_1.ModConfig.config.generalConfig.plateChances.bossMainPlateChance[tierObject];
+                    tierJson[botType].chances.equipmentMods["left_side_plate"] = tierJson[botType].chances.equipmentMods["right_side_plate"] = ModConfig_1.ModConfig.config.generalConfig.plateChances.bossSidePlateChance[tierObject];
                 }
                 if (botType == "scav") {
-                    tierJson[botType].chances.equipmentMods["back_plate"] = tierJson[botType].chances.equipmentMods["front_plate"] = ModConfig_1.ModConfig.config.scavMainPlateChance[tierObject];
-                    tierJson[botType].chances.equipmentMods["left_side_plate"] = tierJson[botType].chances.equipmentMods["right_side_plate"] = ModConfig_1.ModConfig.config.scavSidePlateChance[tierObject];
+                    tierJson[botType].chances.equipmentMods["back_plate"] = tierJson[botType].chances.equipmentMods["front_plate"] = ModConfig_1.ModConfig.config.generalConfig.plateChances.scavMainPlateChance[tierObject];
+                    tierJson[botType].chances.equipmentMods["left_side_plate"] = tierJson[botType].chances.equipmentMods["right_side_plate"] = ModConfig_1.ModConfig.config.generalConfig.plateChances.scavSidePlateChance[tierObject];
                 }
-                if (botType == "exusec" || botType == "pmcbot") {
-                    tierJson[botType].chances.equipmentMods["back_plate"] = tierJson[botType].chances.equipmentMods["front_plate"] = ModConfig_1.ModConfig.config.raiderMainPlateChance[tierObject];
-                    tierJson[botType].chances.equipmentMods["left_side_plate"] = tierJson[botType].chances.equipmentMods["right_side_plate"] = ModConfig_1.ModConfig.config.raiderSidePlateChance[tierObject];
+                if (botType == "exusec" || botType == "pmcbot" || botType.includes("sectant")) {
+                    tierJson[botType].chances.equipmentMods["back_plate"] = tierJson[botType].chances.equipmentMods["front_plate"] = ModConfig_1.ModConfig.config.generalConfig.plateChances.specialMainPlateChance[tierObject];
+                    tierJson[botType].chances.equipmentMods["left_side_plate"] = tierJson[botType].chances.equipmentMods["right_side_plate"] = ModConfig_1.ModConfig.config.generalConfig.plateChances.specialSidePlateChance[tierObject];
                 }
                 if (botType == "default") {
-                    tierJson[botType].chances.equipmentMods["back_plate"] = tierJson[botType].chances.equipmentMods["front_plate"] = ModConfig_1.ModConfig.config.guardMainPlateChance[tierObject];
-                    tierJson[botType].chances.equipmentMods["left_side_plate"] = tierJson[botType].chances.equipmentMods["right_side_plate"] = ModConfig_1.ModConfig.config.guardSidePlateChance[tierObject];
+                    tierJson[botType].chances.equipmentMods["back_plate"] = tierJson[botType].chances.equipmentMods["front_plate"] = ModConfig_1.ModConfig.config.generalConfig.plateChances.followerMainPlateChance[tierObject];
+                    tierJson[botType].chances.equipmentMods["left_side_plate"] = tierJson[botType].chances.equipmentMods["right_side_plate"] = ModConfig_1.ModConfig.config.generalConfig.plateChances.followerSidePlateChance[tierObject];
                 }
             }
         }
     }
     setWeaponModLimits() {
+        if (!ModConfig_1.ModConfig.config.generalConfig.forceWeaponModLimits)
+            return;
         const botConfigEquipment = this.botConfig.equipment;
         for (const botType in botConfigEquipment) {
+            if (!this.raidInformation.isBotEnabled(botType))
+                continue;
             if (botConfigEquipment[botType].weaponModLimits == undefined) {
                 botConfigEquipment[botType].weaponModLimits =
                     {
@@ -274,40 +317,74 @@ let BotConfigs = class BotConfigs {
                         "lightLaserLimit": 1
                     };
             }
-            botConfigEquipment[botType].weaponModLimits.scopeLimit = ModConfig_1.ModConfig.config.scopeLimit;
-            botConfigEquipment[botType].weaponModLimits.lightLaserLimit = ModConfig_1.ModConfig.config.tacticalLimit;
+            botConfigEquipment[botType].weaponModLimits.scopeLimit = ModConfig_1.ModConfig.config.generalConfig.scopeLimit;
+            botConfigEquipment[botType].weaponModLimits.lightLaserLimit = ModConfig_1.ModConfig.config.generalConfig.tacticalLimit;
         }
     }
     setLootItemResourceRandomization() {
-        // Chance it is 100% full
-        let scavFoodMaxChance = 100;
-        let scavMedMaxChance = 100;
-        let pmcFoodMaxChance = 100;
-        let pmcMedMaxChance = 100;
-        // Minimum resource amount
-        let scavFoodResourcePercent = 60;
-        let scavMedResourcePercent = 60;
-        let pmcFoodResourcePercent = 60;
-        let pmcMedResourcePercent = 60;
-        // Check if enabled, if so - change to values in config
-        if (ModConfig_1.ModConfig.config.enableConsumableResourceRandomization) {
-            scavFoodMaxChance = ModConfig_1.ModConfig.config.scavFoodRates[0];
-            scavMedMaxChance = ModConfig_1.ModConfig.config.scavMedRates[0];
-            pmcFoodMaxChance = ModConfig_1.ModConfig.config.pmcFoodRates[0];
-            pmcMedMaxChance = ModConfig_1.ModConfig.config.pmcMedRates[0];
-            scavFoodResourcePercent = ModConfig_1.ModConfig.config.scavFoodRates[1];
-            scavMedResourcePercent = ModConfig_1.ModConfig.config.scavMedRates[1];
-            pmcFoodResourcePercent = ModConfig_1.ModConfig.config.pmcFoodRates[1];
-            pmcMedResourcePercent = ModConfig_1.ModConfig.config.pmcMedRates[1];
+        const botTable = this.tables.bots.types;
+        const botConfig = this.botConfig;
+        for (const botType in botTable) {
+            if (!this.raidInformation.isBotEnabled(botType))
+                continue;
+            let setValues = false;
+            let foodMaxChance = 100;
+            let medMaxChance = 100;
+            let foodResourcePercent = 60;
+            let medResourcePercent = 60;
+            if (Object.values(Bots_1.PMCBots).includes(botType) && ModConfig_1.ModConfig.config.pmcBots.resourceRandomization.enable) {
+                setValues = true;
+                foodMaxChance = ModConfig_1.ModConfig.config.pmcBots.resourceRandomization.foodRateMaxChance;
+                foodResourcePercent = ModConfig_1.ModConfig.config.pmcBots.resourceRandomization.foodRateUsagePercent;
+                medMaxChance = ModConfig_1.ModConfig.config.pmcBots.resourceRandomization.medRateMaxChance;
+                medResourcePercent = ModConfig_1.ModConfig.config.pmcBots.resourceRandomization.medRateUsagePercent;
+            }
+            if (Object.values(Bots_1.ScavBots).includes(botType) && ModConfig_1.ModConfig.config.scavBots.resourceRandomization.enable) {
+                setValues = true;
+                foodMaxChance = ModConfig_1.ModConfig.config.scavBots.resourceRandomization.foodRateMaxChance;
+                foodResourcePercent = ModConfig_1.ModConfig.config.scavBots.resourceRandomization.foodRateUsagePercent;
+                medMaxChance = ModConfig_1.ModConfig.config.scavBots.resourceRandomization.medRateMaxChance;
+                medResourcePercent = ModConfig_1.ModConfig.config.scavBots.resourceRandomization.medRateUsagePercent;
+            }
+            if (Object.values(Bots_1.BossBots).includes(botType) && ModConfig_1.ModConfig.config.bossBots.resourceRandomization.enable) {
+                setValues = true;
+                foodMaxChance = ModConfig_1.ModConfig.config.bossBots.resourceRandomization.foodRateMaxChance;
+                foodResourcePercent = ModConfig_1.ModConfig.config.bossBots.resourceRandomization.foodRateUsagePercent;
+                medMaxChance = ModConfig_1.ModConfig.config.bossBots.resourceRandomization.medRateMaxChance;
+                medResourcePercent = ModConfig_1.ModConfig.config.bossBots.resourceRandomization.medRateUsagePercent;
+            }
+            if (Object.values(Bots_1.FollowerBots).includes(botType) && ModConfig_1.ModConfig.config.followerBots.resourceRandomization.enable) {
+                setValues = true;
+                foodMaxChance = ModConfig_1.ModConfig.config.followerBots.resourceRandomization.foodRateMaxChance;
+                foodResourcePercent = ModConfig_1.ModConfig.config.followerBots.resourceRandomization.foodRateUsagePercent;
+                medMaxChance = ModConfig_1.ModConfig.config.followerBots.resourceRandomization.medRateMaxChance;
+                medResourcePercent = ModConfig_1.ModConfig.config.followerBots.resourceRandomization.medRateUsagePercent;
+            }
+            if (Object.values(Bots_1.SpecialBots).includes(botType) && ModConfig_1.ModConfig.config.specialBots.resourceRandomization.enable) {
+                setValues = true;
+                foodMaxChance = ModConfig_1.ModConfig.config.specialBots.resourceRandomization.foodRateMaxChance;
+                foodResourcePercent = ModConfig_1.ModConfig.config.specialBots.resourceRandomization.foodRateUsagePercent;
+                medMaxChance = ModConfig_1.ModConfig.config.specialBots.resourceRandomization.medRateMaxChance;
+                medResourcePercent = ModConfig_1.ModConfig.config.specialBots.resourceRandomization.medRateUsagePercent;
+            }
+            if (!setValues)
+                continue;
+            botConfig.lootItemResourceRandomization[botType] =
+                {
+                    "food": {
+                        "chanceMaxResourcePercent": foodMaxChance,
+                        "resourcePercent": foodResourcePercent
+                    },
+                    "meds": {
+                        "chanceMaxResourcePercent": medMaxChance,
+                        "resourcePercent": medResourcePercent
+                    }
+                };
         }
-        // Set values in botConfig
-        this.botConfig.lootItemResourceRandomization.assault = { "food": { "chanceMaxResourcePercent": scavFoodMaxChance, "resourcePercent": scavFoodResourcePercent }, "meds": { "chanceMaxResourcePercent": scavMedMaxChance, "resourcePercent": scavMedResourcePercent } };
-        this.botConfig.lootItemResourceRandomization.marksman = { "food": { "chanceMaxResourcePercent": scavFoodMaxChance, "resourcePercent": scavFoodResourcePercent }, "meds": { "chanceMaxResourcePercent": scavMedMaxChance, "resourcePercent": scavMedResourcePercent } };
-        this.botConfig.lootItemResourceRandomization.pmcusec = { "food": { "chanceMaxResourcePercent": pmcFoodMaxChance, "resourcePercent": pmcFoodResourcePercent }, "meds": { "chanceMaxResourcePercent": pmcMedMaxChance, "resourcePercent": pmcMedResourcePercent } };
-        this.botConfig.lootItemResourceRandomization.pmcbear = { "food": { "chanceMaxResourcePercent": pmcFoodMaxChance, "resourcePercent": pmcFoodResourcePercent }, "meds": { "chanceMaxResourcePercent": pmcMedMaxChance, "resourcePercent": pmcMedResourcePercent } };
-        this.botConfig.lootItemResourceRandomization.pmc = { "food": { "chanceMaxResourcePercent": pmcFoodMaxChance, "resourcePercent": pmcFoodResourcePercent }, "meds": { "chanceMaxResourcePercent": pmcMedMaxChance, "resourcePercent": pmcMedResourcePercent } };
     }
     setPMCItemLimits() {
+        if (!ModConfig_1.ModConfig.config.pmcBots.enable)
+            return;
         // Clear PMC item limits
         this.botConfig.itemSpawnLimits.pmc = {};
         // Go through custom limits and add them
@@ -316,20 +393,22 @@ let BotConfigs = class BotConfigs {
         }
     }
     setPMCLoot() {
+        if (!ModConfig_1.ModConfig.config.pmcBots.enable)
+            return;
         const allBots = this.database.getTables().bots.types;
         this.pmcConfig.looseWeaponInBackpackLootMinMax.min = 0;
         this.pmcConfig.looseWeaponInBackpackLootMinMax.max = 0;
         this.botConfig.equipment.pmc.randomisation = [];
-        if (ModConfig_1.ModConfig.config.pmcLoot) {
-            if (ModConfig_1.ModConfig.config.pmcLootBlacklistItems.length > 0) {
-                for (const item in ModConfig_1.ModConfig.config.pmcLootBlacklistItems) {
+        if (ModConfig_1.ModConfig.config.pmcBots.lootConfig.enable) {
+            if (ModConfig_1.ModConfig.config.pmcBots.lootConfig.blacklist.length > 0) {
+                for (const item of ModConfig_1.ModConfig.config.pmcBots.lootConfig.blacklist) {
                     this.pmcConfig.backpackLoot.blacklist.push(item);
                     this.pmcConfig.vestLoot.blacklist.push(item);
                     this.pmcConfig.pocketLoot.blacklist.push(item);
                 }
             }
         }
-        if (!ModConfig_1.ModConfig.config.pmcLoot) {
+        if (!ModConfig_1.ModConfig.config.pmcBots.lootConfig.enable) {
             this.botConfig.disableLootOnBotTypes.push("pmcusec", "pmcbear");
         }
         for (const botType in allBots) {
@@ -342,6 +421,8 @@ let BotConfigs = class BotConfigs {
         }
     }
     setPMCScopeWhitelist() {
+        if (!ModConfig_1.ModConfig.config.pmcBots.enable)
+            return;
         this.botConfig.equipment.pmc.weaponSightWhitelist = {
             "5447b5fc4bdc2d87278b4567": [
                 "55818ad54bdc2ddc698b4569",
@@ -408,6 +489,10 @@ let BotConfigs = class BotConfigs {
         };
     }
     pushScavKeys() {
+        if (!ModConfig_1.ModConfig.config.scavBots.enable)
+            return;
+        if (!ModConfig_1.ModConfig.config.scavBots.keyConfig.addAllKeysToScavs && !ModConfig_1.ModConfig.config.scavBots.keyConfig.addOnlyMechanicalKeysToScavs && !ModConfig_1.ModConfig.config.scavBots.keyConfig.addOnlyKeyCardsToScavs)
+            return;
         const scavBackpack = this.tables.bots.types.assault.inventory.items.Backpack;
         const items = Object.values(this.tables.templates.items);
         const baseClass = this.getKeyConfig();
@@ -422,17 +507,178 @@ let BotConfigs = class BotConfigs {
         this.apbsLogger.log(Logging_1.Logging.DEBUG, `Added ${count} keys to Scav Backpacks (Key Class Added: ${baseClass})`);
     }
     getKeyConfig() {
-        if (ModConfig_1.ModConfig.config.addAllKeysToScavs)
+        if (ModConfig_1.ModConfig.config.scavBots.keyConfig.addAllKeysToScavs)
             return BaseClasses_1.BaseClasses.KEY;
-        if (ModConfig_1.ModConfig.config.addOnlyMechanicalKeysToScavs)
+        if (ModConfig_1.ModConfig.config.scavBots.keyConfig.addOnlyMechanicalKeysToScavs)
             return BaseClasses_1.BaseClasses.KEY_MECHANICAL;
-        if (ModConfig_1.ModConfig.config.addOnlyKeyCardsToScavs)
+        if (ModConfig_1.ModConfig.config.scavBots.keyConfig.addOnlyKeyCardsToScavs)
             return BaseClasses_1.BaseClasses.KEYCARD;
     }
-    removeScavLoot() {
-        this.botConfig.disableLootOnBotTypes.push("assault", "marksman", "cursedassault", "assaultgroup", "crazyassaultevent");
+    setScavLoot() {
+        if (!ModConfig_1.ModConfig.config.scavBots.enable)
+            return;
+        if (!ModConfig_1.ModConfig.config.scavBots.lootConfig.enable) {
+            Object.values(Bots_1.ScavBots).forEach((bot) => {
+                this.botConfig.disableLootOnBotTypes.push(bot);
+            });
+            return;
+        }
+        const botTable = this.database.getTables().bots.types;
+        if (ModConfig_1.ModConfig.config.scavBots.lootConfig.blacklist.length > 0) {
+            for (const botType in botTable) {
+                if (Object.values(Bots_1.ScavBots).includes(botType)) {
+                    for (const item of ModConfig_1.ModConfig.config.scavBots.lootConfig.blacklist) {
+                        if (Object.keys(botTable[botType].inventory.items.TacticalVest).includes(item)) {
+                            const tacticalVestLootTable = Object.keys(botTable[botType].inventory.items.TacticalVest);
+                            const index = tacticalVestLootTable.indexOf(item);
+                            if (index > -1) {
+                                tacticalVestLootTable.splice(index, 1);
+                            }
+                        }
+                        if (Object.keys(botTable[botType].inventory.items.Pockets).includes(item)) {
+                            const pocketsLootTable = Object.keys(botTable[botType].inventory.items.Pockets);
+                            const index = pocketsLootTable.indexOf(item);
+                            if (index > -1) {
+                                pocketsLootTable.splice(index, 1);
+                            }
+                        }
+                        if (Object.keys(botTable[botType].inventory.items.Backpack).includes(item)) {
+                            const backpackLootTable = Object.keys(botTable[botType].inventory.items.Backpack);
+                            const index = backpackLootTable.indexOf(item);
+                            if (index > -1) {
+                                backpackLootTable.splice(index, 1);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    setBossLoot() {
+        if (!ModConfig_1.ModConfig.config.bossBots.enable)
+            return;
+        if (!ModConfig_1.ModConfig.config.bossBots.lootConfig.enable) {
+            Object.values(Bots_1.BossBots).forEach((bot) => {
+                this.botConfig.disableLootOnBotTypes.push(bot);
+            });
+            return;
+        }
+        const botTable = this.database.getTables().bots.types;
+        if (ModConfig_1.ModConfig.config.bossBots.lootConfig.blacklist.length > 0) {
+            for (const botType in botTable) {
+                if (Object.values(Bots_1.BossBots).includes(botType)) {
+                    for (const item of ModConfig_1.ModConfig.config.bossBots.lootConfig.blacklist) {
+                        if (Object.keys(botTable[botType].inventory.items.TacticalVest).includes(item)) {
+                            const tacticalVestLootTable = Object.keys(botTable[botType].inventory.items.TacticalVest);
+                            const index = tacticalVestLootTable.indexOf(item);
+                            if (index > -1) {
+                                tacticalVestLootTable.splice(index, 1);
+                            }
+                        }
+                        if (Object.keys(botTable[botType].inventory.items.Pockets).includes(item)) {
+                            const pocketsLootTable = Object.keys(botTable[botType].inventory.items.Pockets);
+                            const index = pocketsLootTable.indexOf(item);
+                            if (index > -1) {
+                                pocketsLootTable.splice(index, 1);
+                            }
+                        }
+                        if (Object.keys(botTable[botType].inventory.items.Backpack).includes(item)) {
+                            const backpackLootTable = Object.keys(botTable[botType].inventory.items.Backpack);
+                            const index = backpackLootTable.indexOf(item);
+                            if (index > -1) {
+                                backpackLootTable.splice(index, 1);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    setFollowerLoot() {
+        if (!ModConfig_1.ModConfig.config.followerBots.enable)
+            return;
+        if (!ModConfig_1.ModConfig.config.followerBots.lootConfig.enable) {
+            Object.values(Bots_1.FollowerBots).forEach((bot) => {
+                this.botConfig.disableLootOnBotTypes.push(bot);
+            });
+            return;
+        }
+        const botTable = this.database.getTables().bots.types;
+        if (ModConfig_1.ModConfig.config.followerBots.lootConfig.blacklist.length > 0) {
+            for (const botType in botTable) {
+                if (Object.values(Bots_1.FollowerBots).includes(botType)) {
+                    for (const item of ModConfig_1.ModConfig.config.followerBots.lootConfig.blacklist) {
+                        if (Object.keys(botTable[botType].inventory.items.TacticalVest).includes(item)) {
+                            const tacticalVestLootTable = Object.keys(botTable[botType].inventory.items.TacticalVest);
+                            const index = tacticalVestLootTable.indexOf(item);
+                            if (index > -1) {
+                                tacticalVestLootTable.splice(index, 1);
+                            }
+                        }
+                        if (Object.keys(botTable[botType].inventory.items.Pockets).includes(item)) {
+                            const pocketsLootTable = Object.keys(botTable[botType].inventory.items.Pockets);
+                            const index = pocketsLootTable.indexOf(item);
+                            if (index > -1) {
+                                pocketsLootTable.splice(index, 1);
+                            }
+                        }
+                        if (Object.keys(botTable[botType].inventory.items.Backpack).includes(item)) {
+                            const backpackLootTable = Object.keys(botTable[botType].inventory.items.Backpack);
+                            const index = backpackLootTable.indexOf(item);
+                            if (index > -1) {
+                                backpackLootTable.splice(index, 1);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    setSpecialLoot() {
+        if (!ModConfig_1.ModConfig.config.specialBots.enable)
+            return;
+        if (!ModConfig_1.ModConfig.config.specialBots.lootConfig.enable) {
+            Object.values(Bots_1.SpecialBots).forEach((bot) => {
+                this.botConfig.disableLootOnBotTypes.push(bot);
+            });
+            return;
+        }
+        const botTable = this.database.getTables().bots.types;
+        if (ModConfig_1.ModConfig.config.specialBots.lootConfig.blacklist.length > 0) {
+            for (const botType in botTable) {
+                if (Object.values(Bots_1.SpecialBots).includes(botType)) {
+                    for (const item of ModConfig_1.ModConfig.config.specialBots.lootConfig.blacklist) {
+                        if (Object.keys(botTable[botType].inventory.items.TacticalVest).includes(item)) {
+                            const tacticalVestLootTable = Object.keys(botTable[botType].inventory.items.TacticalVest);
+                            const index = tacticalVestLootTable.indexOf(item);
+                            if (index > -1) {
+                                tacticalVestLootTable.splice(index, 1);
+                            }
+                        }
+                        if (Object.keys(botTable[botType].inventory.items.Pockets).includes(item)) {
+                            const pocketsLootTable = Object.keys(botTable[botType].inventory.items.Pockets);
+                            const index = pocketsLootTable.indexOf(item);
+                            if (index > -1) {
+                                pocketsLootTable.splice(index, 1);
+                            }
+                        }
+                        if (Object.keys(botTable[botType].inventory.items.Backpack).includes(item)) {
+                            const backpackLootTable = Object.keys(botTable[botType].inventory.items.Backpack);
+                            const index = backpackLootTable.indexOf(item);
+                            if (index > -1) {
+                                backpackLootTable.splice(index, 1);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
     setIdenticalScavWeights() {
+        if (!ModConfig_1.ModConfig.config.scavBots.enable)
+            return;
+        if (!ModConfig_1.ModConfig.config.scavBots.additionalOptions.enableScavEqualEquipmentTiering)
+            return;
         for (const tierObject in this.tierInformation.tiers) {
             const tierNumber = this.tierInformation.tiers[tierObject].tier;
             const tierJson = this.apbsEquipmentGetter.getTierJson(tierNumber, true);
@@ -460,7 +706,7 @@ let BotConfigs = class BotConfigs {
             const tierJson = this.apbsEquipmentGetter.getTierModsJson(tierNumber, true);
             const tatmMods = tierJson["5a16b8a9fcdbcb00165aa6ca"].mod_nvg;
             const index = tatmMods.indexOf("5c11046cd174af02a012e42b");
-            if (removeSome && tierNumber >= ModConfig_1.ModConfig.config.startTier)
+            if (removeSome && tierNumber >= ModConfig_1.ModConfig.config.generalConfig.startTier)
                 continue;
             if (index > -1) {
                 tatmMods.splice(index, 1);
@@ -468,63 +714,71 @@ let BotConfigs = class BotConfigs {
         }
     }
     setPMCGameVersionWeights() {
-        this.pmcConfig.gameVersionWeight.standard = ModConfig_1.ModConfig.config.standard;
-        this.pmcConfig.gameVersionWeight.left_behind = ModConfig_1.ModConfig.config.left_behind;
-        this.pmcConfig.gameVersionWeight.prepare_for_escape = ModConfig_1.ModConfig.config.prepare_for_escape;
-        this.pmcConfig.gameVersionWeight.edge_of_darkness = ModConfig_1.ModConfig.config.edge_of_darkness;
-        this.pmcConfig.gameVersionWeight.unheard_edition = ModConfig_1.ModConfig.config.unheard_edition;
+        if (!ModConfig_1.ModConfig.config.pmcBots.enable || !ModConfig_1.ModConfig.config.pmcBots.additionalOptions.gameVersionWeighting.enable)
+            return;
+        this.pmcConfig.gameVersionWeight.standard = ModConfig_1.ModConfig.config.pmcBots.additionalOptions.gameVersionWeighting.standard;
+        this.pmcConfig.gameVersionWeight.left_behind = ModConfig_1.ModConfig.config.pmcBots.additionalOptions.gameVersionWeighting.leftBehind;
+        this.pmcConfig.gameVersionWeight.prepare_for_escape = ModConfig_1.ModConfig.config.pmcBots.additionalOptions.gameVersionWeighting.prepareForEscape;
+        this.pmcConfig.gameVersionWeight.edge_of_darkness = ModConfig_1.ModConfig.config.pmcBots.additionalOptions.gameVersionWeighting.edgeOfDarkness;
+        this.pmcConfig.gameVersionWeight.unheard_edition = ModConfig_1.ModConfig.config.pmcBots.additionalOptions.gameVersionWeighting.unheardEdition;
     }
     setLevelDeltas() {
-        this.tierInformation.tiers[0].botMinLevelVariance = ModConfig_1.ModConfig.config.tier1LevelDelta[0];
-        this.tierInformation.tiers[0].botMaxLevelVariance = ModConfig_1.ModConfig.config.tier1LevelDelta[1];
-        this.tierInformation.tiers[1].botMinLevelVariance = ModConfig_1.ModConfig.config.tier2LevelDelta[0];
-        this.tierInformation.tiers[1].botMaxLevelVariance = ModConfig_1.ModConfig.config.tier2LevelDelta[1];
-        this.tierInformation.tiers[2].botMinLevelVariance = ModConfig_1.ModConfig.config.tier3LevelDelta[0];
-        this.tierInformation.tiers[2].botMaxLevelVariance = ModConfig_1.ModConfig.config.tier3LevelDelta[1];
-        this.tierInformation.tiers[3].botMinLevelVariance = ModConfig_1.ModConfig.config.tier4LevelDelta[0];
-        this.tierInformation.tiers[3].botMaxLevelVariance = ModConfig_1.ModConfig.config.tier4LevelDelta[1];
-        this.tierInformation.tiers[4].botMinLevelVariance = ModConfig_1.ModConfig.config.tier5LevelDelta[0];
-        this.tierInformation.tiers[4].botMaxLevelVariance = ModConfig_1.ModConfig.config.tier5LevelDelta[1];
-        this.tierInformation.tiers[5].botMinLevelVariance = ModConfig_1.ModConfig.config.tier6LevelDelta[0];
-        this.tierInformation.tiers[5].botMaxLevelVariance = ModConfig_1.ModConfig.config.tier6LevelDelta[1];
-        this.tierInformation.tiers[6].botMinLevelVariance = ModConfig_1.ModConfig.config.tier7LevelDelta[0];
-        this.tierInformation.tiers[6].botMaxLevelVariance = ModConfig_1.ModConfig.config.tier7LevelDelta[1];
+        if (!ModConfig_1.ModConfig.config.customLevelDeltas.enable)
+            return;
+        this.tierInformation.tiers[0].botMinLevelVariance = ModConfig_1.ModConfig.config.customLevelDeltas.tier1.min;
+        this.tierInformation.tiers[0].botMaxLevelVariance = ModConfig_1.ModConfig.config.customLevelDeltas.tier1.max;
+        this.tierInformation.tiers[1].botMinLevelVariance = ModConfig_1.ModConfig.config.customLevelDeltas.tier2.min;
+        this.tierInformation.tiers[1].botMaxLevelVariance = ModConfig_1.ModConfig.config.customLevelDeltas.tier2.max;
+        this.tierInformation.tiers[2].botMinLevelVariance = ModConfig_1.ModConfig.config.customLevelDeltas.tier3.min;
+        this.tierInformation.tiers[2].botMaxLevelVariance = ModConfig_1.ModConfig.config.customLevelDeltas.tier3.max;
+        this.tierInformation.tiers[3].botMinLevelVariance = ModConfig_1.ModConfig.config.customLevelDeltas.tier4.min;
+        this.tierInformation.tiers[3].botMaxLevelVariance = ModConfig_1.ModConfig.config.customLevelDeltas.tier4.max;
+        this.tierInformation.tiers[4].botMinLevelVariance = ModConfig_1.ModConfig.config.customLevelDeltas.tier5.min;
+        this.tierInformation.tiers[4].botMaxLevelVariance = ModConfig_1.ModConfig.config.customLevelDeltas.tier5.max;
+        this.tierInformation.tiers[5].botMinLevelVariance = ModConfig_1.ModConfig.config.customLevelDeltas.tier6.min;
+        this.tierInformation.tiers[5].botMaxLevelVariance = ModConfig_1.ModConfig.config.customLevelDeltas.tier6.min;
+        this.tierInformation.tiers[6].botMinLevelVariance = ModConfig_1.ModConfig.config.customLevelDeltas.tier7.min;
+        this.tierInformation.tiers[6].botMaxLevelVariance = ModConfig_1.ModConfig.config.customLevelDeltas.tier7.max;
     }
     setScavLevelDeltas() {
-        this.tierInformation.tiers[0].scavMinLevelVariance = ModConfig_1.ModConfig.config.tier1ScavLevelDelta[0];
-        this.tierInformation.tiers[0].scavMaxLevelVariance = ModConfig_1.ModConfig.config.tier1ScavLevelDelta[1];
-        this.tierInformation.tiers[1].scavMinLevelVariance = ModConfig_1.ModConfig.config.tier2ScavLevelDelta[0];
-        this.tierInformation.tiers[1].scavMaxLevelVariance = ModConfig_1.ModConfig.config.tier2ScavLevelDelta[1];
-        this.tierInformation.tiers[2].scavMinLevelVariance = ModConfig_1.ModConfig.config.tier3ScavLevelDelta[0];
-        this.tierInformation.tiers[2].scavMaxLevelVariance = ModConfig_1.ModConfig.config.tier3ScavLevelDelta[1];
-        this.tierInformation.tiers[3].scavMinLevelVariance = ModConfig_1.ModConfig.config.tier4ScavLevelDelta[0];
-        this.tierInformation.tiers[3].scavMaxLevelVariance = ModConfig_1.ModConfig.config.tier4ScavLevelDelta[1];
-        this.tierInformation.tiers[4].scavMinLevelVariance = ModConfig_1.ModConfig.config.tier5ScavLevelDelta[0];
-        this.tierInformation.tiers[4].scavMaxLevelVariance = ModConfig_1.ModConfig.config.tier5ScavLevelDelta[1];
-        this.tierInformation.tiers[5].scavMinLevelVariance = ModConfig_1.ModConfig.config.tier6ScavLevelDelta[0];
-        this.tierInformation.tiers[5].scavMaxLevelVariance = ModConfig_1.ModConfig.config.tier6ScavLevelDelta[1];
-        this.tierInformation.tiers[6].scavMinLevelVariance = ModConfig_1.ModConfig.config.tier7ScavLevelDelta[0];
-        this.tierInformation.tiers[6].scavMaxLevelVariance = ModConfig_1.ModConfig.config.tier7ScavLevelDelta[1];
+        if (!ModConfig_1.ModConfig.config.customScavLevelDeltas.enable)
+            return;
+        this.tierInformation.tiers[0].scavMinLevelVariance = ModConfig_1.ModConfig.config.customScavLevelDeltas.tier1.min;
+        this.tierInformation.tiers[0].scavMaxLevelVariance = ModConfig_1.ModConfig.config.customScavLevelDeltas.tier1.max;
+        this.tierInformation.tiers[1].scavMinLevelVariance = ModConfig_1.ModConfig.config.customScavLevelDeltas.tier2.min;
+        this.tierInformation.tiers[1].scavMaxLevelVariance = ModConfig_1.ModConfig.config.customScavLevelDeltas.tier2.max;
+        this.tierInformation.tiers[2].scavMinLevelVariance = ModConfig_1.ModConfig.config.customScavLevelDeltas.tier3.min;
+        this.tierInformation.tiers[2].scavMaxLevelVariance = ModConfig_1.ModConfig.config.customScavLevelDeltas.tier3.max;
+        this.tierInformation.tiers[3].scavMinLevelVariance = ModConfig_1.ModConfig.config.customScavLevelDeltas.tier4.min;
+        this.tierInformation.tiers[3].scavMaxLevelVariance = ModConfig_1.ModConfig.config.customScavLevelDeltas.tier4.max;
+        this.tierInformation.tiers[4].scavMinLevelVariance = ModConfig_1.ModConfig.config.customScavLevelDeltas.tier5.min;
+        this.tierInformation.tiers[4].scavMaxLevelVariance = ModConfig_1.ModConfig.config.customScavLevelDeltas.tier5.max;
+        this.tierInformation.tiers[5].scavMinLevelVariance = ModConfig_1.ModConfig.config.customScavLevelDeltas.tier6.min;
+        this.tierInformation.tiers[5].scavMaxLevelVariance = ModConfig_1.ModConfig.config.customScavLevelDeltas.tier6.max;
+        this.tierInformation.tiers[6].scavMinLevelVariance = ModConfig_1.ModConfig.config.customScavLevelDeltas.tier7.min;
+        this.tierInformation.tiers[6].scavMaxLevelVariance = ModConfig_1.ModConfig.config.customScavLevelDeltas.tier7.max;
     }
     setPMCSlotIDsToMakeRequired() {
+        if (!ModConfig_1.ModConfig.config.pmcBots.enable)
+            return;
         this.botConfig.equipment.pmc.weaponSlotIdsToMakeRequired = ["mod_reciever", "mod_stock"];
     }
     setMuzzleChances() {
+        if (!ModConfig_1.ModConfig.config.generalConfig.forceMuzzle)
+            return;
         for (const tierObject in this.tierInformation.tiers) {
             const tierNumber = this.tierInformation.tiers[tierObject].tier;
             const tierJson = this.apbsEquipmentGetter.getTierChancesJson(tierNumber);
-            const usec = tierJson.pmcUSEC.chances;
-            const bear = tierJson.pmcBEAR.chances;
-            for (const type in usec) {
-                if (type == "equipment" || type == "equipmentMods" || type == "generation")
-                    continue;
-                const arrayPosition = tierNumber - 1;
-                usec[type].mod_muzzle = ModConfig_1.ModConfig.config.muzzleChance[arrayPosition];
-                usec[type].mod_muzzle_000 = ModConfig_1.ModConfig.config.muzzleChance[arrayPosition];
-                usec[type].mod_muzzle_000 = ModConfig_1.ModConfig.config.muzzleChance[arrayPosition];
-                bear[type].mod_muzzle = ModConfig_1.ModConfig.config.muzzleChance[arrayPosition];
-                bear[type].mod_muzzle_000 = ModConfig_1.ModConfig.config.muzzleChance[arrayPosition];
-                bear[type].mod_muzzle_000 = ModConfig_1.ModConfig.config.muzzleChance[arrayPosition];
+            for (const botType in tierJson) {
+                const botChanceJson = tierJson[botType].chances;
+                for (const chanceType in botChanceJson) {
+                    if (chanceType == "equipment" || chanceType == "equipmentMods" || chanceType == "generation")
+                        continue;
+                    const arrayPosition = tierNumber - 1;
+                    tierJson[botType].chances[chanceType].mod_muzzle = ModConfig_1.ModConfig.config.generalConfig.muzzleChance[arrayPosition];
+                    tierJson[botType].chances[chanceType].mod_muzzle_000 = ModConfig_1.ModConfig.config.generalConfig.muzzleChance[arrayPosition];
+                    tierJson[botType].chances[chanceType].mod_muzzle_001 = ModConfig_1.ModConfig.config.generalConfig.muzzleChance[arrayPosition];
+                }
             }
         }
     }

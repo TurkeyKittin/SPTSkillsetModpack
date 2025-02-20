@@ -26,9 +26,11 @@ const ModConfig_1 = require("../Globals/ModConfig");
 let APBSLogger = class APBSLogger {
     logger;
     modInformation;
+    hasNotLoggedDebugDisabledYet;
     constructor(logger, modInformation) {
         this.logger = logger;
         this.modInformation = modInformation;
+        this.hasNotLoggedDebugDisabledYet = false;
     }
     createLogFiles() {
         for (const value in Logging_1.LoggingFolders) {
@@ -36,8 +38,17 @@ let APBSLogger = class APBSLogger {
         }
     }
     log(logcation, message, message2, message3, message4, message5, message6, message7, message8) {
-        if (!ModConfig_1.ModConfig.config.enableDebugLog && logcation == Logging_1.Logging.DEBUG)
-            return;
+        if (!ModConfig_1.ModConfig.config.enableDebugLog && logcation == Logging_1.Logging.DEBUG) {
+            if (!this.hasNotLoggedDebugDisabledYet) {
+                this.hasNotLoggedDebugDisabledYet = true;
+                message = "================================================================================";
+                message2 = "enableDebugLog is disabled. If you want debug logging, enable it in the config.";
+                message3 = "This log will only show WARNINGs and ERRORs while enableDebugLog is disabled.";
+                message4 = "================================================================================";
+            }
+            else
+                return;
+        }
         const messagesArray = {
             message,
             message2,

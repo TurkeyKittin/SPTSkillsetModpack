@@ -21,7 +21,7 @@ exports.ModConfig = void 0;
 /* eslint-disable @typescript-eslint/naming-convention */
 const VFS_1 = require("C:/snapshot/project/obj/utils/VFS");
 const tsyringe_1 = require("C:/snapshot/project/node_modules/tsyringe");
-const jsonc_1 = __importDefault(require("C:/snapshot/project/node_modules/jsonc"));
+const jsonc_1 = require("C:/snapshot/project/node_modules/jsonc");
 const path_1 = __importDefault(require("path"));
 const TierInformation_1 = require("./TierInformation");
 const APBSLogger_1 = require("../Utils/APBSLogger");
@@ -38,13 +38,16 @@ let ModConfig = class ModConfig {
         this.logger = logger;
         this.tierInformation = tierInformation;
         this.vfs = vfs;
-        ModConfig_1.config = jsonc_1.default.parse(this.vfs.readFile(path_1.default.resolve(__dirname, "../../config/config.jsonc")));
+        ModConfig_1.config = jsonc_1.jsonc.parse(this.vfs.readFile(path_1.default.resolve(__dirname, "../../config/config.json")));
     }
     serverLogDetails() {
         this.logger.debug("[APBS] Mod Config - FOR SUPPORT FOLKS ❤❤");
-        this.logger.debug(`[APBS] Import Mod Weapons: ${ModConfig_1.config.enableModdedWeapons} <- MUST BE FALSE FOR SUPPORT`);
-        this.logger.debug(`[APBS] Import Mod Equipment: ${ModConfig_1.config.enableModdedEquipment} <- MUST BE FALSE FOR SUPPORT`);
-        this.logger.debug(`[APBS] Import Mod Clothing: ${ModConfig_1.config.enableModdedClothing} <- MUST BE FALSE FOR SUPPORT`);
+        this.logger.debug("[APBS] If any of these values are true, you can send them to me for support regarding bots/bot gen.");
+        this.logger.debug(`[APBS] Using a Preset? ${ModConfig_1.config.usePreset}`);
+        this.logger.debug(`[APBS] Mod Weapons: ${ModConfig_1.config.compatibilityConfig.enableModdedWeapons}`);
+        this.logger.debug(`[APBS] Mod Equipment: ${ModConfig_1.config.compatibilityConfig.enableModdedEquipment}`);
+        this.logger.debug(`[APBS] Mod Clothing: ${ModConfig_1.config.compatibilityConfig.enableModdedClothing}`);
+        this.logger.debug(`[APBS] Mod Attachments: ${ModConfig_1.config.compatibilityConfig.enableModdedAttachments}`);
     }
 };
 exports.ModConfig = ModConfig;

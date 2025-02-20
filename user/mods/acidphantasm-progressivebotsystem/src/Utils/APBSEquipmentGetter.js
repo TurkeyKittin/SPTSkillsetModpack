@@ -41,14 +41,14 @@ let APBSEquipmentGetter = class APBSEquipmentGetter {
         this.seasonalEventService = seasonalEventService;
     }
     chadOrChill(tierInfo) {
-        if (ModConfig_1.ModConfig.config.onlyChads && ModConfig_1.ModConfig.config.tarkovAndChill) {
+        if (ModConfig_1.ModConfig.config.generalConfig.onlyChads && ModConfig_1.ModConfig.config.generalConfig.tarkovAndChill) {
             return this.randomUtil.getInt(1, 7);
         }
-        if (ModConfig_1.ModConfig.config.onlyChads)
+        if (ModConfig_1.ModConfig.config.generalConfig.onlyChads)
             return 7;
-        if (ModConfig_1.ModConfig.config.tarkovAndChill)
+        if (ModConfig_1.ModConfig.config.generalConfig.tarkovAndChill)
             return 1;
-        if (ModConfig_1.ModConfig.config.blickyMode)
+        if (ModConfig_1.ModConfig.config.generalConfig.blickyMode)
             return 0;
         return tierInfo;
     }
@@ -205,7 +205,7 @@ let APBSEquipmentGetter = class APBSEquipmentGetter {
             case "marksman":
             case "cursedassault":
             case "assault":
-                if (ModConfig_1.ModConfig.config.blickyMode || ModConfig_1.ModConfig.config.onlyChads || ModConfig_1.ModConfig.config.enableScavAttachmentTiering)
+                if (ModConfig_1.ModConfig.config.generalConfig.blickyMode || ModConfig_1.ModConfig.config.generalConfig.onlyChads || ModConfig_1.ModConfig.config.scavBots.additionalOptions.enableScavAttachmentTiering)
                     return tierJson;
                 else
                     return this.tierInformation.tier1mods;
@@ -309,6 +309,8 @@ let APBSEquipmentGetter = class APBSEquipmentGetter {
             case "sectantwarrior":
                 return tierJson.sectantwarrior.chances;
             case "exusec":
+            case "arenafighterevent":
+            case "arenafighter":
                 return tierJson.exusec.chances;
             case "pmcbot":
                 return tierJson.pmcbot.chances;
@@ -317,9 +319,9 @@ let APBSEquipmentGetter = class APBSEquipmentGetter {
         }
     }
     getAmmoByBotRole(botRole, tierInfo) {
-        if ((botRole == "pmcusec" || botRole == "pmcbear") && ModConfig_1.ModConfig.config.enablePMCAmmoTierSliding) {
-            if (this.randomUtil.getChance100(ModConfig_1.ModConfig.config.slideChance)) {
-                const slideAmount = ModConfig_1.ModConfig.config.slideAmount;
+        if ((botRole == "pmcusec" || botRole == "pmcbear") && ModConfig_1.ModConfig.config.pmcBots.additionalOptions.ammoTierSliding.enable) {
+            if (this.randomUtil.getChance100(ModConfig_1.ModConfig.config.pmcBots.additionalOptions.ammoTierSliding.slideChance)) {
+                const slideAmount = ModConfig_1.ModConfig.config.pmcBots.additionalOptions.ammoTierSliding.slideAmount;
                 const minTier = (tierInfo - slideAmount) <= 0 ? 1 : tierInfo - slideAmount;
                 const maxTier = tierInfo - 1;
                 tierInfo = this.newTierCalc(tierInfo, minTier, maxTier);

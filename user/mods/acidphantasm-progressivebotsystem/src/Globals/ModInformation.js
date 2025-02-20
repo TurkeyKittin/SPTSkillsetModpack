@@ -31,9 +31,11 @@ class ModInformation {
     logPath = path.join(path.dirname(__filename), "..", "..", "logs");
     profilePath = path.join(path.dirname(__filename), "..", "..", "..", "..", "profiles");
     versionNumber = modPackage.version;
+    // Don't mess with this shit unless you are making a preset and know what you are doing
     testMode = false;
     testBotRole = ["pmcusec", "pmcbear"];
-    testTrader = "6741449944c5b44c53741ccc";
+    testTrader = "100000000000000000000000";
+    testLevelLock = true;
     clearAssortPreRaid = true;
 }
 exports.ModInformation = ModInformation;

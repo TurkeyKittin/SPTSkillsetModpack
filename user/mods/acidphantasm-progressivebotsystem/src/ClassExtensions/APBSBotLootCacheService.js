@@ -301,6 +301,8 @@ let APBSBotLootCacheService = class APBSBotLootCacheService extends BotLootCache
         }
         // Get backpack loot (excluding magazines, bullets, grenades, drink, food and healing/stim items)
         const filteredBackpackItems = {};
+        const secondFilteredBackpackItems = {};
+        let useInitialFilter = true;
         for (const itemKey of Object.keys(backpackLootPool)) {
             const itemResult = this.itemHelper.getItem(itemKey);
             if (!itemResult[0]) {
@@ -313,12 +315,50 @@ let APBSBotLootCacheService = class APBSBotLootCacheService extends BotLootCache
                 this.isGrenade(itemTemplate._props) ||
                 this.isFood(itemTemplate._id) ||
                 this.isDrink(itemTemplate._id) ||
+                this.isAmmoBox(itemTemplate._id) ||
                 this.isCurrency(itemTemplate._id)) {
                 // Is type we dont want as backpack loot, skip
                 continue;
             }
             filteredBackpackItems[itemKey] = backpackLootPool[itemKey];
         }
+        // If filtered pool gets too small, hydrate with combined loot pool and then filter again
+        if (!isPmc && Object.keys(filteredBackpackItems).length < 5) {
+            useInitialFilter = false;
+            const pmcType = Math.round(Math.random()) == 1 ? "pmcBEAR" : "pmcUSEC";
+            const newItemPool = this.cloner.clone(this.pmcLootGenerator.generatePMCBackpackLootPool(pmcType));
+            for (const tpl in newItemPool) {
+                // Skip adding items that already exist
+                if (filteredBackpackItems[tpl]) {
+                    continue;
+                }
+                filteredBackpackItems[tpl] = newItemPool[tpl];
+            }
+            //Refilter them
+            for (const itemKey of Object.keys(filteredBackpackItems)) {
+                const itemResult = this.itemHelper.getItem(itemKey);
+                if (!itemResult[0]) {
+                    continue;
+                }
+                const itemTemplate = itemResult[1];
+                if (this.isBulletOrGrenade(itemTemplate._props) ||
+                    this.isMagazine(itemTemplate._props) ||
+                    this.isMedicalItem(itemTemplate._props) ||
+                    this.isGrenade(itemTemplate._props) ||
+                    this.isFood(itemTemplate._id) ||
+                    this.isDrink(itemTemplate._id) ||
+                    this.isAmmoBox(itemTemplate._id) ||
+                    this.isArmour(itemTemplate._id) ||
+                    this.isCurrency(itemTemplate._id) ||
+                    itemTemplate._id == "6711039f9e648049e50b3307" ||
+                    itemTemplate._id == "593962ca86f774068014d9af") {
+                    // Is type we dont want as backpack loot, skip
+                    continue;
+                }
+                secondFilteredBackpackItems[itemKey] = filteredBackpackItems[itemKey];
+            }
+        }
+        const finalFilteredBackpackItems = useInitialFilter ? filteredBackpackItems : secondFilteredBackpackItems;
         // Get pocket loot (excluding magazines, bullets, grenades, drink, food medical and healing/stim items)
         const filteredPocketItems = {};
         for (const itemKey of Object.keys(pocketLootPool)) {
@@ -368,10 +408,16 @@ let APBSBotLootCacheService = class APBSBotLootCacheService extends BotLootCache
         this.apbsLootCache[combinedBotRoleTier].stimItems = stimItems;
         this.apbsLootCache[combinedBotRoleTier].grenadeItems = grenadeItems;
         this.apbsLootCache[combinedBotRoleTier].specialItems = specialLootItems;
-        this.apbsLootCache[combinedBotRoleTier].backpackLoot = filteredBackpackItems;
+        this.apbsLootCache[combinedBotRoleTier].backpackLoot = finalFilteredBackpackItems;
         this.apbsLootCache[combinedBotRoleTier].pocketLoot = filteredPocketItems;
         this.apbsLootCache[combinedBotRoleTier].vestLoot = filteredVestItems;
         this.apbsLootCache[combinedBotRoleTier].secureLoot = secureLootTPool;
+    }
+    isAmmoBox(tpl) {
+        return this.itemHelper.isOfBaseclass(tpl, BaseClasses_1.BaseClasses.AMMO_BOX);
+    }
+    isArmour(tpl) {
+        return this.itemHelper.isOfBaseclass(tpl, BaseClasses_1.BaseClasses.EQUIPMENT);
     }
 };
 exports.APBSBotLootCacheService = APBSBotLootCacheService;

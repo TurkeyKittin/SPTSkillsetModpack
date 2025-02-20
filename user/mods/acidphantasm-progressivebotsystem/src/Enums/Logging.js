@@ -5,7 +5,7 @@ var Logging;
 (function (Logging) {
     Logging["SCAV"] = "scav_generation";
     Logging["PMC"] = "pmc_generation";
-    Logging["RAIDER"] = "raider_generation";
+    Logging["SPECIAL"] = "special_generation";
     Logging["BOSS"] = "boss_generation";
     Logging["EVENT"] = "event_generation";
     Logging["WARN"] = "warnings";
@@ -17,7 +17,7 @@ var LoggingFolders;
     LoggingFolders["DEBUG"] = "debug";
     LoggingFolders["SCAV"] = "scav_generation";
     LoggingFolders["PMC"] = "pmc_generation";
-    LoggingFolders["RAIDER"] = "raider_generation";
+    LoggingFolders["SPECIAL"] = "special_generation";
     LoggingFolders["BOSS"] = "boss_generation";
     LoggingFolders["EVENT"] = "event_generation";
 })(LoggingFolders || (exports.LoggingFolders = LoggingFolders = {}));
