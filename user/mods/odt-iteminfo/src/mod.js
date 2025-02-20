@@ -1,4 +1,6 @@
 "use strict";
+// Abandon Hope All Ye Who Enter Here.
+// If you have OCD or at least the slightest sense of beauty, or just have a linter installed, I beg you - just **leave**. You will thank me later.
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -444,20 +446,20 @@ class ItemInfo {
             userLocale = translations_json_1.default.debug.languageToDebug;
         }
         // Fill the missing translation dictionaries with English keys as a fallback + debug mode to help translations. Smart.
-        for (const key in translations_json_1.default["en"]) {
+        for (const key in translations_json_1.default.en) {
             for (const lang in translations_json_1.default) {
                 if (translations_json_1.default.debug.enabled &&
-                    lang != "en" &&
-                    lang == translations_json_1.default.debug.languageToDebug &&
-                    translations_json_1.default[translations_json_1.default.debug.languageToDebug][key] == translations_json_1.default["en"][key] &&
-                    key != "") {
-                    this.logger.warning(translations_json_1.default.debug.languageToDebug + ` language "${translations_json_1.default[translations_json_1.default.debug.languageToDebug][key]}" is the same as in English`);
+                    lang !== "en" &&
+                    lang === translations_json_1.default.debug.languageToDebug &&
+                    translations_json_1.default[translations_json_1.default.debug.languageToDebug][key] === translations_json_1.default.en[key] &&
+                    key !== "") {
+                    this.logger.warning(`${translations_json_1.default.debug.languageToDebug} language "${translations_json_1.default[translations_json_1.default.debug.languageToDebug][key]}" is the same as in English`);
                 }
-                if (key in translations_json_1.default[lang] == false) {
-                    if (translations_json_1.default.debug.enabled && translations_json_1.default.debug.languageToDebug == lang) {
+                if (key in translations_json_1.default[lang] === false) {
+                    if (translations_json_1.default.debug.enabled && translations_json_1.default.debug.languageToDebug === lang) {
                         this.logger.warning(`${lang} language is missing "${key}" transaition!`);
                     }
-                    translations_json_1.default[lang][key] = translations_json_1.default["en"][key];
+                    translations_json_1.default[lang][key] = translations_json_1.default.en[key];
                 }
             }
         }
@@ -480,15 +482,17 @@ class ItemInfo {
         // I'll just pretend I thought about it beforehand and will call it "in hindsight optimization". Cheers.
         // P.S. Is there a way to access last user selected locale at IPreAkiLoadMod?
         //}
-        this.euroRatio = this.handbook.Items.find((x) => x.Id == "569668774bdc2da2298b4568").Price;
-        this.dollarRatio = this.handbook.Items.find((x) => x.Id == "5696686a4bdc2da3298b456a").Price;
+        this.euroRatio = this.handbook.Items.find((x) => x.Id === "569668774bdc2da2298b4568").Price;
+        this.dollarRatio = this.handbook.Items.find((x) => x.Id === "5696686a4bdc2da3298b456a").Price;
         this.questRewardsDB = {};
         for (const questID in this.quests) {
-            const questRewards = this.quests[questID].rewards.Started.concat(this.quests[questID].rewards.Success).filter((x) => x.type == "AssortmentUnlock");
+            const questRewards = this.quests[questID].rewards.Started.concat(this.quests[questID].rewards.Success).filter((x) => x.type === "AssortmentUnlock");
             if (questRewards.length > 1) {
                 this.questRewardsDB[questID] = {};
+                // biome-ignore lint/complexity/noForEach: <explanation>
                 questRewards.forEach((i) => {
                     this.questRewardsDB[questID][i.target] = [];
+                    // biome-ignore lint/complexity/noForEach: <explanation>
                     i.items.forEach((x) => this.questRewardsDB[questID][i.target].push(x._tpl));
                 });
             }
@@ -522,9 +526,9 @@ class ItemInfo {
             const item = this.items[itemID];
             const itemInHandbook = this.getItemInHandbook(itemID);
             if (item._type === "Item" && // Check if the item is a real item and not a "node" type.
-                itemInHandbook != undefined && // Ignore "useless" items
+                itemInHandbook !== undefined && // Ignore "useless" items
                 !item._props.QuestItem && // Ignore quest items.
-                item._parent != "543be5dd4bdc2deb348b4569" // Ignore currencies.
+                item._parent !== "543be5dd4bdc2deb348b4569" // Ignore currencies.
             ) {
                 const name = this.getItemName(itemID, userLocale); // for debug only
                 // item._props.ExaminedByDefault = true // DEBUG!!!
@@ -547,6 +551,7 @@ class ItemInfo {
                 let armorDurabilityString = "";
                 let slotefficiencyString = "";
                 let headsetDescription = "";
+                let advancedAmmoInfoString = "";
                 let tier = "";
                 let itemRarity = 0;
                 let fleaPrice = this.getFleaPrice(itemID);
@@ -589,8 +594,8 @@ class ItemInfo {
                     this.itemHelper.isOfBaseclass(itemID, BaseClasses_1.BaseClasses.ARMOR_PLATE) ||
                     this.itemHelper.isOfBaseclass(itemID, BaseClasses_1.BaseClasses.VEST) ||
                     this.itemHelper.isOfBaseclass(itemID, BaseClasses_1.BaseClasses.WEAPON) ||
-                    item._parent == "57bef4c42459772e8d35a53b") && // strictly ARMORED_EQUIPMENT
-                    barterInfo.barters.length == 0 &&
+                    item._parent === "57bef4c42459772e8d35a53b") && // strictly ARMORED_EQUIPMENT
+                    barterInfo.barters.length === 0 &&
                     !isBanned) {
                     itemRarity = 6;
                     // log(`${this.getItemName(itemID)}, ${this.getItemName(item._parent)}, ${item._parent}`)
@@ -600,14 +605,14 @@ class ItemInfo {
                     itemRarity += 2;
                     // log(`${this.getItemName(itemID)}, ${itemRarity} | ${rarityArray}`)
                 }
-                if (item._parent == "543be5cb4bdc2deb348b4568") {
+                if (item._parent === "543be5cb4bdc2deb348b4568") {
                     // Ammo boxes special case
                     const count = item._props.StackSlots[0]._max_count;
                     const ammo = item._props.StackSlots[0]._props.filters[0].Filter[0];
                     const value = this.getItemBestTrader(ammo).price;
                     // let value = this.getItemInHandbook(ammo).price
                     traderPrice = value * count;
-                    if (!itemRarity || itemRarity == 7) {
+                    if (!itemRarity || itemRarity === 7) {
                         itemRarity = bsgBlacklist.includes(ammo) ? 7 : Math.min(...this.barterInfoGenerator(this.bartersResolver(ammo)).rarity); // my magnum opus
                     }
                 }
@@ -629,61 +634,68 @@ class ItemInfo {
                 // 		fleaPrice = fleaPriceFix
                 // 	}
                 // }
-                if (config_json_1.default.RarityRecolor.enabled && !config_json_1.default.RarityRecolorBlacklist.includes(item._parent)) {
+                // biome-ignore lint/suspicious/noConfusingLabels: bypassAmmoRecolor and bypassKeysRecolor
+                rarityRecolor: if (config_json_1.default.RarityRecolor.enabled && !config_json_1.default.RarityRecolorBlacklist.includes(item._parent)) {
                     // item._props.BackgroundColor = "grey"
+                    if (config_json_1.default.RarityRecolor.bypassAmmoRecolor && item._parent === BaseClasses_1.BaseClasses.AMMO) {
+                        break rarityRecolor;
+                    }
+                    if (config_json_1.default.RarityRecolor.bypassKeysRecolor && (item._parent === BaseClasses_1.BaseClasses.KEY_MECHANICAL || item._parent === BaseClasses_1.BaseClasses.KEYCARD)) {
+                        break rarityRecolor;
+                    }
                     for (const customItem in config_json_1.default.RarityRecolor.customRarity) {
-                        if (customItem == itemID) {
+                        if (customItem === itemID) {
                             itemRarity = config_json_1.default.RarityRecolor.customRarity[customItem];
                         }
                     }
-                    if (itemRarity == 7) {
+                    if (itemRarity === 7) {
                         tier = i18n.OVERPOWERED;
                         item._props.BackgroundColor = tiers_json_1.default.OVERPOWERED;
                         // log(`${itemID} | ${this.getItemName(itemID)}`)
                     }
-                    else if (itemRarity == 1) {
+                    else if (itemRarity === 1) {
                         tier = i18n.COMMON;
                         item._props.BackgroundColor = tiers_json_1.default.COMMON;
                     }
-                    else if (itemRarity == 2) {
+                    else if (itemRarity === 2) {
                         tier = i18n.RARE;
                         item._props.BackgroundColor = tiers_json_1.default.RARE;
                     }
-                    else if (itemRarity == 3) {
+                    else if (itemRarity === 3) {
                         tier = i18n.EPIC;
                         item._props.BackgroundColor = tiers_json_1.default.EPIC;
                     }
-                    else if (itemRarity == 4) {
+                    else if (itemRarity === 4) {
                         tier = i18n.LEGENDARY;
                         item._props.BackgroundColor = tiers_json_1.default.LEGENDARY;
                     }
-                    else if (itemRarity == 5) {
+                    else if (itemRarity === 5) {
                         tier = i18n.UBER;
                         item._props.BackgroundColor = tiers_json_1.default.UBER;
                     }
-                    else if (itemRarity == 6) {
+                    else if (itemRarity === 6) {
                         // can get 6 from custom rules only
                         tier = i18n.UNOBTAINIUM;
                         item._props.BackgroundColor = tiers_json_1.default.UNOBTAINIUM;
                     }
-                    else if (itemRarity == 8) {
+                    else if (itemRarity === 8) {
                         // 8 is for custom dim red background
                         tier = i18n.CUSTOM;
                         item._props.BackgroundColor = tiers_json_1.default.CUSTOM;
                     }
                     else if (itemRarity >= 9) {
                         // 8 is for custom dim orange background
-                        // tier = i18n.CUSTOM2
+                        tier = i18n.CUSTOM2;
                         item._props.BackgroundColor = tiers_json_1.default.CUSTOM2;
                     }
-                    if (config_json_1.default.RarityRecolor.fallbackValueBasedRecolor && itemRarity == 0) {
+                    if (config_json_1.default.RarityRecolor.fallbackValueBasedRecolor && itemRarity === 0) {
                         let itemValue = itemInHandbook.Price;
                         const itemSlots = item._props.Width * item._props.Height;
                         if (itemSlots > 1) {
                             itemValue = Math.round(itemValue / itemSlots);
                         }
                         // log(`"${itemID}", // ${name}, ${item._props.BackgroundColor}, ${itemValue}`)
-                        if (item._parent == "543be5cb4bdc2deb348b4568") {
+                        if (item._parent === "543be5cb4bdc2deb348b4568") {
                             // Ammo boxes special case
                             const count = item._props.StackSlots[0]._max_count;
                             const ammo = item._props.StackSlots[0]._props.filters[0].Filter[0];
@@ -692,34 +704,34 @@ class ItemInfo {
                         }
                         // TODO: This will generate non-user friendly errors if they f*ck up their config. Maybe needs manual validation to ensure that all tiers.X values are numbers?
                         if (itemValue < Number.parseInt(tiers_json_1.default.COMMON_VALUE_FALLBACK)) {
-                            // tier = i18n.COMMON
+                            tier = i18n.COMMON;
                             item._props.BackgroundColor = tiers_json_1.default.COMMON;
                         }
                         else if (itemValue < Number.parseInt(tiers_json_1.default.RARE_VALUE_FALLBACK)) {
-                            // tier = i18n.RARE
+                            tier = i18n.RARE;
                             item._props.BackgroundColor = tiers_json_1.default.RARE;
                         }
                         else if (itemValue < Number.parseInt(tiers_json_1.default.EPIC_VALUE_FALLBACK)) {
-                            // tier = i18n.EPIC
+                            tier = i18n.EPIC;
                             item._props.BackgroundColor = tiers_json_1.default.EPIC;
                         }
                         else if (itemValue < Number.parseInt(tiers_json_1.default.LEGENDARY_VALUE_FALLBACK)) {
-                            // tier = i18n.LEGENDARY
+                            tier = i18n.LEGENDARY;
                             item._props.BackgroundColor = tiers_json_1.default.LEGENDARY;
                         }
                         else if (itemValue < Number.parseInt(tiers_json_1.default.UBER_VALUE_FALLBACK)) {
-                            // tier = i18n.UBER
+                            tier = i18n.UBER;
                             item._props.BackgroundColor = tiers_json_1.default.UBER;
                         }
                         else {
                             // log(`"${itemID}", // ${name}, ${item._props.BackgroundColor}, ${itemValue}`)
-                            // tier = i18n.UNOBTAINIUM
+                            tier = i18n.UNOBTAINIUM;
                             item._props.BackgroundColor = tiers_json_1.default.UNOBTAINIUM;
                         }
                     }
                     if (config_json_1.default.RarityRecolor.addTierNameToPricesInfo) {
-                        if (tier.length > 0) {
-                            priceString += tier + " | ";
+                        if (tier?.length > 0) {
+                            priceString += `${tier} | `;
                         }
                     }
                 }
@@ -727,9 +739,72 @@ class ItemInfo {
                     if (Number(item._props.armorClass) > 0) {
                         const armor = this.armors[item._props.ArmorMaterial];
                         // prettier-ignore
-                        armorDurabilityString += `${config_json_1.default.ArmorInfo.addArmorClassInfo ? i18n.Armorclass + ": " + item._props?.armorClass + " | " : ""}${i18n.Effectivedurability}: ${Math.round(item._props?.MaxDurability / armor?.Destructibility)} (${i18n.Max}: ${Math.round(item._props?.MaxDurability)} x ${this.locales[userLocale][`Mat${(item._props?.ArmorMaterial)}`]}: ${roundWithPrecision(1 / armor?.Destructibility, 1)}) | ${i18n.Repairdegradation}: ${Math.round(armor?.MinRepairDegradation * 100)}% - ${Math.round(armor?.MaxRepairDegradation * 100)}%` + newLine + newLine;
+                        armorDurabilityString += `${config_json_1.default.ArmorInfo.addArmorClassInfo ? `${i18n.Armorclass}: ${item._props?.armorClass} | ` : ""}${i18n.Effectivedurability}: ${Math.round(item._props?.MaxDurability / armor?.Destructibility)} (${i18n.Max}: ${Math.round(item._props?.MaxDurability)} x ${this.locales[userLocale][`Mat${(item._props?.ArmorMaterial)}`]}: ${roundWithPrecision(1 / armor?.Destructibility, 1)}) | ${i18n.Repairdegradation}: ${Math.round(armor?.MinRepairDegradation * 100)}% - ${Math.round(armor?.MaxRepairDegradation * 100)}%${newLine + newLine}`;
+                        if (config_json_1.default.ArmorInfo.addArmorToName) {
+                            this.addToName(itemID, ` (${item._props?.armorClass}/${Math.round(item._props?.MaxDurability / armor?.Destructibility)})`, "append");
+                        }
+                        if (config_json_1.default.ArmorInfo.addArmorToShortName) {
+                            this.addToShortName(itemID, `${item._props?.armorClass}/${Math.round(item._props?.MaxDurability / armor?.Destructibility)} `, "prepend");
+                        }
                         // log(name)
                         // log(armorDurabilityString)
+                    }
+                }
+                if (config_json_1.default.AdvancedAmmoInfo.enabled) {
+                    if (item._parent === "5485a8684bdc2da71d8b4567") {
+                        const ammoProps = item._props;
+                        // welcome to JS hell.
+                        advancedAmmoInfoString = `Damage: ${ammoProps.Damage}
+Penetration Power: ${ammoProps.PenetrationPower}
+Armor Damage: ${ammoProps.ArmorDamage}${ammoProps.ProjectileCount > 1
+                            ? `
+Projectile Count: ${ammoProps.ProjectileCount}`
+                            : ""}${ammoProps.buckshotBullets
+                            ? `
+Buckshot Bullets: ${ammoProps.buckshotBullets}`
+                            : ""}
+Initial Speed: ${ammoProps.InitialSpeed}
+Speed Retardation: ${ammoProps.SpeedRetardation}
+Ballistic Coeficient: ${ammoProps.BallisticCoeficient}
+Ammo Tooltip Class: ${ammoProps.AmmoTooltipClass}
+Fragmentation Chance: ${Math.round(ammoProps.FragmentationChance * 100)}%${ammoProps.MaxFragmentsCount > 1
+                            ? `
+Min Fragments Count: ${ammoProps.MinFragmentsCount}
+Max Fragments Count: ${ammoProps.MaxFragmentsCount}`
+                            : ""}
+Ricochet Chance: ${Math.round(ammoProps.RicochetChance * 100)}%
+Misfire Chance: ${Math.round(ammoProps.MisfireChance * 100)}%
+Malf Feed Chance: ${Math.round(ammoProps.MalfFeedChance * 100)}%
+Malf Misfire Chance: ${Math.round(ammoProps.MalfMisfireChance * 100)}%
+Durability Burn Modificator: ${ammoProps.DurabilityBurnModificator}
+Heat Factor: ${ammoProps.HeatFactor}
+Heavy Bleeding Delta: ${ammoProps.HeavyBleedingDelta}
+Light Bleeding Delta: ${ammoProps.LightBleedingDelta}
+Stamina Burn Per Damage: ${ammoProps.StaminaBurnPerDamage}
+${ammoProps.Tracer
+                            ? `Tracer: Yes
+Tracer Color: ${ammoProps.TracerColor}
+Tracer Distance: ${ammoProps.TracerDistance}`
+                            : "Tracer: No"}
+Penetration Chance Obstacle: ${ammoProps.PenetrationChanceObstacle}
+Penetration Damage Mod: ${ammoProps.PenetrationDamageMod}
+Penetration Power Diviation: ${ammoProps.PenetrationPowerDiviation}
+Accr(?): ${ammoProps.ammoAccr}
+Dist(?): ${ammoProps.ammoDist}
+Hear(?): ${ammoProps.ammoHear}
+Rec(?): ${ammoProps.ammoRec}
+Shift Chance(?): ${ammoProps.ammoShiftChance}${ammoProps.ExplosionStrength
+                            ? `
+Explosion Strength: ${ammoProps.ExplosionStrength}
+Max Explosion Distance: ${ammoProps.MaxExplosionDistance}
+Explosion Type: ${ammoProps.ExplosionType}
+HasGrenaderComponent: ${ammoProps.HasGrenaderComponent}`
+                            : ""}
+Bullet Mass Gram: ${ammoProps.BulletMassGram}
+Bullet Diameter Milimeters: ${ammoProps.BulletDiameterMilimeters}
+Weight: ${ammoProps.Weight}
+
+`;
                     }
                 }
                 if (config_json_1.default.ContainerInfo.enabled) {
@@ -740,7 +815,7 @@ class ItemInfo {
                         }
                         const slotefficiency = roundWithPrecision(totalSlots / (item._props.Width * item._props.Height), 2);
                         // prettier-ignore
-                        slotefficiencyString += `${i18n.Slotefficiency}: ×${slotefficiency} (${totalSlots}/${item._props.Width * item._props.Height})` + newLine + newLine;
+                        slotefficiencyString += `${i18n.Slotefficiency}: ×${slotefficiency} (${totalSlots}/${item._props.Width * item._props.Height})${newLine + newLine}`;
                         // log(name)
                         // log(slotefficiencyString)
                     }
@@ -764,10 +839,10 @@ class ItemInfo {
                     else {
                         fleaValue = fleaPrice / slotDensity;
                     }
-                    if (this.items[itemID]._parent != "5795f317245977243854e041") {
+                    if (this.items[itemID]._parent !== "5795f317245977243854e041") {
                         // ignore containers
                         if (itemvalue > config_json_1.default.MarkValueableItems.traderSlotValueThresholdBest || fleaValue > config_json_1.default.MarkValueableItems.fleaSlotValueThresholdBest) {
-                            if (userLocale == "jp" || userLocale == "kr" || config_json_1.default.MarkValueableItems.useAltValueMarks) {
+                            if (userLocale === "jp" || userLocale === "kr" || config_json_1.default.MarkValueableItems.useAltValueMarks) {
                                 if (config_json_1.default.MarkValueableItems.addToShortName) {
                                     this.addToShortName(itemID, config_json_1.default.MarkValueableItems.AltBestValueMark, "prepend");
                                 }
@@ -786,7 +861,7 @@ class ItemInfo {
                             }
                         }
                         else if (itemvalue > config_json_1.default.MarkValueableItems.traderSlotValueThresholdGood || fleaValue > config_json_1.default.MarkValueableItems.fleaSlotValueThresholdGood) {
-                            if (userLocale == "jp" || userLocale == "kr" || config_json_1.default.MarkValueableItems.useAltValueMarks) {
+                            if (userLocale === "jp" || userLocale === "kr" || config_json_1.default.MarkValueableItems.useAltValueMarks) {
                                 if (config_json_1.default.MarkValueableItems.addToShortName) {
                                     this.addToShortName(itemID, config_json_1.default.MarkValueableItems.AltGoodValueMark, "prepend");
                                 }
@@ -806,8 +881,11 @@ class ItemInfo {
                     }
                 }
                 if (config_json_1.default.PricesInfo.enabled) {
-                    // prettier-ignore
-                    priceString += (config_json_1.default.PricesInfo.addFleaPrice ? i18n.Fleaprice + ": " + this.formatPrice(fleaPrice) + (fleaPrice > 0 ? "₽" : "") + " | " : "") + (config_json_1.default.PricesInfo.addItemValue ? i18n.ItemValue + ": " + this.formatPrice(itemInHandbook.Price) + " | " : "") + i18n.Valuation1 + traderName + i18n.Valuation2 + ": " + this.formatPrice(traderPrice) + "₽" + newLine + newLine;
+                    priceString += `${(config_json_1.default.PricesInfo.addFleaPrice ? `${i18n.Fleaprice}: ${this.formatPrice(fleaPrice)}${fleaPrice > 0 ? "₽" : ""} | ` : "") +
+                        (config_json_1.default.PricesInfo.addItemValue ? `${i18n.ItemValue}: ${this.formatPrice(itemInHandbook.Price)} | ` : "") +
+                        i18n.Valuation1 +
+                        traderName +
+                        i18n.Valuation2}: ${this.formatPrice(traderPrice)}₽${newLine + newLine}`;
                     // log(priceString)
                 }
                 if (config_json_1.default.HeadsetInfo.enabled) {
@@ -816,7 +894,7 @@ class ItemInfo {
                         const thresh = item._props.CompressorThreshold;
                         // prettier-ignore
                         // headsetDescription = `${i18n.AmbientVolume}: ${item._props.AmbientCompressorSendLevel+10}dB | ${i18n.Compressor}: ${i18n.Gain} +${gain}dB × ${i18n.Treshold} ${thresh}dB ≈ ×${Math.abs((gain * (thresh+20)) / 10)} ${i18n.Boost} | ${i18n.ResonanceFilter}: ${item._props.HighpassResonance}@${item._props.HighpassFreq}Hz | ${i18n.Distortion}: ${Math.round(item._props.Distortion * 100)}%` + newLine + newLine;
-                        headsetDescription = `${i18n.AmbientVolume}: ${Math.round((item._props.AmbientCompressorSendLevel + 10 + item._props.EnvCommonCompressorSendLevel + 7 + item._props.EnvNatureCompressorSendLevel + 5 + item._props.EnvTechnicalCompressorSendLevel + 7) * 10) / 10}dB | ${i18n.Boost}: +${((gain + Math.abs(thresh + 20)))}dB  | ${i18n.Distortion}: ${Math.round(item._props.Distortion * 100)}%` + newLine + newLine;
+                        headsetDescription = `${i18n.AmbientVolume}: ${Math.round((item._props.AmbientCompressorSendLevel + 10 + item._props.EnvCommonCompressorSendLevel + 7 + item._props.EnvNatureCompressorSendLevel + 5 + item._props.EnvTechnicalCompressorSendLevel + 7) * 10) / 10}dB | ${i18n.Boost}: +${((gain + Math.abs(thresh + 20)))}dB${item._props.Distortion ? ` | ${i18n.Distortion}: ${Math.round(item._props.Distortion * 100)}%` : ""}${newLine + newLine}`;
                         // 						const headsetststs =
                         // 							`AmbientCompressorSendLevel: ${item._props.AmbientCompressorSendLevel}dB
                         // AmbientVolume: ${item._props.AmbientVolume}dB
@@ -906,7 +984,8 @@ class ItemInfo {
                         barterString +
                         productionString +
                         usedForCraftingString +
-                        usedForBarterString;
+                        usedForBarterString +
+                        advancedAmmoInfoString;
                 this.addToDescription(itemID, descriptionString, "prepend");
                 const debug = false;
                 if (debug) {
@@ -986,13 +1065,13 @@ class ItemInfo {
         }
     }
     getItemName(itemID, locale = "en") {
-        if (typeof this.locales[locale][`${itemID} Name`] != "undefined") {
+        if (typeof this.locales[locale][`${itemID} Name`] !== "undefined") {
             return this.locales[locale][`${itemID} Name`];
         }
-        else if (typeof this.locales["en"][`${itemID} Name`] != "undefined") {
+        else if (typeof this.locales["en"][`${itemID} Name`] !== "undefined") {
             return this.locales["en"][`${itemID} Name`];
         }
-        else if (typeof this.items[itemID]?._props?.Name != "undefined") {
+        else if (typeof this.items[itemID]?._props?.Name !== "undefined") {
             return this.items[itemID]._props.Name; // If THIS fails, the modmaker REALLY fucked up
         }
         else {
@@ -1000,10 +1079,10 @@ class ItemInfo {
         }
     }
     getItemShortName(itemID, locale = "en") {
-        if (typeof this.locales[locale][`${itemID} ShortName`] != "undefined") {
+        if (typeof this.locales[locale][`${itemID} ShortName`] !== "undefined") {
             return this.locales[locale][`${itemID} ShortName`];
         }
-        else if (typeof this.locales["en"][`${itemID} ShortName`] != "undefined") {
+        else if (typeof this.locales["en"][`${itemID} ShortName`] !== "undefined") {
             return this.locales["en"][`${itemID} ShortName`];
         }
         else {
@@ -1011,10 +1090,10 @@ class ItemInfo {
         }
     }
     getItemDescription(itemID, locale = "en") {
-        if (typeof this.locales[locale][`${itemID} Description`] != "undefined") {
+        if (typeof this.locales[locale][`${itemID} Description`] !== "undefined") {
             return this.locales[locale][`${itemID} Description`];
         }
-        else if (typeof this.locales["en"][`${itemID} Description`] != "undefined") {
+        else if (typeof this.locales["en"][`${itemID} Description`] !== "undefined") {
             return this.locales["en"][`${itemID} Description`];
         }
         else {
@@ -1022,7 +1101,7 @@ class ItemInfo {
         }
     }
     formatPrice(price) {
-        if (typeof price == "number" && config_json_1.default.FormatPrice) {
+        if (typeof price === "number" && config_json_1.default.FormatPrice) {
             return Intl.NumberFormat("en-US").format(price);
         }
         else {
@@ -1030,7 +1109,7 @@ class ItemInfo {
         }
     }
     addToName(itemID, addToName, place, lang = "") {
-        if (lang == "") {
+        if (lang === "") {
             // I'm actually really proud of this one! If no lang argument is passed, it defaults to recursion for all languages.
             for (const locale in this.locales) {
                 this.addToName(itemID, addToName, place, locale);
@@ -1049,7 +1128,7 @@ class ItemInfo {
         }
     }
     addToShortName(itemID, addToShortName, place, lang = "") {
-        if (lang == "") {
+        if (lang === "") {
             for (const locale in this.locales) {
                 this.addToShortName(itemID, addToShortName, place, locale);
             }
@@ -1067,7 +1146,7 @@ class ItemInfo {
         }
     }
     addToDescription(itemID, addToDescription, place, lang = "") {
-        if (lang == "") {
+        if (lang === "") {
             for (const locale in this.locales) {
                 this.addToDescription(itemID, addToDescription, place, locale);
             }
@@ -1135,11 +1214,11 @@ class ItemInfo {
         };
     }
     getFleaPrice(itemID) {
-        if (typeof this.fleaPrices[itemID] != "undefined") {
+        if (typeof this.fleaPrices[itemID] !== "undefined") {
             // Forgot quotes, typeof returns string..
             return this.fleaPrices[itemID];
         }
-        else if (typeof this.getItemInHandbook(itemID)?.Price != "undefined") {
+        else if (typeof this.getItemInHandbook(itemID)?.Price !== "undefined") {
             return this.getItemInHandbook(itemID).Price;
         }
         else {
@@ -1147,7 +1226,7 @@ class ItemInfo {
         }
     }
     getBestPrice(itemID) {
-        if (typeof this.fleaPrices[itemID] != "undefined") {
+        if (typeof this.fleaPrices[itemID] !== "undefined") {
             return this.fleaPrices[itemID];
         }
         else {
@@ -1159,13 +1238,13 @@ class ItemInfo {
         try {
             this.traderList.forEach((trader) => {
                 const allTraderBarters = trader.assort.items;
-                const traderBarters = allTraderBarters.filter((x) => x._tpl == itemID);
+                const traderBarters = allTraderBarters.filter((x) => x._tpl === itemID);
                 const barters = traderBarters
                     .map((barter) => recursion(barter)) // find and get list of "parent items" for a passed component
                     .map((barter) => ({
                     // reset parentItem for actual parent items because of recursion function.
                     // can be done in a more elegant way, but i'm too tired after a night of debugging. who cares anyway, it works.
-                    parentItem: barter.originalItemID ? (barter.originalItemID == itemID ? null : barter.originalItemID) : null,
+                    parentItem: barter.originalItemID ? (barter.originalItemID === itemID ? null : barter.originalItemID) : null,
                     barterResources: trader.assort.barter_scheme[barter._id][0],
                     barterLoyaltyLevel: trader.assort.loyal_level_items[barter._id],
                     traderID: trader.base._id,
@@ -1173,7 +1252,7 @@ class ItemInfo {
                 }));
                 itemBarters.push(...barters);
                 function recursion(barter) {
-                    if (barter.parentId == "hideout") {
+                    if (barter.parentId === "hideout") {
                         return barter;
                     }
                     else {
@@ -1181,7 +1260,7 @@ class ItemInfo {
                         try {
                             // spent literary 12 hours debugging this feature... KMP.
                             // all because of one item, SWORD International Mk-18 not having proper .parentId is assort table. who would have thought. thx Nikita
-                            parentBarter = allTraderBarters.find((x) => x._id == barter.parentId);
+                            parentBarter = allTraderBarters.find((x) => x._id === barter.parentId);
                             parentBarter.originalItemID = parentBarter._tpl;
                         }
                         catch (error) {
@@ -1213,15 +1292,15 @@ class ItemInfo {
             barterString += `${translations_json_1.default[locale].Bought}${partOf} ${translations_json_1.default[locale].at} ${traderName} ${translations_json_1.default[locale].lv}${barter.barterLoyaltyLevel} < `;
             let isBarter = false;
             for (const resource of barter.barterResources) {
-                if (resource._tpl == "5449016a4bdc2d6f028b456f") {
+                if (resource._tpl === "5449016a4bdc2d6f028b456f") {
                     const rubles = resource.count;
                     barterString += `${this.formatPrice(Math.round(rubles))}₽ + `;
                 }
-                else if (resource._tpl == "569668774bdc2da2298b4568") {
+                else if (resource._tpl === "569668774bdc2da2298b4568") {
                     const euro = resource.count;
                     barterString += `${this.formatPrice(Math.round(euro))}€ ≈ ${this.formatPrice(Math.round(this.euroRatio * euro))}₽ + `;
                 }
-                else if (resource._tpl == "5696686a4bdc2da3298b456a") {
+                else if (resource._tpl === "5696686a4bdc2da3298b456a") {
                     const dollars = resource.count;
                     barterString += `$${this.formatPrice(Math.round(dollars))} ≈ ${this.formatPrice(Math.round(this.dollarRatio * dollars))}₽ + `;
                 }
@@ -1238,16 +1317,16 @@ class ItemInfo {
             else {
                 rarityArray.push(barter.barterLoyaltyLevel);
             }
-            if (totalBarterPrice != 0) {
+            if (totalBarterPrice !== 0) {
                 totalBarterPriceString = ` | Σ ≈ ${this.formatPrice(Math.round(totalBarterPrice))}₽`;
             }
-            barterString = barterString.slice(0, barterString.length - 3) + totalBarterPriceString + "\n";
+            barterString = `${barterString.slice(0, barterString.length - 3) + totalBarterPriceString}\n`;
         }
         return {
             prices: prices, //TODO
             barters: barterString,
             // rarity: rarityArray.length == 0 ? 0 : Math.min(...rarityArray),
-            rarity: rarityArray.length == 0 ? [0] : rarityArray,
+            rarity: rarityArray.length === 0 ? [0] : rarityArray,
         };
     }
     barterResourceInfoGenerator(itemID, locale = "en") {
@@ -1264,22 +1343,21 @@ class ItemInfo {
                         let totalBarterPrice = 0;
                         const barterLoyaltyLevel = trader.assort.loyal_level_items[barterID];
                         for (const originalBarter in trader.assort.items) {
-                            if (trader.assort.items[originalBarter]._id == barterID) {
+                            if (trader.assort.items[originalBarter]._id === barterID) {
                                 bartedForItem = trader.assort.items[originalBarter]._tpl;
                             }
                         }
-                        baseBarterString += translations_json_1.default[locale].Traded + " ×" + trader.assort.barter_scheme[barterID][0][srcs].count + " ";
-                        baseBarterString +=
-                            translations_json_1.default[locale].at + " " + traderName + " " + translations_json_1.default[locale].lv + barterLoyaltyLevel + " > " + this.getItemName(bartedForItem, locale);
+                        baseBarterString += `${translations_json_1.default[locale].Traded} ×${trader.assort.barter_scheme[barterID][0][srcs].count} `;
+                        baseBarterString += `${translations_json_1.default[locale].at} ${traderName} ${translations_json_1.default[locale].lv}${barterLoyaltyLevel} > ${this.getItemName(bartedForItem, locale)}`;
                         let extendedBarterString = " < … + ";
                         for (const barterResource in barterResources) {
                             totalBarterPrice += this.getFleaPrice(barterResources[barterResource]._tpl) * barterResources[barterResource].count;
-                            if (barterResources[barterResource]._tpl != itemID) {
+                            if (barterResources[barterResource]._tpl !== itemID) {
                                 extendedBarterString += this.getItemShortName(barterResources[barterResource]._tpl, locale);
                                 extendedBarterString += ` ×${barterResources[barterResource].count} + `;
                             }
                         }
-                        const barterStringToAppend = totalBarterPrice != 0 ? ` | Δ ≈ ${this.formatPrice(Math.round(this.getFleaPrice(bartedForItem) - totalBarterPrice))}₽` : null;
+                        const barterStringToAppend = totalBarterPrice !== 0 ? ` | Δ ≈ ${this.formatPrice(Math.round(this.getFleaPrice(bartedForItem) - totalBarterPrice))}₽` : null;
                         extendedBarterString = extendedBarterString.slice(0, extendedBarterString.length - 3);
                         extendedBarterString += barterStringToAppend;
                         baseBarterString += extendedBarterString + newLine;
@@ -1322,14 +1400,14 @@ class ItemInfo {
                     let questReq = "";
                     for (const requirement of recipe.requirements) {
                         if (requirement.type === "Area") {
-                            recipeAreaString = this.getCraftingAreaName(requirement.areaType, locale) + " " + translations_json_1.default[locale].lv + requirement.requiredLevel;
+                            recipeAreaString = `${this.getCraftingAreaName(requirement.areaType, locale)} ${translations_json_1.default[locale].lv}${requirement.requiredLevel}`;
                             rarityArray.push(this.getCraftingRarity(requirement.areaType, requirement.requiredLevel));
                         }
                         if (requirement.type === "Item") {
                             const craftComponentId = requirement.templateId;
                             const craftComponentCount = requirement.count;
                             const craftComponentPrice = this.getFleaPrice(craftComponentId);
-                            componentsString += this.getItemShortName(craftComponentId, locale) + " ×" + craftComponentCount + " + ";
+                            componentsString += `${this.getItemShortName(craftComponentId, locale)} ×${craftComponentCount} + `;
                             totalRecipePrice += craftComponentPrice * craftComponentCount;
                         }
                         if (requirement.type === "Resource") {
@@ -1337,7 +1415,7 @@ class ItemInfo {
                             const craftComponentId = requirement.templateId;
                             const resourceProportion = requirement.resource / this.items[requirement.templateId]._props.Resource;
                             const craftComponentPrice = this.getFleaPrice(craftComponentId);
-                            componentsString += this.getItemShortName(craftComponentId, locale) + " ×" + Math.round(resourceProportion * 100) + "%" + " + ";
+                            componentsString += `${this.getItemShortName(craftComponentId, locale)} ×${Math.round(resourceProportion * 100)}% + `;
                             totalRecipePrice += Math.round(craftComponentPrice * resourceProportion);
                         }
                         if (requirement.type === "QuestComplete") {
@@ -1351,7 +1429,7 @@ class ItemInfo {
                         }
                     }
                     if (recipe.count > 1) {
-                        recipeDivision = " " + translations_json_1.default[locale].peritem;
+                        recipeDivision = ` ${translations_json_1.default[locale].peritem}`;
                     }
                     componentsString = componentsString.slice(0, componentsString.length - 3);
                     if (recipe.endProduct === "59faff1d86f7746c51718c9c") {
@@ -1422,23 +1500,22 @@ class ItemInfo {
                     let totalRecipePrice = 0;
                     let questReq = "";
                     for (const requirement of recipe.requirements) {
-                        if (requirement.type == "Area") {
+                        if (requirement.type === "Area") {
                             // prettier-ignore
-                            recipeAreaString = this.getCraftingAreaName(requirement.areaType, locale) + " " + translations_json_1.default[locale].lv + requirement.requiredLevel;
+                            recipeAreaString = `${this.getCraftingAreaName(requirement.areaType, locale)} ${translations_json_1.default[locale].lv}${requirement.requiredLevel}`;
                         }
-                        if (requirement.type == "Item") {
+                        if (requirement.type === "Item") {
                             const craftComponent = requirement;
-                            if (craftComponent.templateId != itemID) {
-                                usedForCraftingComponentsString += this.getItemShortName(craftComponent.templateId, locale) + " ×" + craftComponent.count + " + ";
+                            if (craftComponent.templateId !== itemID) {
+                                usedForCraftingComponentsString += `${this.getItemShortName(craftComponent.templateId, locale)} ×${craftComponent.count} + `;
                             }
                             totalRecipePrice += this.getFleaPrice(craftComponent.templateId) * craftComponent.count;
                         }
-                        if (requirement.type == "Resource") {
+                        if (requirement.type === "Resource") {
                             const craftComponent = requirement;
                             const resourceProportion = craftComponent.resource / this.items[craftComponent.templateId]._props.Resource;
-                            if (craftComponent.templateId != itemID) {
-                                usedForCraftingComponentsString +=
-                                    this.getItemShortName(craftComponent.templateId, locale) + " ×" + Math.round(resourceProportion * 100) + "%" + " + ";
+                            if (craftComponent.templateId !== itemID) {
+                                usedForCraftingComponentsString += `${this.getItemShortName(craftComponent.templateId, locale)} ×${Math.round(resourceProportion * 100)}% + `;
                             }
                             totalRecipePrice += Math.round(this.getFleaPrice(craftComponent.templateId) * resourceProportion);
                         }
@@ -1450,7 +1527,7 @@ class ItemInfo {
                     // prettier-ignore
                     usedForCraftingComponentsString += ` | Δ ≈ ${this.formatPrice(Math.round(this.getFleaPrice(recipe.endProduct) * recipe.count - totalRecipePrice))}₽`;
                     // prettier-ignore
-                    usedForCraftingString += `${recipe.requirements[s].type == "Tool" ? translations_json_1.default[locale].Tool : translations_json_1.default[locale].Part + " ×" + recipe.requirements[s].count} > ${this.getItemName(recipe.endProduct, locale)} ×${recipe.count}`;
+                    usedForCraftingString += `${recipe.requirements[s].type === "Tool" ? translations_json_1.default[locale].Tool : `${translations_json_1.default[locale].Part} ×${recipe.requirements[s].count}`} > ${this.getItemName(recipe.endProduct, locale)} ×${recipe.count}`;
                     usedForCraftingString += ` @ ${recipeAreaString + questReq + usedForCraftingComponentsString}\n`;
                 }
             }
@@ -1466,7 +1543,7 @@ class ItemInfo {
             const questName = this.locales[locale][`${questID} name`];
             const questConditions = this.quests[questID].conditions.AvailableForFinish;
             for (const condition of questConditions) {
-                if (condition.conditionType == "HandoverItem" && condition.target.includes(itemID)) {
+                if (condition.conditionType === "HandoverItem" && condition.target.includes(itemID)) {
                     const trader = this.quests[questID].traderId;
                     //let tradeName = tables.traders[trader].base.nickname
                     const traderName = this.locales[locale][`${trader} Nickname`];
@@ -1474,7 +1551,7 @@ class ItemInfo {
                     questString += `${translations_json_1.default[locale].Found} ${condition.onlyFoundInRaid ? "(✔) " : ""}×${condition.value} > ${questName} @ ${traderName}\n`;
                 }
             }
-            const questRewards = this.quests[questID].rewards.Started.concat(this.quests[questID].rewards.Success).filter((x) => x.type == "AssortmentUnlock");
+            const questRewards = this.quests[questID].rewards.Started.concat(this.quests[questID].rewards.Success).filter((x) => x.type === "AssortmentUnlock");
             if (questRewards.length > 0) {
                 const splitRewardString = this.locales[locale]["AssortmentUnlockReward/Description"].split("{0}");
                 for (const results of questRewards) {
@@ -1487,11 +1564,11 @@ class ItemInfo {
                         if (item._tpl.includes(itemID)) {
                             // prettier-ignore
                             // unlockString += `${splitRewardString[0]}${traderName} ${translations[locale].lv}${ll}${splitRewardString[1]} > "${questName}"\n`
-                            if (item._id != results.target) {
-                                partString = this.getItemName(results.items.find(x => x._id == results.target)._tpl, locale);
+                            if (item._id !== results.target) {
+                                partString = this.getItemName(results.items.find(x => x._id === results.target)._tpl, locale);
                             }
                             // prettier-ignore
-                            unlockString += `↺ "${questName}"${traderName == questGiverName ? "" : " " + questGiverName}✔ @ ${traderName} ${translations_json_1.default[locale].lv}${ll}${partString.length > 0 ? " ∈ " + partString : ""}\n`;
+                            unlockString += `↺ "${questName}"${traderName === questGiverName ? "" : ` ${questGiverName}`}✔ @ ${traderName} ${translations_json_1.default[locale].lv}${ll}${partString.length > 0 ? ` ∈ ${partString}` : ""}\n`;
                             // if (trader == "6617beeaa9cfa777ca915b7c") {
                             // 	log(`${this.getItemName(itemID, locale)}:\n${unlockString}`)
                             // }
@@ -1505,7 +1582,7 @@ class ItemInfo {
     }
 }
 function roundWithPrecision(num, precision) {
-    const multiplier = Math.pow(10, precision);
+    const multiplier = 10 ** precision;
     return Math.round(num * multiplier) / multiplier;
 }
 const log = (i) => {
