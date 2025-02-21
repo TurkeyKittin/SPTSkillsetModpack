@@ -31,4 +31,9 @@ BepInEx/cache/*
 # Ignore FIKA server files
 user/mods/fika-server/
 
+# Ignore FIKA dedicated files
+Start_dedicated_*
+BepInEx/config/com.fika.dedicated.cfg
+BepInEx/plugins/Fika.Dedicated.dll
+
 # ------------------------ Add additional adjustments below ---------------------------------------------
