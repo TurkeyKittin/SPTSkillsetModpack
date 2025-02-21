@@ -36,4 +36,8 @@ Start_dedicated_*
 BepInEx/config/com.fika.dedicated.cfg
 BepInEx/plugins/Fika.Dedicated.dll
 
+# Don't ignore APBS logs as they need to exist or they the whole system will break -_-
+!user/mods/acidphantasm-progressivebotsystem/logs
+!user/mods/acidphantasm-progressivebotsystem/logs/debug.log
+
 # ------------------------ Add additional adjustments below ---------------------------------------------
