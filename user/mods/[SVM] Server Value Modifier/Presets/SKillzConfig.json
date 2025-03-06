@@ -588,7 +588,7 @@
         "Filter": false
       },
       "InjectorCase": {
-        "Height": 3,
+        "Height": 5,
         "Width": 3,
         "Filter": false
       },
@@ -684,17 +684,17 @@
       }
     },
     "SecureContainers": {
-      "KappaWidth": 4,
+      "KappaWidth": 6,
       "AlphaHeight": 2,
       "KappaHeight": 4,
       "AlphaWidth": 2,
-      "GammaWidth": 3,
+      "GammaWidth": 4,
       "GammaHeight": 3,
-      "GammaTUEWidth": 3,
+      "GammaTUEWidth": 4,
       "GammaTUEHeight": 3,
       "BetaHeight": 2,
       "BetaWidth": 3,
-      "EpsilonWidth": 4,
+      "EpsilonWidth": 5,
       "EpsilonHeight": 3,
       "DevHeight": 3,
       "DevWidth": 3,
