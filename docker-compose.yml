@@ -9,3 +9,5 @@ services:
         SKILLSET_BRANCH: skillz
     ports:
       - '6969:6969'
+    environment:
+      - LOG_REQUESTS=false
