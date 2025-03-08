@@ -42,12 +42,12 @@ PORT=${SERVER_PORT:-$PORT}
 PINGDELAYMS=${webSocketPingDelayMs:-90000}
 
 # Update the http.json configuration file
-sed -i "s/\"ip\": \"127.0.0.1\"/\"ip\": \"${IP}\"/g" SPT_Data/Server/configs/http.json
-sed -i "s/\"backendIp\": \"127.0.0.1\"/\"backendIp\": \"${IP}\"/g" SPT_Data/Server/configs/http.json
-sed -i "s/\"port\": [0-9]\+/\"port\": ${PORT}/g" SPT_Data/Server/configs/http.json
-sed -i "s/\"backendPort\": [0-9]\+/\"backendPort\": ${PORT}/g" SPT_Data/Server/configs/http.json
-sed -i "s/\"webSocketPingDelayMs\": [0-9]\+/\"webSocketPingDelayMs\": ${PINGDELAYMS}/g" SPT_Data/Server/configs/http.json
-sed -i "s/\"logRequests\": \w\+/\"logRequests\": ${LOG_REQUESTS}/g" SPT_Data/Server/configs/http.json
+[ -n "$IP" ] && sed -i "s/\"ip\": \"127.0.0.1\"/\"ip\": \"${IP}\"/g" SPT_Data/Server/configs/http.json
+[ -n "$IP" ] && sed -i "s/\"backendIp\": \"127.0.0.1\"/\"backendIp\": \"${IP}\"/g" SPT_Data/Server/configs/http.json
+[ -n "$PORT" ] && sed -i "s/\"port\": [0-9]\+/\"port\": ${PORT}/g" SPT_Data/Server/configs/http.json
+[ -n "$PORT" ] && sed -i "s/\"backendPort\": [0-9]\+/\"backendPort\": ${PORT}/g" SPT_Data/Server/configs/http.json
+[ -n "$PINGDELAYMS" ] && sed -i "s/\"webSocketPingDelayMs\": [0-9]\+/\"webSocketPingDelayMs\": ${PINGDELAYMS}/g" SPT_Data/Server/configs/http.json
+sed -i "s/\"logRequests\": \w\+/\"logRequests\": false/g" SPT_Data/Server/configs/http.json
 
 # Make the SPT.Server.exe file executable
 chmod +x SPT.Server.exe
