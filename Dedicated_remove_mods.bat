@@ -57,7 +57,7 @@ set mods[12]=SPTDynamicMaps
 
 REM Function to delete plugins
 :deletePlugins
-for /L %%i in (0,1,22) do (
+for /L %%i in (0,1,23) do (
     set "item=!plugins[%%i]!"
     if defined item (
         set "itemPath=BepInEx\plugins\!item!"
