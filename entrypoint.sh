@@ -49,12 +49,6 @@ sed -i "s/\"backendPort\": [0-9]\+/\"backendPort\": ${PORT}/g" SPT_Data/Server/c
 sed -i "s/\"webSocketPingDelayMs\": [0-9]\+/\"webSocketPingDelayMs\": ${PINGDELAYMS}/g" SPT_Data/Server/configs/http.json
 sed -i "s/\"logRequests\": \w\+/\"logRequests\": ${LOG_REQUESTS}/g" SPT_Data/Server/configs/http.json
 
-# Debug: Show the modified http.json content
-echo "LOG_REQUESTS is set to: $LOG_REQUESTS"
-echo "Modified http.json content:"
-cat SPT_Data/Server/configs/http.json
-sleep 10
-
 # Make the SPT.Server.exe file executable
 chmod +x SPT.Server.exe
 
