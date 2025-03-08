@@ -24,7 +24,8 @@
       "KickOpenAllDoors": false,
       "HoldGroundBaseTime": 1.5,
       "HoldGroundMinRandom": 0.8,
-      "HoldGroundMaxRandom": 1.2
+      "HoldGroundMaxRandom": 1.2,
+      "SuppressionResistance": 0.0
     },
     "Search": {
       "WillSearchForEnemy": true,
