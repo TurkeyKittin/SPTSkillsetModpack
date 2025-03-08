@@ -1,6 +1,7 @@
 @echo off
 
 REM Run git pull
+git reset --hard HEAD
 git pull
 
 REM Check the exit code of the git pull command
