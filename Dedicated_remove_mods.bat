@@ -37,6 +37,7 @@ set plugins[19]=MoreCheckmarks
 set plugins[20]=PlayerEncumbranceBar
 set plugins[21]=StashManagementHelper
 set plugins[22]=StashSearch
+set plugins[23]=Sense
 
 REM Array of mods to delete
 set mods[0]=acidphantasm-brightlasers
