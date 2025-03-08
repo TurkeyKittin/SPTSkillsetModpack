@@ -10,34 +10,36 @@ set "GREEN=%ESC%[32m"
 set "YELLOW=%ESC%[33m"
 set "RESET=%ESC%[0m"
 
+REM remember to update the index of the array when adding or removing items
 
 REM Array of plugins to delete
 set plugins[0]=AmandsGraphics.dll
-set plugins[1]=BossNotifier.dll
-set plugins[2]=CactusPie.RamCleanerInterval.dll
-set plugins[3]=ContinuousHealing.dll
-set plugins[4]=DrakiaXYZ-QuickMoveToContainer.dll
-set plugins[5]=DrakiaXYZ-SearchOpenContainers.dll
-set plugins[6]=Endurance.dll
-set plugins[7]=Gaylatea-UseLooseLoot.dll
-set plugins[8]=HandsAreNotBusy.dll
-set plugins[9]=HideSpecialIcon.dll
-set plugins[10]=IhanaMies-HealingAutoCancel.dll
-set plugins[11]=IncreaseLookDirection.dll
-set plugins[12]=MergeConsumables.dll
-set plugins[13]=Tyfon.AutoDeposit.dll
-set plugins[14]=UseItemsFromAnywhere.dll
-set plugins[15]=Wara-ModdingStatsHelper.dll
+set plugins[1]=AmandsSense.dll
+set plugins[2]=BossNotifier.dll
+set plugins[3]=CactusPie.RamCleanerInterval.dll
+set plugins[4]=ContinuousHealing.dll
+set plugins[5]=DrakiaXYZ-QuickMoveToContainer.dll
+set plugins[6]=DrakiaXYZ-SearchOpenContainers.dll
+set plugins[7]=Endurance.dll
+set plugins[8]=Gaylatea-UseLooseLoot.dll
+set plugins[9]=HandsAreNotBusy.dll
+set plugins[10]=HideSpecialIcon.dll
+set plugins[11]=IhanaMies-HealingAutoCancel.dll
+set plugins[12]=IncreaseLookDirection.dll
+set plugins[13]=MergeConsumables.dll
+set plugins[14]=Tyfon.AutoDeposit.dll
+set plugins[15]=UseItemsFromAnywhere.dll
+set plugins[16]=Wara-ModdingStatsHelper.dll
 
-set plugins[16]=acidphantasm-stattrack
-REM set plugins[16.111111]=BorkelRNVG
-set plugins[17]=Declutterer
-set plugins[18]=DynamicMaps
-set plugins[19]=MoreCheckmarks
-set plugins[20]=PlayerEncumbranceBar
-set plugins[21]=StashManagementHelper
-set plugins[22]=StashSearch
-set plugins[23]=Sense
+set plugins[17]=acidphantasm-stattrack
+REM set plugins[1.11111111111]=BorkelRNVG
+set plugins[18]=Declutterer
+set plugins[19]=DynamicMaps
+set plugins[20]=MoreCheckmarks
+set plugins[21]=PlayerEncumbranceBar
+set plugins[22]=StashManagementHelper
+set plugins[23]=StashSearch
+set plugins[24]=Sense
 
 REM Array of mods to delete
 set mods[0]=acidphantasm-brightlasers
@@ -57,7 +59,7 @@ set mods[12]=SPTDynamicMaps
 
 REM Function to delete plugins
 :deletePlugins
-for /L %%i in (0,1,23) do (
+for /L %%i in (0,1,24) do (
     set "item=!plugins[%%i]!"
     if defined item (
         set "itemPath=BepInEx\plugins\!item!"
