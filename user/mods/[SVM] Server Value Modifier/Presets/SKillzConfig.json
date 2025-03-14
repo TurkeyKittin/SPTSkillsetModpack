@@ -69,7 +69,7 @@
       "EnergyRegen": 1
     },
     "WaterFilterTime": 100,
-    "BitcoinTime": 2321,
+    "BitcoinTime": 4000,
     "MaxBitcoins": 10,
     "NoFuelMult": 1,
     "ScavCasePrice": 1,
@@ -83,7 +83,7 @@
     "RemoveSkillRequirements": true,
     "RemoveTraderLevelRequirements": true,
     "EnableHideout": true,
-    "FuelConsumptionRate": 0.1
+    "FuelConsumptionRate": 0.2
   },
   "Traders": {
     "Fence": {
@@ -754,14 +754,14 @@
       "TrioShoreline": 50,
       "TrioWoods": 50,
       "Zryachiy": 100,
-      "CultistCustoms": 20,
-      "CultistShoreline": 20,
+      "CultistCustoms": 30,
+      "CultistShoreline": 50,
       "Trio": 50,
       "RaiderLab": 60,
       "RaiderReserve": 60,
-      "CultistFactory": 10,
-      "CultistWoods": 30,
-      "CultistGroundZero": 45,
+      "CultistFactory": 20,
+      "CultistWoods": 40,
+      "CultistGroundZero": 50,
       "Rogue": 85,
       "Tagilla": 60,
       "Shturman": 60,
