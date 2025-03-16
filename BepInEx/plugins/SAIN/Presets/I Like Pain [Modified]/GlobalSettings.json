@@ -1,10 +1,10 @@
 {
   "Difficulty": {
-    "VisibleDistCoef": 1.33,
+    "VisibleDistCoef": 2.0,
     "GainSightCoef": 0.8,
     "ScatteringCoef": 0.85,
     "HearingDistanceCoef": 1.0,
-    "AggressionCoef": 1.0,
+    "AggressionCoef": 1.5,
     "PrecisionSpeedCoef": 0.8,
     "AccuracySpeedCoef": 0.8
   },
@@ -369,11 +369,11 @@
       "Labs": {
         "VisibleDistCoef": 1.0,
         "GainSightCoef": 1.0,
-        "ScatteringCoef": 1.0,
-        "HearingDistanceCoef": 1.0,
-        "AggressionCoef": 1.0,
-        "PrecisionSpeedCoef": 1.0,
-        "AccuracySpeedCoef": 1.0
+        "ScatteringCoef": 0.8,
+        "HearingDistanceCoef": 1.5,
+        "AggressionCoef": 2.0,
+        "PrecisionSpeedCoef": 0.8,
+        "AccuracySpeedCoef": 0.8
       },
       "Woods": {
         "VisibleDistCoef": 1.0,
@@ -635,7 +635,7 @@
   },
   "Shoot": {
     "ONLY_SEMIAUTO_TOGGLE": false,
-    "RecoilMultiplier": 0.66,
+    "RecoilMultiplier": 1.0,
     "AddRecoil": 5.0,
     "RECOIL_DECAY_COEF": 0.2,
     "RECOIL_BASELINE": 100.0,
@@ -750,10 +750,10 @@
   },
   "Talk": {
     "TalkativeScavs": true,
-    "TalkativePMCs": false,
+    "TalkativePMCs": true,
     "TalkativeRaidersRogues": true,
     "TalkativeBosses": true,
-    "TalkativeGoons": false,
+    "TalkativeGoons": true,
     "FriendlyReponseChance": 85.0,
     "FriendlyReponseChanceAI": 80.0,
     "FriendlyReponseDistance": 65.0,
@@ -771,9 +771,9 @@
     "_reportRatTimeSinceSeen": 60.0,
     "_reportEnemyConversationChance": 10.0,
     "_reportEnemyMaxDist": 70.0,
-    "_reportEnemyHealthChance": 40.0,
+    "_reportEnemyHealthChance": 75.0,
     "_reportEnemyHealthFreq": 8.0,
-    "_reportEnemyKilledChance": 60.0,
+    "_reportEnemyKilledChance": 90.0,
     "_reportEnemyKilledSquadLeadChance": 60.0,
     "_reportEnemyKilledToxicSquadLeader": false,
     "_friendCloseDist": 40.0,
