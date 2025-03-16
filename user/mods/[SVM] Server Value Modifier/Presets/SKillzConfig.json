@@ -77,8 +77,10 @@
     "HideoutConstMult": 0.001,
     "HideoutProdMult": 0.001,
     "WaterFilterRate": 50,
-    "GPUBoostRate": 2,
+    "GPUBoostRate": 1,
     "AirFilterRate": 0.1,
+    "CultistTime": 1,
+    "CultistMaxRewards": 5,
     "RemoveConstructionsRequirements": false,
     "RemoveSkillRequirements": true,
     "RemoveTraderLevelRequirements": true,
@@ -102,7 +104,8 @@
       "Blacklist": ""
     },
     "RemoveTradeLimits": true,
-    "QuestRedeemTime": 144,
+    "QuestRedeemDefault": 144,
+    "QuestRedeemUnheard": 144,
     "TraderMarkup": {
       "Ragman": 62,
       "Peacekeeper": 45,
@@ -292,7 +295,18 @@
       "Health_blacked": 0.1,
       "Health_death": 0.3
     },
-    "MaxStamina": 200,
+    "MaxStaminaLegs": 200,
+    "MaxStaminaHands": 80,
+    "EnableStaminaHands": false,
+    "EnableStaminaLegs": true,
+    "RegenStaminaLegs": 4.5,
+    "RegenStaminaHands": 2.1,
+    "JumpConsumption": 14,
+    "LayToStand": 20,
+    "CrouchToStand": 11,
+    "Standing": 1,
+    "LayingDown": 0.15,
+    "Crouching": 0.75,
     "UnlimitedStamina": false
   },
   "Raids": {
@@ -331,7 +345,9 @@
     "RaidEvents": {
       "DisableEvents": false,
       "KillaFactoryChance": 100,
+      "CultistBossesChance": 100,
       "GoonsFactoryChance": 100,
+      "CultistBosses": false,
       "GoonsFactory": false,
       "BossesOnCustoms": false,
       "BossesOnHealthResort": false,
@@ -342,8 +358,10 @@
       "SkierFighters": 10,
       "PeaceFighters": 15,
       "Christmas": false,
+      "NonSeasonalQuests": false,
       "Halloween": false,
       "DisableZombies": false,
+      "DisableHalloweenAIFriendly": false,
       "RandomInfectionLevel": false,
       "IncludeStreetBosses": false,
       "KillaFactory": false,
@@ -356,6 +374,9 @@
     "Removelabkey": true,
     "EnableCarCoop": true,
     "ForceBTRFriendly": false,
+    "ForceTransitStash": false,
+    "TransitHeight": 2,
+    "TransitWidth": 5,
     "ForceBTRStash": false,
     "EnableBTR": true,
     "BTRCoverPrice": 30000,
@@ -364,7 +385,7 @@
     "BearMult": 1,
     "ScavMult": 0.5,
     "BTRHeight": 2,
-    "BTRHWidth": 5,
+    "BTRWidth": 5,
     "Season": 0,
     "ForceSeason": false,
     "RaidStartup": {
@@ -681,6 +702,11 @@
         "Height": 14,
         "Width": 14,
         "Filter": false
+      },
+      "StreamerCase": {
+        "Height": 11,
+        "Width": 7,
+        "Filter": false
       }
     },
     "SecureContainers": {
@@ -745,6 +771,8 @@
     "AIChance": {
       "KolontayStreets": 60,
       "KolontayGZ": 60,
+      "ForcePartisan": false,
+      "PartisanCustoms": 30,
       "PartisanShoreline": 15,
       "PartisanWoods": 15,
       "PartisanLighthouse": 15,
@@ -812,6 +840,7 @@
       "PMCNamePrefix": 15,
       "PMCAllNamePrefix": 5,
       "PMCLooseWep": 15,
+      "HostileSamePMC": 85,
       "HostilePMC": 80,
       "PMCWepEnhance": 5
     },
@@ -825,6 +854,7 @@
       "CursedToPMC": 20,
       "SnipertoPMC": 0,
       "ScavToPMC": 30,
+      "ScavToPMCFactory": 13,
       "RogueToPMC": 5,
       "RaiderToPMC": 7
     },
