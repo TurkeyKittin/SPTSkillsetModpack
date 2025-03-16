@@ -6,12 +6,12 @@ import path from "path";
 import { TierInformation } from "./TierInformation";
 import { APBSLogger } from "../Utils/APBSLogger";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
-import { Logging } from "../Enums/Logging";
 
 @injectable()
 export class ModConfig
 {
     public static config: Config;
+    public static blacklist: Blacklist;
 
     constructor(
         @inject("APBSLogger") protected apbsLogger: APBSLogger,
@@ -21,6 +21,7 @@ export class ModConfig
     )
     {
         ModConfig.config = jsonc.parse(this.vfs.readFile(path.resolve(__dirname, "../../config/config.json")));
+        ModConfig.blacklist = jsonc.parse(this.vfs.readFile(path.resolve(__dirname, "../../config/blacklists.json")));
     }
 
     public serverLogDetails(): void
@@ -54,12 +55,9 @@ export interface Config
     },
     normalizedHealthPool: NormalizeHealthConfig,
     generalConfig: {
-        enableBotsToRollAmmoAgain: boolean,
-        chanceToRollAmmoAgain: number,
-        onlyChads: boolean,
-        tarkovAndChill: boolean,
-        blickyMode: boolean,
         enablePerWeaponTypeAttachmentChances: boolean,
+        enableLargeCapacityMagazineLimit: boolean,
+        largeCapacityMagazineCount: number,
         forceStock: boolean,
         stockButtpadChance: number,
         forceDustCover: boolean,
@@ -70,6 +68,9 @@ export interface Config
         forceWeaponModLimits: boolean,
         scopeLimit: number,
         tacticalLimit: number,
+        onlyChads: boolean,
+        tarkovAndChill: boolean,
+        blickyMode: boolean,
         enableT7Thermals: boolean,
         startTier: number,
         plateChances: PlateWeightConfig,
@@ -79,6 +80,10 @@ export interface Config
         resourceRandomization: ResourceRandomizationConfig,
         weaponDurability: WeaponDurabilityConfig,
         lootConfig: LootConfig,
+        rerollConfig: EnableChance,
+        toploadConfig: ToploadConfig,
+        questConfig: EnableChance,
+        povertyConfig: EnableChance,
         additionalOptions: PMCSpecificConfig,
         secrets: PMCSecrets,
     }
@@ -87,6 +92,8 @@ export interface Config
         resourceRandomization: ResourceRandomizationConfig,
         weaponDurability: WeaponDurabilityConfig,
         lootConfig: LootConfig,
+        rerollConfig: EnableChance,
+        toploadConfig: ToploadConfig,
         keyConfig: KeyConfig,
         additionalOptions: ScavSpecificConfig,
     },
@@ -94,34 +101,49 @@ export interface Config
         enable: boolean,
         resourceRandomization: ResourceRandomizationConfig,
         weaponDurability: WeaponDurabilityConfig,
-        lootConfig: LootConfig
+        lootConfig: LootConfig,
+        rerollConfig: EnableChance,
+        toploadConfig: ToploadConfig,
     },
     followerBots: {
         enable: boolean,
         resourceRandomization: ResourceRandomizationConfig,
         weaponDurability: WeaponDurabilityConfig,
-        lootConfig: LootConfig
+        lootConfig: LootConfig,
+        rerollConfig: EnableChance,
+        toploadConfig: ToploadConfig,
     },
     specialBots: {
         enable: boolean,
         resourceRandomization: ResourceRandomizationConfig,
         weaponDurability: WeaponDurabilityConfig,
-        lootConfig: LootConfig
+        lootConfig: LootConfig,
+        rerollConfig: EnableChance,
+        toploadConfig: ToploadConfig,
     },
-    weaponBlacklist: TierBlacklistConfig,
-    equipmentBlacklist: TierBlacklistConfig,
-    ammoBlacklist: TierBlacklistConfig,
-    attachmentBlacklist: TierBlacklistConfig,
     customLevelDeltas: CustomLevelDeltas,
     customScavLevelDeltas: CustomLevelDeltas,
     enableDebugLog: boolean,
     configAppSettings: ConfigAppSettings,
+}
+export interface Blacklist
+{
+    weaponBlacklist: TierBlacklistConfig,
+    equipmentBlacklist: TierBlacklistConfig,
+    ammoBlacklist: TierBlacklistConfig,
+    attachmentBlacklist: TierBlacklistConfig,
+    clothingBlacklist: TierBlacklistConfig
 }
 export interface PMCSpecificConfig
 {
     seasonalPmcAppearance: boolean,
     ammoTierSliding: AmmoTierSlideConfig,
     gameVersionWeighting: GameVersionWeightConfig, 
+}
+export interface EnableChance
+{
+    enable: boolean,
+    chance: number,
 }
 export interface ScavSpecificConfig
 {
@@ -144,11 +166,18 @@ export interface WeaponDurabilityConfig
     minDelta: number,
     maxDelta: number,
     minLimitPercent: number,
+    enhancementChance: number,
 }
 export interface LootConfig
 {
     enable: boolean,
     blacklist: string[],
+}
+export interface ToploadConfig
+{
+    enable: boolean,
+    chance: number,
+    percent: number,
 }
 export interface KeyConfig
 {

@@ -16,8 +16,6 @@ import { BaseClasses } from "@spt/models/enums/BaseClasses";
 import { IBotLootCache, LootCacheType } from "@spt/models/spt/bots/IBotLootCache";
 import { RaidInformation } from "../Globals/RaidInformation";
 import { APBSLogger } from "../Utils/APBSLogger";
-import { Logging } from "../Enums/Logging";
-import { IProps } from "@spt/models/eft/common/tables/ITemplateItem";
 
 @injectable()
 export class APBSBotLootCacheService extends BotLootCacheService
@@ -84,16 +82,17 @@ export class APBSBotLootCacheService extends BotLootCacheService
         isPmc: boolean,
         lootType: LootCacheType,
         botJsonTemplate: IBotType,
-        botLevel: number
+        botLevel: number,
+        tier: number
     ): Record<string, number> 
     {
-        const tierInfo = this.apbsTierGetter.getTierByLevel(botLevel).toString();
+        const tierInfo = tier.toString()
         const combinedBotRoleTier = botRole + tierInfo;
         if (!this.apbsBotRoleExistsInCache(combinedBotRoleTier))
         {
             this.apbsInitCacheForBotRole(combinedBotRoleTier);
 
-            this.apbsAddLootToCache(botRole, isPmc, botJsonTemplate, botLevel);
+            this.apbsAddLootToCache(botRole, isPmc, botJsonTemplate, botLevel, tier);
         }
 
         let result = undefined;
@@ -152,11 +151,11 @@ export class APBSBotLootCacheService extends BotLootCacheService
         return this.cloner.clone(result);
     }
     
-    public apbsAddLootToCache(botRole: string, isPmc: boolean, botJsonTemplate: IBotType, botLevel: number): void
+    public apbsAddLootToCache(botRole: string, isPmc: boolean, botJsonTemplate: IBotType, botLevel: number, tier: number): void
     {
-        const tierInfo = this.apbsTierGetter.getTierByLevel(botLevel);
+        const tierInfo = tier.toString();
         const combinedBotRoleTier = botRole + tierInfo;
-        const chances = this.apbsEquipmentGetter.getSpawnChancesByBotRole(botRole, tierInfo);
+        const chances = this.apbsEquipmentGetter.getSpawnChancesByBotRole(botRole, tier);
         let realWhitelist: IGenerationWeightingItems = chances.generation.items;
         
         if (!this.raidInformation.isBotEnabled(botRole))

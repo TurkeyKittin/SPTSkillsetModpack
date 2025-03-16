@@ -96,7 +96,7 @@
                 "mod_mount_001": 40,
                 "mod_mount_002": 40,
                 "mod_mount_003": 40,
-                "mod_mount_004": 40,
+                "mod_mount_004": 100,
                 "mod_mount_005": 40,
                 "mod_mount_006": 40,
                 "mod_muzzle": 65,
@@ -602,9 +602,9 @@
                     },
                     "grenades": {
                         "weights": {
-                            "0": 30,
-                            "1": 30,
-                            "2": 25,
+                            "0": 40,
+                            "1": 25,
+                            "2": 20,
                             "3": 10,
                             "4": 5
                         },
@@ -637,8 +637,8 @@
                             "0": 0,
                             "1": 0,
                             "2": 10,
-                            "3": 45,
-                            "4": 45
+                            "3": 65,
+                            "4": 25
                         },
                         "whitelist": {}
                     },
@@ -796,7 +796,7 @@
                 "mod_mount_001": 40,
                 "mod_mount_002": 40,
                 "mod_mount_003": 40,
-                "mod_mount_004": 40,
+                "mod_mount_004": 100,
                 "mod_mount_005": 40,
                 "mod_mount_006": 40,
                 "mod_muzzle": 65,
@@ -1302,9 +1302,9 @@
                     },
                     "grenades": {
                         "weights": {
-                            "0": 30,
-                            "1": 30,
-                            "2": 25,
+                            "0": 40,
+                            "1": 25,
+                            "2": 20,
                             "3": 10,
                             "4": 5
                         },
@@ -1337,8 +1337,8 @@
                             "0": 0,
                             "1": 0,
                             "2": 10,
-                            "3": 45,
-                            "4": 45
+                            "3": 65,
+                            "4": 25
                         },
                         "whitelist": {}
                     },
@@ -1637,7 +1637,7 @@
                 "mod_barrel": 100,
                 "mod_bipod": 50,
                 "mod_catch": 0,
-                "mod_charge": 15,
+                "mod_charge": 100,
                 "mod_flashlight": 10,
                 "mod_foregrip": 20,
                 "mod_hammer": 0,
@@ -2012,10 +2012,10 @@
                     "magazines": {
                         "weights": {
                             "0": 0,
-                            "1": 5,
-                            "2": 4,
-                            "3": 2,
-                            "4": 1
+                            "1": 35,
+                            "2": 50,
+                            "3": 10,
+                            "4": 5
                         },
                         "whitelist": {}
                     },
@@ -4166,7 +4166,7 @@
                 "mod_muzzle_001": 0,
                 "mod_pistol_grip": 0,
                 "mod_pistol_grip_akms": 0,
-                "mod_pistolgrip": 0,
+                "mod_pistolgrip": 100,
                 "mod_pistolgrip_000": 0,
                 "mod_reciever": 100,
                 "mod_scope": 66,
@@ -12718,7 +12718,7 @@
                 "mod_hammer": 35,
                 "mod_handguard": 35,
                 "mod_launcher": 1,
-                "mod_magazine": 45,
+                "mod_magazine": 100,
                 "mod_mount": 65,
                 "mod_mount_000": 75,
                 "mod_mount_001": 50,
@@ -13061,11 +13061,11 @@
                     },
                     "grenades": {
                         "weights": {
-                            "0": 1,
-                            "1": 1,
-                            "2": 3,
-                            "3": 2,
-                            "4": 2,
+                            "0": 15,
+                            "1": 30,
+                            "2": 40,
+                            "3": 10,
+                            "4": 4,
                             "5": 1
                         },
                         "whitelist": {
@@ -13373,9 +13373,9 @@
                 "mod_flashlight": 45,
                 "mod_foregrip": 65,
                 "mod_hammer": 35,
-                "mod_handguard": 35,
+                "mod_handguard": 100,
                 "mod_launcher": 1,
-                "mod_magazine": 45,
+                "mod_magazine": 100,
                 "mod_mount": 65,
                 "mod_mount_000": 75,
                 "mod_mount_001": 50,
@@ -13390,7 +13390,7 @@
                 "mod_pistol_grip": 50,
                 "mod_pistol_grip_akms": 50,
                 "mod_pistolgrip": 50,
-                "mod_pistolgrip_000": 0,
+                "mod_pistolgrip_000": 100,
                 "mod_reciever": 75,
                 "mod_scope": 80,
                 "mod_scope_000": 85,
@@ -13719,11 +13719,11 @@
                     },
                     "grenades": {
                         "weights": {
-                            "0": 1,
-                            "1": 1,
-                            "2": 5,
-                            "3": 2,
-                            "4": 1,
+                            "0": 15,
+                            "1": 30,
+                            "2": 40,
+                            "3": 10,
+                            "4": 4,
                             "5": 1
                         },
                         "whitelist": {
@@ -14036,7 +14036,7 @@
                 "mod_hammer": 25,
                 "mod_handguard": 85,
                 "mod_launcher": 20,
-                "mod_magazine": 80,
+                "mod_magazine": 100,
                 "mod_mount": 85,
                 "mod_mount_000": 75,
                 "mod_mount_001": 75,
@@ -14380,11 +14380,11 @@
                     },
                     "grenades": {
                         "weights": {
-                            "0": 1,
-                            "1": 1,
-                            "2": 5,
-                            "3": 2,
-                            "4": 1,
+                            "0": 15,
+                            "1": 30,
+                            "2": 40,
+                            "3": 10,
+                            "4": 4,
                             "5": 1
                         },
                         "whitelist": {
@@ -14407,9 +14407,9 @@
                         "weights": {
                             "0": 0,
                             "1": 0,
-                            "2": 1,
-                            "3": 3,
-                            "4": 2
+                            "2": 20,
+                            "3": 60,
+                            "4": 20
                         },
                         "whitelist": {}
                     },

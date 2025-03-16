@@ -1,5 +1,3 @@
-import { IInventoryMagGen } from "@spt/generators/weapongen/IInventoryMagGen";
-import { InventoryMagGen } from "@spt/generators/weapongen/InventoryMagGen";
 import { BotWeaponGeneratorHelper } from "@spt/helpers/BotWeaponGeneratorHelper";
 import { BaseClasses } from "@spt/models/enums/BaseClasses";
 import { EquipmentSlots } from "@spt/models/enums/EquipmentSlots";
@@ -40,16 +38,17 @@ export class APBSUbglExternalMagGen implements APBSIInventoryMagGen
             inventoryMagGen.getMagCount(),
             inventoryMagGen.getMagazineTemplate()
         );
-
         
-        if (ModConfig.config.generalConfig.enableBotsToRollAmmoAgain && this.randomUtil.getChance100(ModConfig.config.generalConfig.chanceToRollAmmoAgain))
+        const rerollConfig = inventoryMagGen.getRerollDetails();
+        if (rerollConfig.enable && this.randomUtil.getChance100(rerollConfig.chance))
         {
             const weapon = inventoryMagGen.getWeaponTemplate();
             
-            const tierInfo = this.apbsTierGetter.getTierByLevel(inventoryMagGen.getBotLevel());
-            const ammoTable = this.apbsEquipmentGetter.getAmmoByBotRole(inventoryMagGen.getBotRole(), tierInfo)
+            const ammoTable = this.apbsEquipmentGetter.getAmmoByBotRole(inventoryMagGen.getBotRole(), inventoryMagGen.getTierNumber())
+            const ammoTemplate = inventoryMagGen.getAmmoTemplate();
+            const ammoCaliber = ammoTemplate._props.Caliber;
 
-            const rerolledAmmo = this.apbsMethodHolder.getWeightedCompatibleAmmo(ammoTable, weapon);
+            const rerolledAmmo = this.apbsMethodHolder.apbsGetWeightedCompatibleAmmo(ammoTable, ammoCaliber, weapon);
 
             this.botWeaponGeneratorHelper.addAmmoIntoEquipmentSlots(
                 rerolledAmmo,

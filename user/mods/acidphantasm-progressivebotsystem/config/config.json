@@ -27,9 +27,9 @@
     "excludedBots": []
   },
   "generalConfig": {
-    "enableBotsToRollAmmoAgain": false,
-    "chanceToRollAmmoAgain": 50,
     "enablePerWeaponTypeAttachmentChances": true,
+    "enableLargeCapacityMagazineLimit": false,
+    "largeCapacityMagazineCount": 2,
     "forceStock": false,
     "stockButtpadChance": 50,
     "forceDustCover": false,
@@ -162,13 +162,31 @@
       "max": 100,
       "minDelta": 0,
       "maxDelta": 5,
-      "minLimitPercent": 90
+      "minLimitPercent": 90,
+      "enhancementChance": 10
     },
     "lootConfig": {
       "enable": false,
       "blacklist": [
         "6711039f9e648049e50b3307"
       ]
+    },
+    "rerollConfig": {
+      "enable": false,
+      "chance": 50
+    },
+    "toploadConfig": {
+      "enable": true,
+      "chance": 1,
+      "percent": 10
+    },
+    "questConfig": {
+      "enable": true,
+      "chance": 10
+    },
+    "povertyConfig": {
+      "enable": true,
+      "chance": 10
     },
     "additionalOptions": {
       "seasonalPmcAppearance": true,
@@ -226,11 +244,21 @@
       "max": 90,
       "minDelta": 5,
       "maxDelta": 20,
-      "minLimitPercent": 50
+      "minLimitPercent": 50,
+      "enhancementChance": 1
     },
     "lootConfig": {
       "enable": true,
       "blacklist": []
+    },
+    "rerollConfig": {
+      "enable": true,
+      "chance": 50
+    },
+    "toploadConfig": {
+      "enable": false,
+      "chance": 30,
+      "percent": 30
     },
     "keyConfig": {
       "addAllKeysToScavs": false,
@@ -257,11 +285,21 @@
       "max": 100,
       "minDelta": 0,
       "maxDelta": 5,
-      "minLimitPercent": 85
+      "minLimitPercent": 85,
+      "enhancementChance": 0
     },
     "lootConfig": {
       "enable": true,
       "blacklist": []
+    },
+    "rerollConfig": {
+      "enable": false,
+      "chance": 50
+    },
+    "toploadConfig": {
+      "enable": true,
+      "chance": 1,
+      "percent": 10
     }
   },
   "followerBots": {
@@ -279,11 +317,21 @@
       "max": 100,
       "minDelta": 0,
       "maxDelta": 15,
-      "minLimitPercent": 75
+      "minLimitPercent": 75,
+      "enhancementChance": 0
     },
     "lootConfig": {
       "enable": true,
       "blacklist": []
+    },
+    "rerollConfig": {
+      "enable": false,
+      "chance": 50
+    },
+    "toploadConfig": {
+      "enable": true,
+      "chance": 1,
+      "percent": 10
     }
   },
   "specialBots": {
@@ -301,48 +349,22 @@
       "max": 100,
       "minDelta": 0,
       "maxDelta": 10,
-      "minLimitPercent": 80
+      "minLimitPercent": 80,
+      "enhancementChance": 0
     },
     "lootConfig": {
       "enable": true,
       "blacklist": []
+    },
+    "rerollConfig": {
+      "enable": false,
+      "chance": 50
+    },
+    "toploadConfig": {
+      "enable": true,
+      "chance": 1,
+      "percent": 10
     }
-  },
-  "weaponBlacklist": {
-    "tier1Blacklist": [],
-    "tier2Blacklist": [],
-    "tier3Blacklist": [],
-    "tier4Blacklist": [],
-    "tier5Blacklist": [],
-    "tier6Blacklist": [],
-    "tier7Blacklist": []
-  },
-  "equipmentBlacklist": {
-    "tier1Blacklist": [],
-    "tier2Blacklist": [],
-    "tier3Blacklist": [],
-    "tier4Blacklist": [],
-    "tier5Blacklist": [],
-    "tier6Blacklist": [],
-    "tier7Blacklist": []
-  },
-  "ammoBlacklist": {
-    "tier1Blacklist": [],
-    "tier2Blacklist": [],
-    "tier3Blacklist": [],
-    "tier4Blacklist": [],
-    "tier5Blacklist": [],
-    "tier6Blacklist": [],
-    "tier7Blacklist": []
-  },
-  "attachmentBlacklist": {
-    "tier1Blacklist": [],
-    "tier2Blacklist": [],
-    "tier3Blacklist": [],
-    "tier4Blacklist": [],
-    "tier5Blacklist": [],
-    "tier6Blacklist": [],
-    "tier7Blacklist": []
   },
   "customLevelDeltas": {
     "enable": false,
