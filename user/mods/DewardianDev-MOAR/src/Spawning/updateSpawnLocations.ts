@@ -1,7 +1,15 @@
 import { ILocation } from "@spt/models/eft/common/ILocation";
 import { configLocations } from "./constants";
-import mapConfig from "../../config/mapConfig.json";
 import _config from "../../config/config.json";
+import { getRandomInArray, shuffle } from "./utils";
+import advancedConfig from "../../config/advancedConfig.json";
+import { ISpawnPointParam } from "@spt/models/eft/common/ILocationBase";
+import { globalValues } from "../GlobalValues";
+import getSortedSpawnPointList, {
+  getClosestZone,
+  getDistance,
+  uuidv4,
+} from "./spawnZoneUtils";
 
 export default function updateSpawnLocations(
   locationList: ILocation[],
@@ -9,131 +17,55 @@ export default function updateSpawnLocations(
 ) {
   for (let index = 0; index < locationList.length; index++) {
     const map = configLocations[index];
-    // console.log(map);
-    const limit = mapConfig[map].spawnMinDistance;
+    const mapSpawns = [...globalValues.indexedMapSpawns[index]];
 
-    const InfiltrationList = [
-      ...new Set(
-        locationList[index].base.SpawnPointParams.filter(
-          ({ Infiltration }) => Infiltration
-        ).map(({ Infiltration }) => Infiltration)
-      ),
+    const playerSpawns = mapSpawns.filter(
+      (point) => point?.["type"] === "player"
+    );
+
+    const playerSpawn: ISpawnPointParam = getRandomInArray(playerSpawns);
+
+    globalValues.playerSpawn = playerSpawn;
+
+    const { x, y, z } = playerSpawn.Position;
+
+    const sortedSpawnPointList = getSortedSpawnPointList(mapSpawns, x, y, z);
+
+    const possibleSpawnList: ISpawnPointParam[] = [];
+
+    sortedSpawnPointList.forEach((point) => {
+      if (
+        possibleSpawnList.length <= advancedConfig.SpawnpointAreaTarget &&
+        point?.["type"] === "player"
+      ) {
+        possibleSpawnList.push(point);
+      }
+    });
+
+    // const possibleSpawnListSet = new Set(possibleSpawnList.map(({ Id }) => Id));
+
+    locationList[index].base.SpawnPointParams = [
+      ...possibleSpawnList,
+      ...sortedSpawnPointList.filter((point) => point["type"] !== "player"),
     ];
 
-    // console.log(map, InfiltrationList);
-    const getRandomInfil = (): string =>
-      InfiltrationList[Math.floor(Math.random() * InfiltrationList.length)];
-    // console.log(InfiltrationList);
-    // console.log("\n" + map);
-    locationList[index].base.SpawnPointParams.forEach(
-      (
-        {
-          ColliderParams,
-          BotZoneName,
-          DelayToCanSpawnSec,
-          Categories,
-          Sides,
-          Infiltration,
-        },
-        innerIndex
-      ) => {
-        if (
-          !Categories.includes("Boss") &&
-          !BotZoneName?.toLowerCase().includes("snipe") &&
-          DelayToCanSpawnSec < 41
-        ) {
-          // Make it so players/pmcs can spawn anywhere.
-          if (
-            config.playerOpenZones &&
-            !!Infiltration &&
-            (Sides.includes("Pmc") || Sides.includes("All"))
-          ) {
-            locationList[index].base.SpawnPointParams[innerIndex].Categories = [
-              "Player",
-              "Coop",
-              innerIndex % 2 === 0 ? "Group" : "Opposite",
-            ];
+    //  {
+    // if (point["type"] === "player" && !possibleSpawnListSet.has(point.Id)) {
+    //   point.Categories = [];
+    //   point.Sides = [];
+    // }
 
-            locationList[index].base.SpawnPointParams[innerIndex].Sides = [
-              "Pmc",
-              "All",
-            ];
-            // console.log(
-            //   BotZoneName || "none",
-            //   locationList[index].base.SpawnPointParams[innerIndex].Categories,
-            //   locationList[index].base.SpawnPointParams[innerIndex].Sides
-            // );
-          }
-          if (!Infiltration) {
-            if (
-              !config.allOpenZones &&
-              config.pmcOpenZones &&
-              Categories.includes("Bot") &&
-              Sides[0] === "Savage"
-            ) {
-              // if (BotZoneName === "Zone_LongRoad") console.log("yes");
-              locationList[index].base.SpawnPointParams[innerIndex].Categories =
-                ["Player", "Bot"];
+    // return point;
+    // }
 
-              locationList[index].base.SpawnPointParams[
-                innerIndex
-              ].Infiltration = getRandomInfil();
-            }
-
-            if (config.allOpenZones) {
-              locationList[index].base.SpawnPointParams[innerIndex].Categories =
-                [
-                  "Bot",
-                  "Player",
-                  "Coop",
-                  innerIndex % 2 === 0 ? "Group" : "Opposite",
-                ];
-
-              locationList[index].base.SpawnPointParams[
-                innerIndex
-              ].Infiltration = getRandomInfil();
-              // console.log(
-              //   locationList[index].base.SpawnPointParams[innerIndex].Infiltration
-              // );
-              locationList[index].base.SpawnPointParams[innerIndex].Sides = [
-                "Pmc",
-                "Savage",
-                "All",
-              ];
-            }
-
-            if (config.bossOpenZones && Categories.includes("Bot")) {
-              locationList[index].base.SpawnPointParams[
-                innerIndex
-              ].Categories.push("Boss");
-            }
-          }
-
-          if (
-            ColliderParams?._props?.Radius !== undefined &&
-            ColliderParams?._props?.Radius < limit
-          ) {
-            locationList[index].base.SpawnPointParams[
-              innerIndex
-            ].ColliderParams._props.Radius = limit;
-          }
-        } else {
-          if (!Categories.includes("Boss") && DelayToCanSpawnSec > 40) {
-            locationList[index].base.SpawnPointParams[
-              innerIndex
-            ].DelayToCanSpawnSec = Math.round(
-              DelayToCanSpawnSec * Math.random() * Math.random() * 0.5
-            );
-
-            // console.log(
-            //   BotZoneName,
-            //   DelayToCanSpawnSec,
-            //   locationList[index].base.SpawnPointParams[innerIndex]
-            //     .DelayToCanSpawnSec
-            // );
-          }
-        }
-      }
-    );
+    // console.log(
+    //   map,
+    //   locationList[index].base.SpawnPointParams.filter(
+    //     (point) => point?.["type"] === "player"
+    //   ).length,
+    //   locationList[index].base.SpawnPointParams.filter(
+    //     (point) => point?.Categories[0] === "Player"
+    //   ).length
+    // );
   }
 }

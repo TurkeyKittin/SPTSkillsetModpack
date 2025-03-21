@@ -153,13 +153,20 @@ let BotConfigs = class BotConfigs {
         for (const botType in botConfigEquipment) {
             if (!this.raidInformation.isBotEnabled(botType))
                 continue;
-            if (botType.includes("assault") || botType.includes("marksman")) {
+            if (Object.values(Bots_1.EventBots).includes(botType))
+                continue;
+            if (Object.values(Bots_1.ScavBots).includes(botType)) {
                 botConfigEquipment[botType].filterPlatesByLevel = true;
                 botConfigEquipment[botType].armorPlateWeighting = this.tierInformation.scavArmorPlateWeights;
                 continue;
             }
+            if (Object.values(Bots_1.PMCBots).includes(botType)) {
+                botConfigEquipment[botType].filterPlatesByLevel = true;
+                botConfigEquipment[botType].armorPlateWeighting = this.tierInformation.armorPlateWeights;
+                continue;
+            }
             botConfigEquipment[botType].filterPlatesByLevel = true;
-            botConfigEquipment[botType].armorPlateWeighting = this.tierInformation.armorPlateWeights;
+            botConfigEquipment[botType].armorPlateWeighting = this.tierInformation.nonScavNonPMCArmorPlateWeights;
         }
     }
     clearNoLongerNeededBotDetails() {

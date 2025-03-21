@@ -11,7 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.APBSBotEquipmentModGenerator = void 0;
 const tsyringe_1 = require("C:/snapshot/project/node_modules/tsyringe");
@@ -40,7 +40,6 @@ const ICloner_1 = require("C:/snapshot/project/obj/utils/cloners/ICloner");
 const Money_1 = require("C:/snapshot/project/obj/models/enums/Money");
 const BaseClasses_1 = require("C:/snapshot/project/obj/models/enums/BaseClasses");
 const BotEquipmentModGenerator_1 = require("C:/snapshot/project/obj/generators/BotEquipmentModGenerator");
-const APBSEquipmentGetter_1 = require("../Utils/APBSEquipmentGetter");
 const APBSTierGetter_1 = require("../Utils/APBSTierGetter");
 const ModConfig_1 = require("../Globals/ModConfig");
 const RaidInformation_1 = require("../Globals/RaidInformation");
@@ -70,14 +69,13 @@ let APBSBotEquipmentModGenerator = class APBSBotEquipmentModGenerator extends Bo
     botEquipmentModPoolService;
     configServer;
     cloner;
-    apbsEquipmentGetter;
     apbsTierGetter;
     raidInformation;
     modInformation;
     apbsTester;
     apbsLogger;
     realismHelper;
-    constructor(logger, hashUtil, randomUtil, probabilityHelper, databaseService, itemHelper, botEquipmentFilterService, itemFilterService, profileHelper, botWeaponModLimitService, botHelper, botGeneratorHelper, botWeaponGeneratorHelper, weightedRandomHelper, presetHelper, localisationService, botEquipmentModPoolService, configServer, cloner, apbsEquipmentGetter, apbsTierGetter, raidInformation, modInformation, apbsTester, apbsLogger, realismHelper) {
+    constructor(logger, hashUtil, randomUtil, probabilityHelper, databaseService, itemHelper, botEquipmentFilterService, itemFilterService, profileHelper, botWeaponModLimitService, botHelper, botGeneratorHelper, botWeaponGeneratorHelper, weightedRandomHelper, presetHelper, localisationService, botEquipmentModPoolService, configServer, cloner, apbsTierGetter, raidInformation, modInformation, apbsTester, apbsLogger, realismHelper) {
         super(logger, hashUtil, randomUtil, probabilityHelper, databaseService, itemHelper, botEquipmentFilterService, itemFilterService, profileHelper, botWeaponModLimitService, botHelper, botGeneratorHelper, botWeaponGeneratorHelper, weightedRandomHelper, presetHelper, localisationService, botEquipmentModPoolService, configServer, cloner);
         this.logger = logger;
         this.hashUtil = hashUtil;
@@ -98,7 +96,6 @@ let APBSBotEquipmentModGenerator = class APBSBotEquipmentModGenerator extends Bo
         this.botEquipmentModPoolService = botEquipmentModPoolService;
         this.configServer = configServer;
         this.cloner = cloner;
-        this.apbsEquipmentGetter = apbsEquipmentGetter;
         this.apbsTierGetter = apbsTierGetter;
         this.raidInformation = raidInformation;
         this.modInformation = modInformation;
@@ -106,24 +103,13 @@ let APBSBotEquipmentModGenerator = class APBSBotEquipmentModGenerator extends Bo
         this.apbsLogger = apbsLogger;
         this.realismHelper = realismHelper;
     }
-    generateModsForEquipment(equipment, parentId, parentTemplate, settings, specificBlacklist, shouldForceSpawn) {
+    apbsGenerateModsForEquipment(equipment, parentId, parentTemplate, settings, shouldForceSpawn = false) {
         let forceSpawn = shouldForceSpawn;
-        const botRole = settings.botData.role;
-        const tier = this.apbsTierGetter.getTierByLevel(settings.botData.level);
-        const tieredModPool = this.apbsEquipmentGetter.getModsByBotRole(botRole, tier);
-        let spawnChances = this.apbsEquipmentGetter.getSpawnChancesByBotRole(botRole, tier);
-        let compatibleModsPool = tieredModPool[parentTemplate._id];
-        let actualModPool = tieredModPool;
-        if (!this.raidInformation.isBotEnabled(botRole)) {
-            spawnChances = settings.spawnChances;
-            compatibleModsPool = settings.modPool[parentTemplate._id];
-            actualModPool = settings.modPool;
-        }
-        if (!compatibleModsPool) {
-            this.logger.warning(`bot: ${botRole} lacks a mod slot pool for item: ${parentTemplate._id} ${parentTemplate._name}`);
+        if (!settings.modPool[parentTemplate._id]) {
+            this.logger.warning(`bot: ${settings.botData.role} lacks a mod slot pool for item: ${parentTemplate._id} ${parentTemplate._name}`);
         }
         // Iterate over mod pool and choose mods to add to item
-        for (const modSlotName in compatibleModsPool) {
+        for (const modSlotName in settings.modPool[parentTemplate._id]) {
             if (modSlotName === "mod_equipment_000" && this.raidInformation.nightTime)
                 continue;
             if (modSlotName === "mod_equipment" && this.realismHelper.gasMasks.includes(parentTemplate._id) && this.realismHelper.realismDetected == true) {
@@ -139,7 +125,7 @@ let APBSBotEquipmentModGenerator = class APBSBotEquipmentModGenerator extends Bo
                 }));
                 continue;
             }
-            const modSpawnResult = this.shouldModBeSpawned(itemSlotTemplate, modSlotName.toLowerCase(), spawnChances.equipmentMods, settings.botEquipmentConfig);
+            const modSpawnResult = this.shouldModBeSpawned(itemSlotTemplate, modSlotName.toLowerCase(), settings.spawnChances.equipmentMods, settings.botEquipmentConfig);
             if (modSpawnResult === ModSpawn_1.ModSpawn.SKIP && !forceSpawn) {
                 continue;
             }
@@ -152,10 +138,10 @@ let APBSBotEquipmentModGenerator = class APBSBotEquipmentModGenerator extends Bo
                     continue;
                 }
             }
-            let modPoolToChooseFrom = compatibleModsPool[modSlotName];
+            let modPoolToChooseFrom = settings.modPool[parentTemplate._id][modSlotName];
             if (settings.botEquipmentConfig.filterPlatesByLevel
                 && this.itemHelper.isRemovablePlateSlot(modSlotName.toLowerCase())) {
-                const outcome = this.filterPlateModsForSlotByLevel(settings, modSlotName.toLowerCase(), compatibleModsPool[modSlotName], parentTemplate);
+                const outcome = this.apbsFilterPlateModsForSlotByLevel(settings, modSlotName.toLowerCase(), settings.modPool[parentTemplate._id][modSlotName], parentTemplate);
                 if ([IFilterPlateModsForSlotByLevelResult_1.Result.UNKNOWN_FAILURE, IFilterPlateModsForSlotByLevelResult_1.Result.NO_DEFAULT_FILTER].includes(outcome.result)) {
                     this.logger.debug(`Plate slot: ${modSlotName} selection for armor: ${parentTemplate._id} failed: ${IFilterPlateModsForSlotByLevelResult_1.Result[outcome.result]}, skipping`);
                     continue;
@@ -189,20 +175,20 @@ let APBSBotEquipmentModGenerator = class APBSBotEquipmentModGenerator extends Bo
                 continue;
             }
             const modTemplate = this.itemHelper.getItem(modTpl);
-            if (!this.isModValidForSlot(modTemplate, itemSlotTemplate, modSlotName, parentTemplate, botRole)) {
+            if (!this.isModValidForSlot(modTemplate, itemSlotTemplate, modSlotName, parentTemplate, settings.botData.role)) {
                 continue;
             }
             // Generate new id to ensure all items are unique on bot
             const modId = this.hashUtil.generate();
-            equipment.push(this.createModItem(modId, modTpl, parentId, modSlotName, modTemplate[1], botRole));
+            equipment.push(this.createModItem(modId, modTpl, parentId, modSlotName, modTemplate[1], settings.botData.role));
             // Does the item being added have possible child mods?
-            if (Object.keys(actualModPool).includes(modTpl)) {
+            if (Object.keys(settings.modPool).includes(modTpl)) {
                 // Call self recursively with item being checkced item we just added to bot
-                this.generateModsForEquipment(equipment, modId, modTemplate[1], settings, specificBlacklist, forceSpawn);
+                this.apbsGenerateModsForEquipment(equipment, modId, modTemplate[1], settings, forceSpawn);
             }
         }
         // This is for testing...
-        if (this.modInformation.testMode && this.modInformation.testBotRole.includes(botRole.toLowerCase())) {
+        if (this.modInformation.testMode && this.modInformation.testBotRole.includes(settings.botData.role.toLowerCase())) {
             const tables = this.databaseService.getTables();
             const assortEquipment = this.cloner.clone(equipment);
             for (const item in assortEquipment) {
@@ -225,7 +211,7 @@ let APBSBotEquipmentModGenerator = class APBSBotEquipmentModGenerator extends Bo
         }
         return equipment;
     }
-    filterPlateModsForSlotByLevel(settings, modSlot, existingPlateTplPool, armorItem) {
+    apbsFilterPlateModsForSlotByLevel(settings, modSlot, existingPlateTplPool, armorItem) {
         const result = {
             result: IFilterPlateModsForSlotByLevelResult_1.Result.UNKNOWN_FAILURE,
             plateModTpls: undefined
@@ -312,31 +298,14 @@ let APBSBotEquipmentModGenerator = class APBSBotEquipmentModGenerator extends Bo
         result.plateModTpls = platesOfDesiredLevel.map((item) => item._id);
         return result;
     }
-    /**
-     * Get the default plate an armor has in its db item
-     * @param armorItem Item to look up default plate
-     * @param modSlot front/back
-     * @returns Tpl of plate
-     */
     getDefaultPlateTpl(armorItem, modSlot) {
         const relatedItemDbModSlot = armorItem._props.Slots?.find((slot) => slot._name.toLowerCase() === modSlot);
         return relatedItemDbModSlot?._props.filters[0].Plate;
     }
-    /**
-     * Get the matching armor slot from the default preset matching passed in armor tpl
-     * @param presetItemId Id of preset
-     * @param modSlot front/back
-     * @returns Armor IItem
-     */
     getDefaultPresetArmorSlot(armorItemTpl, modSlot) {
         const defaultPreset = this.presetHelper.getDefaultPreset(armorItemTpl);
         return defaultPreset?._items.find((item) => item.slotId?.toLowerCase() === modSlot);
     }
-    /**
-     * Gets the minimum and maximum plate class levels from an array of plates
-     * @param platePool Pool of plates to sort by armorClass to get min and max
-     * @returns MinMax of armorClass from plate pool
-     */
     getMinMaxArmorPlateClass(platePool) {
         platePool.sort((x, y) => {
             if (x._props.armorClass < y._props.armorClass)
@@ -406,7 +375,7 @@ let APBSBotEquipmentModGenerator = class APBSBotEquipmentModGenerator extends Bo
         }
         return chosenModResult;
     }
-    apbsGenerateModsForWeapon(sessionId, request, isPmc) {
+    apbsGenerateModsForWeapon(sessionId, request, isPmc, questInformation, weaponID) {
         const pmcProfile = this.profileHelper.getPmcProfile(sessionId);
         // Get pool of mods that fit weapon
         const compatibleModsPool = request.modPool[request.parentTemplate._id];
@@ -439,7 +408,20 @@ let APBSBotEquipmentModGenerator = class APBSBotEquipmentModGenerator extends Bo
                 continue;
             }
             // Check spawn chance of mod
-            const modSpawnResult = this.shouldModBeSpawned(modsParentSlot, modSlot, request.modSpawnChances, botEquipConfig);
+            let modSpawnResult = this.shouldModBeSpawned(modsParentSlot, modSlot, request.modSpawnChances, botEquipConfig);
+            if (questInformation.isQuesting && !this.itemHelper.isOfBaseclasses(weaponID, [BaseClasses_1.BaseClasses.PISTOL, BaseClasses_1.BaseClasses.REVOLVER])) {
+                if (questInformation.questData.requiredWeaponModSlots.includes(modSlot)) {
+                    if (questInformation.questData.PrimaryWeapon.includes(weaponID)) {
+                        modSpawnResult = ModSpawn_1.ModSpawn.SPAWN;
+                    }
+                    if (questInformation.questData.PrimaryWeapon.length === 0) {
+                        modSpawnResult = ModSpawn_1.ModSpawn.SPAWN;
+                    }
+                }
+                if (!questInformation.questData.requiredWeaponModSlots.includes(modSlot) && questInformation.questData.questName == "Fishing Gear" && questInformation.questData.PrimaryWeapon.includes(weaponID)) {
+                    modSpawnResult = ModSpawn_1.ModSpawn.SKIP;
+                }
+            }
             if (modSpawnResult === ModSpawn_1.ModSpawn.SKIP) {
                 continue;
             }
@@ -459,7 +441,7 @@ let APBSBotEquipmentModGenerator = class APBSBotEquipmentModGenerator extends Bo
                 conflictingItemTpls: request.conflictingItemTpls,
                 botData: request.botData
             };
-            const modToAdd = this.chooseModToPutIntoSlot(modToSpawnRequest);
+            const modToAdd = this.apbsChooseModToPutIntoSlot(modToSpawnRequest, questInformation, weaponID);
             // Compatible mod not found
             if (!modToAdd || typeof modToAdd === "undefined") {
                 continue;
@@ -574,11 +556,316 @@ let APBSBotEquipmentModGenerator = class APBSBotEquipmentModGenerator extends Bo
                         conflictingItemTpls: request.conflictingItemTpls
                     };
                     // Call self recursively to add mods to this mod
-                    this.apbsGenerateModsForWeapon(sessionId, recursiveRequestData, isPmc);
+                    this.apbsGenerateModsForWeapon(sessionId, recursiveRequestData, isPmc, questInformation, weaponID);
                 }
             }
         }
         return request.weapon;
+    }
+    apbsChooseModToPutIntoSlot(request, questInformation, weaponID) {
+        /** Slot mod will fill */
+        const parentSlot = request.parentTemplate._props.Slots?.find((i) => i._name === request.modSlot);
+        const weaponTemplate = this.itemHelper.getItem(request.weapon[0]._tpl)[1];
+        // It's ammo, use predefined ammo parameter
+        if (this.getAmmoContainers().includes(request.modSlot) && request.modSlot !== "mod_magazine") {
+            return this.itemHelper.getItem(request.ammoTpl);
+        }
+        // Ensure there's a pool of mods to pick from
+        let modPool = this.getModPoolForSlot(request, weaponTemplate);
+        if (!modPool && !parentSlot?._required) {
+            // Nothing in mod pool + item not required
+            this.logger.debug(`Mod pool for optional slot: ${request.modSlot} on item: ${request.parentTemplate._name} was empty, skipping mod`);
+            return undefined;
+        }
+        // Filter out non-whitelisted scopes, use full modpool if filtered pool would have no elements
+        if (request.modSlot.includes("mod_scope") && request.botWeaponSightWhitelist) {
+            // scope pool has more than one scope
+            if (modPool.length > 1) {
+                modPool = this.filterSightsByWeaponType(request.weapon[0], modPool, request.botWeaponSightWhitelist);
+            }
+        }
+        if (request.modSlot === "mod_gas_block") {
+            if (request.weaponStats.hasOptic && modPool.length > 1) {
+                // Attempt to limit modpool to low profile gas blocks when weapon has an optic
+                const onlyLowProfileGasBlocks = modPool.filter((tpl) => this.botConfig.lowProfileGasBlockTpls.includes(tpl));
+                if (onlyLowProfileGasBlocks.length > 0) {
+                    modPool = onlyLowProfileGasBlocks;
+                }
+            }
+            else if (request.weaponStats.hasRearIronSight && modPool.length > 1) {
+                // Attempt to limit modpool to high profile gas blocks when weapon has rear iron sight + no front iron sight
+                const onlyHighProfileGasBlocks = modPool.filter((tpl) => !this.botConfig.lowProfileGasBlockTpls.includes(tpl));
+                if (onlyHighProfileGasBlocks.length > 0) {
+                    modPool = onlyHighProfileGasBlocks;
+                }
+            }
+        }
+        // Quest specific handling, because it's stupid
+        if (questInformation.isQuesting) {
+            if (questInformation.questData.questName != "Fishing Gear") {
+                if (questInformation.questData.PrimaryWeapon.includes(weaponID) && questInformation.questData.requiredWeaponMods.length && (questInformation.questData.requiredWeaponModSlots.includes(request.modSlot) || request.modSlot.includes("mod_scope_"))) {
+                    //console.log(`Searching for specific mod for Item: ${request.parentTemplate._id} | Slot ${request.modSlot}`);
+                    const newModPool = this.apbsGetModPoolToForceSpecificMods(request.parentTemplate, questInformation, request.modSlot);
+                    if (newModPool != undefined) {
+                        //console.log(`Mods found: ${newModPool}`)
+                        modPool = newModPool;
+                    }
+                }
+                if (!this.itemHelper.isOfBaseclasses(weaponID, [BaseClasses_1.BaseClasses.PISTOL, BaseClasses_1.BaseClasses.REVOLVER]) && questInformation.questData.requiredWeaponModBaseClasses.includes(BaseClasses_1.BaseClasses.SILENCER)) {
+                    if (request.modSlot === "mod_barrel" && questInformation.questData.requiredWeaponModSlots.includes("mod_muzzle")) {
+                        const barrelModPool = this.apbsGetBarrelModsForSilencer(request.parentTemplate);
+                        if (barrelModPool != undefined)
+                            modPool = barrelModPool;
+                    }
+                    // Quest requires a silencer, only allow silencers in the muzzle pool
+                    if (request.modSlot === "mod_muzzle" && questInformation.questData.requiredWeaponModSlots.includes("mod_muzzle")) {
+                        const muzzleModPool = this.apbsGetMuzzleModsForSilencer(request.parentTemplate);
+                        if (muzzleModPool != undefined)
+                            modPool = muzzleModPool;
+                    }
+                }
+            }
+            else if (questInformation.questData.questName == "Fishing Gear" && questInformation.questData.PrimaryWeapon.includes(weaponID)) {
+                if (request.modSlot === "mod_stock")
+                    modPool = ["61faa91878830f069b6b7967"];
+                if (request.modSlot === "mod_bipod")
+                    modPool = ["56ea8222d2720b69698b4567"];
+                if (request.modSlot === "mod_muzzle")
+                    modPool = ["560e620e4bdc2d724b8b456b"];
+                if (request.modSlot === "mod_tactical")
+                    modPool = ["56083eab4bdc2d26448b456a"];
+                if (request.modSlot === "mod_sight_rear")
+                    modPool = ["56083e1b4bdc2dc8488b4572"];
+                if (request.modSlot === "mod_magazine")
+                    modPool = ["559ba5b34bdc2d1f1a8b4582"];
+            }
+        }
+        if ((weaponID == "67a01e4ea2b82626b73d10a3" || weaponID == "67a01e4ea2b82626b73d10a4") && (request.modSlot === "mod_barrel" || request.modSlot === "mod_magazine")) {
+            const ammoCaliberSelected = this.itemHelper.getItem(request.ammoTpl);
+            if (ammoCaliberSelected[0]) {
+                const caliberData = ammoCaliberSelected[1]._props.Caliber;
+                switch (caliberData) {
+                    case "Caliber762x39":
+                        if (request.modSlot === "mod_barrel") {
+                            modPool = [
+                                "67a01e4ea2b82626b73d10a6",
+                                "67a01e4ea2b82626b73d10a7",
+                                "67a01e4ea2b82626b73d10a8"
+                            ];
+                        }
+                        if (request.modSlot === "mod_magazine") {
+                            modPool = [
+                                "67a01e4ea2b82626b73d10a5"
+                            ];
+                        }
+                        break;
+                    case "Caliber556x45NATO":
+                        if (request.modSlot === "mod_barrel") {
+                            modPool = [
+                                "67a01e4ea2b82626b73d10a9",
+                                "67a01e4ea2b82626b73d10aa",
+                                "67a01e4ea2b82626b73d10ab"
+                            ];
+                        }
+                        if (request.modSlot === "mod_magazine") {
+                            const index = modPool.indexOf("67a01e4ea2b82626b73d10a5");
+                            if (index > -1) {
+                                modPool.splice(index);
+                            }
+                        }
+                        break;
+                }
+            }
+        }
+        // Pick random mod that's compatible
+        const chosenModResult = this.getCompatibleWeaponModTplForSlotFromPool(request, modPool, parentSlot, request.modSpawnResult, request.weapon, request.modSlot);
+        if (chosenModResult.slotBlocked && !parentSlot._required) {
+            // Don't bother trying to fit mod, slot is completely blocked
+            return undefined;
+        }
+        // Log if mod chosen was incompatible
+        if (chosenModResult.incompatible && parentSlot._required) {
+            this.logger.debug(chosenModResult.reason);
+        }
+        // Get random mod to attach from items db for required slots if none found above
+        if (!chosenModResult.found && parentSlot !== undefined && parentSlot._required) {
+            chosenModResult.chosenTpl = this.getRandomModTplFromItemDb("", parentSlot, request.modSlot, request.weapon);
+            chosenModResult.found = true;
+        }
+        // Compatible item not found + not required
+        if (!chosenModResult.found && parentSlot !== undefined && !parentSlot._required) {
+            return undefined;
+        }
+        if (!chosenModResult.found && parentSlot !== undefined) {
+            if (parentSlot._required) {
+                this.logger.warning(`Required slot unable to be filled, ${request.modSlot} on ${request.parentTemplate._name} ${request.parentTemplate._id} for weapon: ${request.weapon[0]._tpl}`);
+            }
+            return undefined;
+        }
+        return this.itemHelper.getItem(chosenModResult.chosenTpl);
+    }
+    apbsGetBarrelModsForSilencer(parentTemplate) {
+        const barrelModPool = [];
+        // Get barrel slot for parent
+        const modSlot = parentTemplate._props.Slots.find((slot) => slot._name === "mod_barrel");
+        if (modSlot) {
+            // All possible mods that fit in slot
+            const modSlotPool = modSlot._props.filters[0].Filter.filter((tpl) => this.itemHelper.getItem(tpl)[1]);
+            if (modSlotPool) {
+                // Has muzzle children
+                const onlyMuzzleDevicesForChildren = modSlotPool.filter((item) => this.itemHelper.getItem(item)[1]._props.Slots.find((slot) => slot._name === "mod_muzzle"));
+                if (onlyMuzzleDevicesForChildren.length) {
+                    for (const item in onlyMuzzleDevicesForChildren) {
+                        barrelModPool.push(item);
+                    }
+                    return barrelModPool;
+                }
+            }
+        }
+        //console.log(`barrels - NOTHING FOUND NOT COOL MAN. Parent ${parentTemplate._id}`)
+        return undefined;
+    }
+    apbsGetMuzzleModsForSilencer(parentTemplate) {
+        const muzzleModPool = [];
+        const modSlot = parentTemplate._props.Slots.find((slot) => slot._name === "mod_muzzle");
+        if (modSlot) {
+            // All possible mods that fit in slot - this quest doesn't require specific muzzle IDs
+            const modSlotPool = modSlot._props.filters[0].Filter.filter((tpl) => this.itemHelper.getItem(tpl)[1]);
+            if (modSlotPool.length) {
+                // Silencers & Combo Devices
+                const allMuzzleInBaseModSlot = modSlotPool.filter((tpl) => this.itemHelper.isOfBaseclasses(tpl, [BaseClasses_1.BaseClasses.MUZZLE]));
+                if (allMuzzleInBaseModSlot.length) {
+                    for (const item of allMuzzleInBaseModSlot) {
+                        const itemData = this.itemHelper.getItem(item)[1];
+                        // Push silencers as they're already found
+                        if (this.itemHelper.isOfBaseclass(itemData._id, BaseClasses_1.BaseClasses.SILENCER)) {
+                            muzzleModPool.push(itemData._id);
+                        }
+                        const muzzleCanHoldChildren = itemData._props.Slots.find((slot) => slot._name === "mod_muzzle");
+                        if (muzzleCanHoldChildren) {
+                            const muzzlesThatCanHoldChildren = muzzleCanHoldChildren._props.filters[0].Filter.filter((tpl) => this.itemHelper.getItem(tpl)[1]);
+                            if (muzzlesThatCanHoldChildren.length) {
+                                const muzzleHasChildrenThatCanHoldSilencers = muzzlesThatCanHoldChildren.filter((tpl) => this.itemHelper.isOfBaseclasses(tpl, [BaseClasses_1.BaseClasses.SILENCER, "550aa4dd4bdc2dc9348b4569"]));
+                                for (const itemChild of muzzleHasChildrenThatCanHoldSilencers) {
+                                    // Push silencers as they're already found
+                                    if (this.itemHelper.isOfBaseclass(itemChild, BaseClasses_1.BaseClasses.SILENCER)) {
+                                        if (!muzzleModPool.includes(itemData._id)) {
+                                            muzzleModPool.push(itemData._id);
+                                        }
+                                    }
+                                    const muzzleItem = this.itemHelper.getItem(itemChild)[1];
+                                    const muzzleOfParentMuzzleCanHoldChildren = muzzleItem._props.Slots.find((slot) => slot._name === "mod_muzzle");
+                                    if (muzzleOfParentMuzzleCanHoldChildren) {
+                                        const muzzlesOfParentThatCanHoldChildren = muzzleOfParentMuzzleCanHoldChildren._props.filters[0].Filter.filter((tpl) => this.itemHelper.getItem(tpl)[1]);
+                                        if (muzzlesOfParentThatCanHoldChildren.length) {
+                                            const muzzleOfParentHasChildrenThatCanHoldSilencers = muzzlesOfParentThatCanHoldChildren.filter((tpl) => this.itemHelper.isOfBaseclasses(tpl, [BaseClasses_1.BaseClasses.SILENCER, "550aa4dd4bdc2dc9348b4569"]));
+                                            for (const itemChildOfParent of muzzleOfParentHasChildrenThatCanHoldSilencers) {
+                                                // Push silencers as they're already found
+                                                if (this.itemHelper.isOfBaseclass(itemChildOfParent, BaseClasses_1.BaseClasses.SILENCER)) {
+                                                    if (!muzzleModPool.includes(itemData._id)) {
+                                                        muzzleModPool.push(itemData._id);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (muzzleModPool.length) {
+            return muzzleModPool;
+        }
+        //console.log(`Muzzles - NOTHING FOUND NOT COOL MAN. Parent ${parentTemplate._id}`)
+        return undefined;
+    }
+    apbsGetModPoolToForceSpecificMods(parentTemplate, questInformation, modSlot) {
+        const bannedSlot = modSlot.includes("mod_scope") ? ["mod_mount", "mod_scope_001"] : [];
+        const modPoolToReturn = [];
+        const slotSearchStart = parentTemplate._props.Slots.find((slot) => slot._name === modSlot);
+        if (slotSearchStart) {
+            const parentModSlotPool = slotSearchStart._props.filters[0].Filter.filter((tpl) => this.itemHelper.getItem(tpl)[1]);
+            if (parentModSlotPool.length) {
+                for (const itemInSlot of parentModSlotPool) {
+                    const itemInSlotData = this.itemHelper.getItem(itemInSlot)[1];
+                    const itemInSlotDataHasModMount = itemInSlotData._props.Slots.some(slot => bannedSlot.includes(slot._name));
+                    if (itemInSlotDataHasModMount)
+                        continue;
+                    if (questInformation.questData.requiredWeaponMods.includes(itemInSlot)) {
+                        //console.log(`pushing ${itemInSlot} found in slot ${modSlot} | banned: ${bannedSlot} | ${itemInSlotDataHasModMount}`)
+                        modPoolToReturn.push(itemInSlot);
+                        continue;
+                    }
+                    if (itemInSlotData?._props?.Slots?.length) {
+                        const childSlots = itemInSlotData._props.Slots;
+                        for (const childSlot in childSlots) {
+                            const childModSlotPool = childSlots[childSlot]._props.filters[0].Filter.filter((tpl) => this.itemHelper.getItem(tpl)[1]);
+                            {
+                                if (childModSlotPool.length) {
+                                    for (const itemInItemChildSlot of childModSlotPool) {
+                                        const itemInItemChildSlotData = this.itemHelper.getItem(itemInItemChildSlot)[1];
+                                        if (questInformation.questData.requiredWeaponMods.includes(itemInItemChildSlot)) {
+                                            if (!modPoolToReturn.includes(itemInSlot)) {
+                                                //console.log(`pushing ${itemInSlot} found in slot ${modSlot} | banned: ${bannedSlot} | ${itemInSlotDataHasModMount}`)
+                                                modPoolToReturn.push(itemInSlot);
+                                            }
+                                            continue;
+                                        }
+                                        if (itemInItemChildSlotData?._props?.Slots?.length) {
+                                            const childOfChildSlots = itemInItemChildSlotData._props.Slots;
+                                            for (const childOfChildSlot in childOfChildSlots) {
+                                                const childOfChildModSlotPool = childOfChildSlots[childOfChildSlot]._props.filters[0].Filter.filter((tpl) => this.itemHelper.getItem(tpl)[1]);
+                                                {
+                                                    if (childOfChildModSlotPool.length) {
+                                                        for (const itemInItemChildOfChildSlot of childOfChildModSlotPool) {
+                                                            const itemInItemChildOfChildSlotData = this.itemHelper.getItem(itemInItemChildOfChildSlot)[1];
+                                                            if (questInformation.questData.requiredWeaponMods.includes(itemInItemChildOfChildSlot)) {
+                                                                if (!modPoolToReturn.includes(itemInSlot)) {
+                                                                    //console.log(`pushing ${itemInSlot} found in slot ${modSlot} | banned: ${bannedSlot} | ${itemInSlotDataHasModMount}`)
+                                                                    modPoolToReturn.push(itemInSlot);
+                                                                }
+                                                                continue;
+                                                            }
+                                                            if (itemInItemChildOfChildSlotData?._props?.Slots?.length) {
+                                                                const childOfChildOfChildSlots = itemInItemChildOfChildSlotData._props.Slots;
+                                                                for (const childOfChildOfChildSlot in childOfChildOfChildSlots) {
+                                                                    const childOfChildOfChildModSlotPool = childOfChildOfChildSlots[childOfChildOfChildSlot]._props.filters[0].Filter.filter((tpl) => this.itemHelper.getItem(tpl)[1]);
+                                                                    {
+                                                                        if (childOfChildOfChildModSlotPool.length) {
+                                                                            for (const itemInItemChildOfChildOfChildSlot of childOfChildOfChildModSlotPool) {
+                                                                                if (questInformation.questData.requiredWeaponMods.includes(itemInItemChildOfChildOfChildSlot)) {
+                                                                                    if (!modPoolToReturn.includes(itemInSlot)) {
+                                                                                        //console.log(`pushing ${itemInSlot} found in slot ${modSlot} | banned: ${bannedSlot} | ${itemInSlotDataHasModMount}`)
+                                                                                        modPoolToReturn.push(itemInSlot);
+                                                                                    }
+                                                                                    continue;
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (modPoolToReturn.length) {
+            return modPoolToReturn;
+        }
+        //console.log(`Specific mods - NOTHING FOUND NOT COOL MAN. Parent ${parentTemplate._id}`)
+        return undefined;
     }
 };
 exports.APBSBotEquipmentModGenerator = APBSBotEquipmentModGenerator;
@@ -603,13 +890,12 @@ exports.APBSBotEquipmentModGenerator = APBSBotEquipmentModGenerator = __decorate
     __param(16, (0, tsyringe_1.inject)("BotEquipmentModPoolService")),
     __param(17, (0, tsyringe_1.inject)("ConfigServer")),
     __param(18, (0, tsyringe_1.inject)("PrimaryCloner")),
-    __param(19, (0, tsyringe_1.inject)("APBSEquipmentGetter")),
-    __param(20, (0, tsyringe_1.inject)("APBSTierGetter")),
-    __param(21, (0, tsyringe_1.inject)("RaidInformation")),
-    __param(22, (0, tsyringe_1.inject)("ModInformation")),
-    __param(23, (0, tsyringe_1.inject)("APBSTester")),
-    __param(24, (0, tsyringe_1.inject)("APBSLogger")),
-    __param(25, (0, tsyringe_1.inject)("RealismHelper")),
-    __metadata("design:paramtypes", [typeof (_a = typeof ILogger_1.ILogger !== "undefined" && ILogger_1.ILogger) === "function" ? _a : Object, typeof (_b = typeof HashUtil_1.HashUtil !== "undefined" && HashUtil_1.HashUtil) === "function" ? _b : Object, typeof (_c = typeof RandomUtil_1.RandomUtil !== "undefined" && RandomUtil_1.RandomUtil) === "function" ? _c : Object, typeof (_d = typeof ProbabilityHelper_1.ProbabilityHelper !== "undefined" && ProbabilityHelper_1.ProbabilityHelper) === "function" ? _d : Object, typeof (_e = typeof DatabaseService_1.DatabaseService !== "undefined" && DatabaseService_1.DatabaseService) === "function" ? _e : Object, typeof (_f = typeof ItemHelper_1.ItemHelper !== "undefined" && ItemHelper_1.ItemHelper) === "function" ? _f : Object, typeof (_g = typeof BotEquipmentFilterService_1.BotEquipmentFilterService !== "undefined" && BotEquipmentFilterService_1.BotEquipmentFilterService) === "function" ? _g : Object, typeof (_h = typeof ItemFilterService_1.ItemFilterService !== "undefined" && ItemFilterService_1.ItemFilterService) === "function" ? _h : Object, typeof (_j = typeof ProfileHelper_1.ProfileHelper !== "undefined" && ProfileHelper_1.ProfileHelper) === "function" ? _j : Object, typeof (_k = typeof BotWeaponModLimitService_1.BotWeaponModLimitService !== "undefined" && BotWeaponModLimitService_1.BotWeaponModLimitService) === "function" ? _k : Object, typeof (_l = typeof BotHelper_1.BotHelper !== "undefined" && BotHelper_1.BotHelper) === "function" ? _l : Object, typeof (_m = typeof BotGeneratorHelper_1.BotGeneratorHelper !== "undefined" && BotGeneratorHelper_1.BotGeneratorHelper) === "function" ? _m : Object, typeof (_o = typeof BotWeaponGeneratorHelper_1.BotWeaponGeneratorHelper !== "undefined" && BotWeaponGeneratorHelper_1.BotWeaponGeneratorHelper) === "function" ? _o : Object, typeof (_p = typeof WeightedRandomHelper_1.WeightedRandomHelper !== "undefined" && WeightedRandomHelper_1.WeightedRandomHelper) === "function" ? _p : Object, typeof (_q = typeof PresetHelper_1.PresetHelper !== "undefined" && PresetHelper_1.PresetHelper) === "function" ? _q : Object, typeof (_r = typeof LocalisationService_1.LocalisationService !== "undefined" && LocalisationService_1.LocalisationService) === "function" ? _r : Object, typeof (_s = typeof BotEquipmentModPoolService_1.BotEquipmentModPoolService !== "undefined" && BotEquipmentModPoolService_1.BotEquipmentModPoolService) === "function" ? _s : Object, typeof (_t = typeof ConfigServer_1.ConfigServer !== "undefined" && ConfigServer_1.ConfigServer) === "function" ? _t : Object, typeof (_u = typeof ICloner_1.ICloner !== "undefined" && ICloner_1.ICloner) === "function" ? _u : Object, typeof (_v = typeof APBSEquipmentGetter_1.APBSEquipmentGetter !== "undefined" && APBSEquipmentGetter_1.APBSEquipmentGetter) === "function" ? _v : Object, typeof (_w = typeof APBSTierGetter_1.APBSTierGetter !== "undefined" && APBSTierGetter_1.APBSTierGetter) === "function" ? _w : Object, typeof (_x = typeof RaidInformation_1.RaidInformation !== "undefined" && RaidInformation_1.RaidInformation) === "function" ? _x : Object, typeof (_y = typeof ModInformation_1.ModInformation !== "undefined" && ModInformation_1.ModInformation) === "function" ? _y : Object, typeof (_z = typeof APBSTester_1.APBSTester !== "undefined" && APBSTester_1.APBSTester) === "function" ? _z : Object, typeof (_0 = typeof APBSLogger_1.APBSLogger !== "undefined" && APBSLogger_1.APBSLogger) === "function" ? _0 : Object, typeof (_1 = typeof RealismHelper_1.RealismHelper !== "undefined" && RealismHelper_1.RealismHelper) === "function" ? _1 : Object])
+    __param(19, (0, tsyringe_1.inject)("APBSTierGetter")),
+    __param(20, (0, tsyringe_1.inject)("RaidInformation")),
+    __param(21, (0, tsyringe_1.inject)("ModInformation")),
+    __param(22, (0, tsyringe_1.inject)("APBSTester")),
+    __param(23, (0, tsyringe_1.inject)("APBSLogger")),
+    __param(24, (0, tsyringe_1.inject)("RealismHelper")),
+    __metadata("design:paramtypes", [typeof (_a = typeof ILogger_1.ILogger !== "undefined" && ILogger_1.ILogger) === "function" ? _a : Object, typeof (_b = typeof HashUtil_1.HashUtil !== "undefined" && HashUtil_1.HashUtil) === "function" ? _b : Object, typeof (_c = typeof RandomUtil_1.RandomUtil !== "undefined" && RandomUtil_1.RandomUtil) === "function" ? _c : Object, typeof (_d = typeof ProbabilityHelper_1.ProbabilityHelper !== "undefined" && ProbabilityHelper_1.ProbabilityHelper) === "function" ? _d : Object, typeof (_e = typeof DatabaseService_1.DatabaseService !== "undefined" && DatabaseService_1.DatabaseService) === "function" ? _e : Object, typeof (_f = typeof ItemHelper_1.ItemHelper !== "undefined" && ItemHelper_1.ItemHelper) === "function" ? _f : Object, typeof (_g = typeof BotEquipmentFilterService_1.BotEquipmentFilterService !== "undefined" && BotEquipmentFilterService_1.BotEquipmentFilterService) === "function" ? _g : Object, typeof (_h = typeof ItemFilterService_1.ItemFilterService !== "undefined" && ItemFilterService_1.ItemFilterService) === "function" ? _h : Object, typeof (_j = typeof ProfileHelper_1.ProfileHelper !== "undefined" && ProfileHelper_1.ProfileHelper) === "function" ? _j : Object, typeof (_k = typeof BotWeaponModLimitService_1.BotWeaponModLimitService !== "undefined" && BotWeaponModLimitService_1.BotWeaponModLimitService) === "function" ? _k : Object, typeof (_l = typeof BotHelper_1.BotHelper !== "undefined" && BotHelper_1.BotHelper) === "function" ? _l : Object, typeof (_m = typeof BotGeneratorHelper_1.BotGeneratorHelper !== "undefined" && BotGeneratorHelper_1.BotGeneratorHelper) === "function" ? _m : Object, typeof (_o = typeof BotWeaponGeneratorHelper_1.BotWeaponGeneratorHelper !== "undefined" && BotWeaponGeneratorHelper_1.BotWeaponGeneratorHelper) === "function" ? _o : Object, typeof (_p = typeof WeightedRandomHelper_1.WeightedRandomHelper !== "undefined" && WeightedRandomHelper_1.WeightedRandomHelper) === "function" ? _p : Object, typeof (_q = typeof PresetHelper_1.PresetHelper !== "undefined" && PresetHelper_1.PresetHelper) === "function" ? _q : Object, typeof (_r = typeof LocalisationService_1.LocalisationService !== "undefined" && LocalisationService_1.LocalisationService) === "function" ? _r : Object, typeof (_s = typeof BotEquipmentModPoolService_1.BotEquipmentModPoolService !== "undefined" && BotEquipmentModPoolService_1.BotEquipmentModPoolService) === "function" ? _s : Object, typeof (_t = typeof ConfigServer_1.ConfigServer !== "undefined" && ConfigServer_1.ConfigServer) === "function" ? _t : Object, typeof (_u = typeof ICloner_1.ICloner !== "undefined" && ICloner_1.ICloner) === "function" ? _u : Object, typeof (_v = typeof APBSTierGetter_1.APBSTierGetter !== "undefined" && APBSTierGetter_1.APBSTierGetter) === "function" ? _v : Object, typeof (_w = typeof RaidInformation_1.RaidInformation !== "undefined" && RaidInformation_1.RaidInformation) === "function" ? _w : Object, typeof (_x = typeof ModInformation_1.ModInformation !== "undefined" && ModInformation_1.ModInformation) === "function" ? _x : Object, typeof (_y = typeof APBSTester_1.APBSTester !== "undefined" && APBSTester_1.APBSTester) === "function" ? _y : Object, typeof (_z = typeof APBSLogger_1.APBSLogger !== "undefined" && APBSLogger_1.APBSLogger) === "function" ? _z : Object, typeof (_0 = typeof RealismHelper_1.RealismHelper !== "undefined" && RealismHelper_1.RealismHelper) === "function" ? _0 : Object])
 ], APBSBotEquipmentModGenerator);
 //# sourceMappingURL=APBSBotEquipmentModGenerator.js.map

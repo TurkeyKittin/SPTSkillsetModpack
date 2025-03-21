@@ -15,6 +15,8 @@ const buildScavMarksmanWaves_1 = __importDefault(require("./buildScavMarksmanWav
 const buildPmcs_1 = __importDefault(require("./buildPmcs"));
 const utils_2 = require("./utils");
 const updateSpawnLocations_1 = __importDefault(require("./updateSpawnLocations"));
+const marksmanChanges_1 = __importDefault(require("./marksmanChanges"));
+const advancedConfig_json_1 = __importDefault(require("../../config/advancedConfig.json"));
 const buildWaves = (container) => {
     const configServer = container.resolve("ConfigServer");
     const Logger = container.resolve("WinstonLogger");
@@ -27,7 +29,7 @@ const buildWaves = (container) => {
     locationConfig.addCustomBotWavesToMaps = false;
     locationConfig.customWaves = { boss: {}, normal: {} };
     const databaseServer = container.resolve("DatabaseServer");
-    const { locations, bots, globals } = databaseServer.getTables();
+    const { locations, bots } = databaseServer.getTables();
     let config = (0, utils_1.cloneDeep)(GlobalValues_1.globalValues.baseConfig);
     const preset = (0, utils_1.getRandomPresetOrCurrentlySelectedPreset)();
     Object.keys(GlobalValues_1.globalValues.overrideConfig).forEach((key) => {
@@ -48,7 +50,9 @@ const buildWaves = (container) => {
     // config.debug &&
     console.log(GlobalValues_1.globalValues.forcedPreset === "custom"
         ? "custom"
-        : GlobalValues_1.globalValues.currentPreset);
+        : GlobalValues_1.globalValues.forcedPreset
+            ? GlobalValues_1.globalValues.forcedPreset
+            : GlobalValues_1.globalValues.currentPreset);
     const { bigmap: customs, factory4_day: factoryDay, factory4_night: factoryNight, interchange, laboratory, lighthouse, rezervbase, shoreline, tarkovstreets, woods, sandbox: gzLow, sandbox_high: gzHigh, } = locations;
     let locationList = [
         customs,
@@ -88,10 +92,16 @@ const buildWaves = (container) => {
         laboratory: { pmcbot: { min: 0, max: 0 } },
         rezervbase: { pmcbot: { min: 0, max: 0 } },
     };
+    if (config.startingPmcs && (!config.randomSpawns || config.spawnSmoothing)) {
+        Logger.warning(`[MOAR] Starting pmcs turned on, turning off cascade system and smoothing.\n`);
+        config.spawnSmoothing = false;
+        config.randomSpawns = true;
+    }
+    if (advancedConfig_json_1.default.MarksmanDifficultyChanges) {
+        (0, marksmanChanges_1.default)(bots);
+    }
     (0, updateSpawnLocations_1.default)(locationList, config);
     (0, utils_2.setEscapeTimeOverrides)(locationList, mapConfig_json_1.default, Logger, config);
-    // Make main waves
-    (0, buildScavMarksmanWaves_1.default)(config, locationList, botConfig);
     // BOSS RELATED STUFF!
     (0, buildBossWaves_1.buildBossWaves)(config, locationList);
     //Zombies
@@ -99,6 +109,13 @@ const buildWaves = (container) => {
         (0, buildZombieWaves_1.default)(config, locationList, bots);
     }
     (0, buildPmcs_1.default)(config, locationList);
+    // Make main waves
+    (0, buildScavMarksmanWaves_1.default)(config, locationList, botConfig);
+    // enableSmoothing
+    if (config.spawnSmoothing) {
+        (0, utils_2.enforceSmoothing)(locationList);
+    }
+    // saveToFile(locations.bigmap.base.SpawnPointParams, "spawns.json");
     constants_1.originalMapList.forEach((name, index) => {
         if (!locations[name]) {
             console.log("[MOAR] OH CRAP we have a problem!", name);

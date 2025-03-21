@@ -40,7 +40,7 @@ let APBSDynamicRouterHooks = class APBSDynamicRouterHooks {
                         }
                     }
                     catch (err) {
-                        this.apbsLogger.log(Logging_1.Logging.WARN, "Bot Router hook failed.\n", `${err.stack}`);
+                        this.apbsLogger.log(Logging_1.Logging.ERR, "Bot Router hook failed.\n", `${err.stack}`);
                     }
                     return output;
                 }

@@ -35,7 +35,6 @@ export const defaultHostility = [
       "bossKolontay",
       "followerKolontayAssault",
       "followerKolontaySecurity",
-      "shooterBTR",
       "bossPartisan",
       "spiritWinter",
       "spiritSpring",
@@ -44,7 +43,6 @@ export const defaultHostility = [
       "assault",
       "marksman",
       "pmcUSEC",
-      "pmcBEAR",
       "exUsec",
       "pmcBot",
       "bossBully",
@@ -60,7 +58,7 @@ export const defaultHostility = [
     BearPlayerBehaviour: "AlwaysEnemies",
     BotRole: "pmcBEAR",
     ChancedEnemies: [],
-    Neutral: [],
+    Neutral: ["shooterBTR"],
     SavagePlayerBehaviour: "AlwaysEnemies",
     UsecEnemyChance: 100,
     UsecPlayerBehaviour: "AlwaysEnemies",
@@ -102,7 +100,6 @@ export const defaultHostility = [
       "bossKolontay",
       "followerKolontayAssault",
       "followerKolontaySecurity",
-      "shooterBTR",
       "bossPartisan",
       "spiritWinter",
       "spiritSpring",
@@ -110,7 +107,6 @@ export const defaultHostility = [
       "skier",
       "assault",
       "marksman",
-      "pmcUSEC",
       "pmcBEAR",
       "exUsec",
       "pmcBot",
@@ -127,7 +123,7 @@ export const defaultHostility = [
     BearPlayerBehaviour: "AlwaysEnemies",
     BotRole: "pmcUSEC",
     ChancedEnemies: [],
-    Neutral: [],
+    Neutral: ["shooterBTR"],
     SavagePlayerBehaviour: "AlwaysEnemies",
     UsecEnemyChance: 100,
     UsecPlayerBehaviour: "AlwaysEnemies",
@@ -201,4 +197,48 @@ export const defaultEscapeTimes = {
   woods: 40,
   gzLow: 35,
   gzHigh: 35,
+};
+
+export const bossPerformanceHash = {
+  bossZryachiy: {
+    BossChance: 50,
+    BossEscortAmount: "0",
+  },
+  exUsec: {
+    BossEscortAmount: "1",
+    BossChance: 35,
+  },
+  skier: {
+    BossEscortAmount: "2,2,3,3",
+  },
+  sectantPriest: {
+    BossEscortAmount: "1,2,2",
+  },
+  bossBully: {
+    BossEscortAmount: "2,3",
+  },
+  bossBoar: {
+    BossEscortAmount: "1,2,2,2",
+  },
+  bossBoarSniper: {
+    BossEscortAmount: "1",
+  },
+  bossKojaniy: {
+    BossEscortAmount: "1,2,2",
+  },
+  bossPartisan: {
+    BossEscortType: "assault",
+    BossEscortAmount: "1,1,2",
+    DependKarma: false,
+    TriggerId: "",
+    TriggerName: "",
+    RandomTimeSpawn: true,
+  },
+  bossSanitar: {
+    BossEscortAmount: "1,2,3",
+  },
+  peacemaker: {
+    BossChance: 25,
+    BossEscortAmount: "2,2,3,3,3,4",
+  },
 };

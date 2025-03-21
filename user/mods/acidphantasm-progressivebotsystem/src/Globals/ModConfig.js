@@ -33,12 +33,14 @@ let ModConfig = class ModConfig {
     tierInformation;
     vfs;
     static config;
+    static blacklist;
     constructor(apbsLogger, logger, tierInformation, vfs) {
         this.apbsLogger = apbsLogger;
         this.logger = logger;
         this.tierInformation = tierInformation;
         this.vfs = vfs;
         ModConfig_1.config = jsonc_1.jsonc.parse(this.vfs.readFile(path_1.default.resolve(__dirname, "../../config/config.json")));
+        ModConfig_1.blacklist = jsonc_1.jsonc.parse(this.vfs.readFile(path_1.default.resolve(__dirname, "../../config/blacklists.json")));
     }
     serverLogDetails() {
         this.logger.debug("[APBS] Mod Config - FOR SUPPORT FOLKS ❤❤");

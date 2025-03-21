@@ -94,7 +94,6 @@ let BotLogHelper = class BotLogHelper {
         }
     }
     logBotGeneration(outputJSON) {
-        const start = performance.now();
         const botDetails = this.getBotDetails(outputJSON);
         const logMessages = this.getLogMessage(botDetails);
         const botRole = outputJSON.data[0].Info.Settings.Role.toLowerCase();
@@ -122,8 +121,6 @@ let BotLogHelper = class BotLogHelper {
         }
         if (!logged)
             this.apbsLogger.log(Logging_1.Logging.ERR, `Logging failed for: ${botRole} - REPORT THIS TO ACIDPHANTASM`);
-        const timeTaken = performance.now() - start;
-        this.apbsLogger.log(Logging_1.Logging.DEBUG, `${timeTaken.toFixed(2)}ms for logging bot ${botDetails.role} | Name: ${botDetails.name}`);
     }
     getBotDetails(detailsJSON) {
         let primaryID;

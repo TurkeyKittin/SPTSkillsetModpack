@@ -9,7 +9,10 @@ class APBSInventoryMagGen {
     pmcInventory;
     botRole;
     botLevel;
-    constructor(magCounts, magazineTemplate, weaponTemplate, ammoTemplate, pmcInventory, botRole, botLevel) {
+    tier;
+    toploadDetails;
+    rerollDetails;
+    constructor(magCounts, magazineTemplate, weaponTemplate, ammoTemplate, pmcInventory, botRole, botLevel, tier, toploadDetails, rerollDetails) {
         this.magCounts = magCounts;
         this.magazineTemplate = magazineTemplate;
         this.weaponTemplate = weaponTemplate;
@@ -17,6 +20,9 @@ class APBSInventoryMagGen {
         this.pmcInventory = pmcInventory;
         this.botRole = botRole;
         this.botLevel = botLevel;
+        this.tier = tier;
+        this.toploadDetails = toploadDetails;
+        this.rerollDetails = rerollDetails;
     }
     getMagCount() {
         return this.magCounts;
@@ -38,6 +44,15 @@ class APBSInventoryMagGen {
     }
     getBotLevel() {
         return this.botLevel;
+    }
+    getTierNumber() {
+        return this.tier;
+    }
+    getToploadDetails() {
+        return this.toploadDetails;
+    }
+    getRerollDetails() {
+        return this.rerollDetails;
     }
 }
 exports.APBSInventoryMagGen = APBSInventoryMagGen;

@@ -18,7 +18,6 @@ const BotWeaponGeneratorHelper_1 = require("C:/snapshot/project/obj/helpers/BotW
 const BaseClasses_1 = require("C:/snapshot/project/obj/models/enums/BaseClasses");
 const EquipmentSlots_1 = require("C:/snapshot/project/obj/models/enums/EquipmentSlots");
 const tsyringe_1 = require("C:/snapshot/project/node_modules/tsyringe");
-const ModConfig_1 = require("../Globals/ModConfig");
 const RandomUtil_1 = require("C:/snapshot/project/obj/utils/RandomUtil");
 const APBSEquipmentGetter_1 = require("../Utils/APBSEquipmentGetter");
 const APBSTierGetter_1 = require("../Utils/APBSTierGetter");
@@ -44,11 +43,13 @@ let APBSUbglExternalMagGen = class APBSUbglExternalMagGen {
     }
     process(inventoryMagGen) {
         const bulletCount = this.botWeaponGeneratorHelper.getRandomizedBulletCount(inventoryMagGen.getMagCount(), inventoryMagGen.getMagazineTemplate());
-        if (ModConfig_1.ModConfig.config.generalConfig.enableBotsToRollAmmoAgain && this.randomUtil.getChance100(ModConfig_1.ModConfig.config.generalConfig.chanceToRollAmmoAgain)) {
+        const rerollConfig = inventoryMagGen.getRerollDetails();
+        if (rerollConfig.enable && this.randomUtil.getChance100(rerollConfig.chance)) {
             const weapon = inventoryMagGen.getWeaponTemplate();
-            const tierInfo = this.apbsTierGetter.getTierByLevel(inventoryMagGen.getBotLevel());
-            const ammoTable = this.apbsEquipmentGetter.getAmmoByBotRole(inventoryMagGen.getBotRole(), tierInfo);
-            const rerolledAmmo = this.apbsMethodHolder.getWeightedCompatibleAmmo(ammoTable, weapon);
+            const ammoTable = this.apbsEquipmentGetter.getAmmoByBotRole(inventoryMagGen.getBotRole(), inventoryMagGen.getTierNumber());
+            const ammoTemplate = inventoryMagGen.getAmmoTemplate();
+            const ammoCaliber = ammoTemplate._props.Caliber;
+            const rerolledAmmo = this.apbsMethodHolder.apbsGetWeightedCompatibleAmmo(ammoTable, ammoCaliber, weapon);
             this.botWeaponGeneratorHelper.addAmmoIntoEquipmentSlots(rerolledAmmo, bulletCount, inventoryMagGen.getPmcInventory());
         }
         this.botWeaponGeneratorHelper.addAmmoIntoEquipmentSlots(inventoryMagGen.getAmmoTemplate()._id, bulletCount, inventoryMagGen.getPmcInventory(), [EquipmentSlots_1.EquipmentSlots.TACTICAL_VEST]);

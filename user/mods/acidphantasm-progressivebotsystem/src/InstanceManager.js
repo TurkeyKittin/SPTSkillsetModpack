@@ -61,6 +61,7 @@ const APBSUbglExternalMagGen_1 = require("./InventoryMagGen/APBSUbglExternalMagG
 const APBSBotGeneratorHelper_1 = require("./ClassExtensions/APBSBotGeneratorHelper");
 const BotEnablementHelper_1 = require("./Helpers/BotEnablementHelper");
 const BotLogHelper_1 = require("./Helpers/BotLogHelper");
+const BotQuestHelper_1 = require("./Helpers/BotQuestHelper");
 class InstanceManager {
     //#region accessible in or after preAkiLoad
     modName;
@@ -110,6 +111,7 @@ class InstanceManager {
     apbsExternalInventoryMagGen;
     apbsMethodHolder;
     botLogHelper;
+    botQuestHelper;
     //#endregion
     //#region accessible in or after postDBLoad
     tables;
@@ -169,6 +171,8 @@ class InstanceManager {
         this.apbsEquipmentGetter = container.resolve("APBSEquipmentGetter");
         this.container.register("BotLogHelper", BotLogHelper_1.BotLogHelper, { lifecycle: tsyringe_1.Lifecycle.Singleton });
         this.botLogHelper = container.resolve("BotLogHelper");
+        this.container.register("BotQuestHelper", BotQuestHelper_1.BotQuestHelper, { lifecycle: tsyringe_1.Lifecycle.Singleton });
+        this.botQuestHelper = container.resolve("BotQuestHelper");
         // Custom Special
         this.container.register("APBSDynamicRouterHooks", APBSDynamicRouterHooks_1.APBSDynamicRouterHooks, { lifecycle: tsyringe_1.Lifecycle.Singleton });
         this.apbsDynamicRouterHooks = container.resolve("APBSDynamicRouterHooks");

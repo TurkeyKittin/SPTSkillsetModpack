@@ -83,16 +83,10 @@ let APBSBotLootGenerator = class APBSBotLootGenerator extends BotLootGenerator_1
         this.apbsBotLootCacheService = apbsBotLootCacheService;
         this.apbsLogger = apbsLogger;
     }
-    generateLoot(sessionId, botJsonTemplate, isPmc, botRole, botInventory, botLevel) {
+    apbsGenerateLoot(sessionId, botJsonTemplate, isPmc, botRole, botInventory, botLevel, tier) {
         // Limits on item types to be added as loot
-        const tierInfo = this.apbsTierGetter.getTierByLevel(botLevel);
-        const chances = this.apbsEquipmentGetter.getSpawnChancesByBotRole(botRole, tierInfo);
-        let itemCounts = chances.generation.items;
-        let useOriginalLootCache = false;
-        if (!this.raidInformation.isBotEnabled(botRole)) {
-            itemCounts = botJsonTemplate.generation.items;
-            useOriginalLootCache = true;
-        }
+        const chances = this.apbsEquipmentGetter.getSpawnChancesByBotRole(botRole, tier);
+        const itemCounts = chances.generation.items;
         if (!itemCounts.backpackLoot.weights
             || !itemCounts.pocketLoot.weights
             || !itemCounts.vestLoot.weights
@@ -135,37 +129,21 @@ let APBSBotLootGenerator = class APBSBotLootGenerator extends BotLootGenerator_1
         // generation of the bots by avoiding checking the slots of containers we already know are full
         const containersIdFull = new Set();
         // Special items
-        this.addLootFromPool(useOriginalLootCache ?
-            this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.SPECIAL, botJsonTemplate) :
-            this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.SPECIAL, botJsonTemplate, botLevel), containersBotHasAvailable, specialLootItemCount, botInventory, botRole, botItemLimits, undefined, undefined, containersIdFull);
+        this.addLootFromPool(this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.SPECIAL, botJsonTemplate, botLevel, tier), containersBotHasAvailable, specialLootItemCount, botInventory, botRole, botItemLimits, undefined, undefined, containersIdFull);
         // Healing items / Meds
-        this.addLootFromPool(useOriginalLootCache ?
-            this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.HEALING_ITEMS, botJsonTemplate) :
-            this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.HEALING_ITEMS, botJsonTemplate, botLevel), containersBotHasAvailable, healingItemCount, botInventory, botRole, botItemLimits, 0, isPmc, containersIdFull);
+        this.addLootFromPool(this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.HEALING_ITEMS, botJsonTemplate, botLevel, tier), containersBotHasAvailable, healingItemCount, botInventory, botRole, botItemLimits, 0, isPmc, containersIdFull);
         // Drugs
-        this.addLootFromPool(useOriginalLootCache ?
-            this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.DRUG_ITEMS, botJsonTemplate) :
-            this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.DRUG_ITEMS, botJsonTemplate, botLevel), containersBotHasAvailable, drugItemCount, botInventory, botRole, botItemLimits, 0, isPmc, containersIdFull);
+        this.addLootFromPool(this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.DRUG_ITEMS, botJsonTemplate, botLevel, tier), containersBotHasAvailable, drugItemCount, botInventory, botRole, botItemLimits, 0, isPmc, containersIdFull);
         // Food
-        this.addLootFromPool(useOriginalLootCache ?
-            this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.FOOD_ITEMS, botJsonTemplate) :
-            this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.FOOD_ITEMS, botJsonTemplate, botLevel), containersBotHasAvailable, foodItemCount, botInventory, botRole, botItemLimits, 0, isPmc, containersIdFull);
+        this.addLootFromPool(this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.FOOD_ITEMS, botJsonTemplate, botLevel, tier), containersBotHasAvailable, foodItemCount, botInventory, botRole, botItemLimits, 0, isPmc, containersIdFull);
         // Drink
-        this.addLootFromPool(useOriginalLootCache ?
-            this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.DRINK_ITEMS, botJsonTemplate) :
-            this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.DRINK_ITEMS, botJsonTemplate, botLevel), containersBotHasAvailable, drinkItemCount, botInventory, botRole, botItemLimits, 0, isPmc, containersIdFull);
+        this.addLootFromPool(this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.DRINK_ITEMS, botJsonTemplate, botLevel, tier), containersBotHasAvailable, drinkItemCount, botInventory, botRole, botItemLimits, 0, isPmc, containersIdFull);
         // Currency
-        this.addLootFromPool(useOriginalLootCache ?
-            this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.CURRENCY_ITEMS, botJsonTemplate) :
-            this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.CURRENCY_ITEMS, botJsonTemplate, botLevel), containersBotHasAvailable, currencyItemCount, botInventory, botRole, botItemLimits, 0, isPmc, containersIdFull);
+        this.addLootFromPool(this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.CURRENCY_ITEMS, botJsonTemplate, botLevel, tier), containersBotHasAvailable, currencyItemCount, botInventory, botRole, botItemLimits, 0, isPmc, containersIdFull);
         // Stims
-        this.addLootFromPool(useOriginalLootCache ?
-            this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.STIM_ITEMS, botJsonTemplate) :
-            this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.STIM_ITEMS, botJsonTemplate, botLevel), containersBotHasAvailable, stimItemCount, botInventory, botRole, botItemLimits, 0, isPmc, containersIdFull);
+        this.addLootFromPool(this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.STIM_ITEMS, botJsonTemplate, botLevel, tier), containersBotHasAvailable, stimItemCount, botInventory, botRole, botItemLimits, 0, isPmc, containersIdFull);
         // Grenades
-        this.addLootFromPool(useOriginalLootCache ?
-            this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.GRENADE_ITEMS, botJsonTemplate) :
-            this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.GRENADE_ITEMS, botJsonTemplate, botLevel), [EquipmentSlots_1.EquipmentSlots.POCKETS, EquipmentSlots_1.EquipmentSlots.TACTICAL_VEST], // Can't use containersBotHasEquipped as we dont want grenades added to backpack
+        this.addLootFromPool(this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.GRENADE_ITEMS, botJsonTemplate, botLevel, tier), [EquipmentSlots_1.EquipmentSlots.POCKETS, EquipmentSlots_1.EquipmentSlots.TACTICAL_VEST], // Can't use containersBotHasEquipped as we dont want grenades added to backpack
         grenadeCount, botInventory, botRole, botItemLimits, 0, isPmc, containersIdFull);
         // Backpack - generate loot if they have one
         if (containersBotHasAvailable.includes(EquipmentSlots_1.EquipmentSlots.BACKPACK)) {
@@ -174,27 +152,19 @@ let APBSBotLootGenerator = class APBSBotLootGenerator extends BotLootGenerator_1
                 this.addLooseWeaponsToInventorySlot(sessionId, botInventory, EquipmentSlots_1.EquipmentSlots.BACKPACK, botJsonTemplate.inventory, botJsonTemplate.chances.weaponMods, botRole, isPmc, botLevel, containersIdFull);
             }
             const backpackLootRoubleTotal = this.getBackpackRoubleTotalByLevel(botLevel, isPmc);
-            this.addLootFromPool(useOriginalLootCache ?
-                this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.BACKPACK, botJsonTemplate) :
-                this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.BACKPACK, botJsonTemplate, botLevel), [EquipmentSlots_1.EquipmentSlots.BACKPACK], backpackLootCount, botInventory, botRole, botItemLimits, backpackLootRoubleTotal, isPmc, containersIdFull);
+            this.addLootFromPool(this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.BACKPACK, botJsonTemplate, botLevel, tier), [EquipmentSlots_1.EquipmentSlots.BACKPACK], backpackLootCount, botInventory, botRole, botItemLimits, backpackLootRoubleTotal, isPmc, containersIdFull);
         }
         // TacticalVest - generate loot if they have one
         if (containersBotHasAvailable.includes(EquipmentSlots_1.EquipmentSlots.TACTICAL_VEST)) {
             // Vest
-            this.addLootFromPool(useOriginalLootCache ?
-                this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.VEST, botJsonTemplate) :
-                this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.VEST, botJsonTemplate, botLevel), [EquipmentSlots_1.EquipmentSlots.TACTICAL_VEST], vestLootCount, botInventory, botRole, botItemLimits, this.pmcConfig.maxVestLootTotalRub, isPmc, containersIdFull);
+            this.addLootFromPool(this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.VEST, botJsonTemplate, botLevel, tier), [EquipmentSlots_1.EquipmentSlots.TACTICAL_VEST], vestLootCount, botInventory, botRole, botItemLimits, this.pmcConfig.maxVestLootTotalRub, isPmc, containersIdFull);
         }
         // Pockets
-        this.addLootFromPool(useOriginalLootCache ?
-            this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.POCKET, botJsonTemplate) :
-            this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.POCKET, botJsonTemplate, botLevel), [EquipmentSlots_1.EquipmentSlots.POCKETS], pocketLootCount, botInventory, botRole, botItemLimits, this.pmcConfig.maxPocketLootTotalRub, isPmc, containersIdFull);
+        this.addLootFromPool(this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.POCKET, botJsonTemplate, botLevel, tier), [EquipmentSlots_1.EquipmentSlots.POCKETS], pocketLootCount, botInventory, botRole, botItemLimits, this.pmcConfig.maxPocketLootTotalRub, isPmc, containersIdFull);
         // Secure
         // only add if not a pmc or is pmc and flag is true
         if (!isPmc || (isPmc && this.pmcConfig.addSecureContainerLootFromBotConfig)) {
-            this.addLootFromPool(useOriginalLootCache ?
-                this.botLootCacheService.getLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.SECURE, botJsonTemplate) :
-                this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.SECURE, botJsonTemplate, botLevel), [EquipmentSlots_1.EquipmentSlots.SECURED_CONTAINER], 50, botInventory, botRole, undefined, -1, isPmc, containersIdFull);
+            this.addLootFromPool(this.apbsBotLootCacheService.apbsGetLootFromCache(botRole, isPmc, IBotLootCache_1.LootCacheType.SECURE, botJsonTemplate, botLevel, tier), [EquipmentSlots_1.EquipmentSlots.SECURED_CONTAINER], 50, botInventory, botRole, undefined, -1, isPmc, containersIdFull);
         }
     }
     itemHasReachedSpawnLimit(itemTemplate, botRole, itemSpawnLimits) {

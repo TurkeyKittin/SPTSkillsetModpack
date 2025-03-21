@@ -81,12 +81,12 @@ let APBSBotLootCacheService = class APBSBotLootCacheService extends BotLootCache
             stimItems: {}
         };
     }
-    apbsGetLootFromCache(botRole, isPmc, lootType, botJsonTemplate, botLevel) {
-        const tierInfo = this.apbsTierGetter.getTierByLevel(botLevel).toString();
+    apbsGetLootFromCache(botRole, isPmc, lootType, botJsonTemplate, botLevel, tier) {
+        const tierInfo = tier.toString();
         const combinedBotRoleTier = botRole + tierInfo;
         if (!this.apbsBotRoleExistsInCache(combinedBotRoleTier)) {
             this.apbsInitCacheForBotRole(combinedBotRoleTier);
-            this.apbsAddLootToCache(botRole, isPmc, botJsonTemplate, botLevel);
+            this.apbsAddLootToCache(botRole, isPmc, botJsonTemplate, botLevel, tier);
         }
         let result = undefined;
         switch (lootType) {
@@ -139,10 +139,10 @@ let APBSBotLootCacheService = class APBSBotLootCacheService extends BotLootCache
         }
         return this.cloner.clone(result);
     }
-    apbsAddLootToCache(botRole, isPmc, botJsonTemplate, botLevel) {
-        const tierInfo = this.apbsTierGetter.getTierByLevel(botLevel);
+    apbsAddLootToCache(botRole, isPmc, botJsonTemplate, botLevel, tier) {
+        const tierInfo = tier.toString();
         const combinedBotRoleTier = botRole + tierInfo;
-        const chances = this.apbsEquipmentGetter.getSpawnChancesByBotRole(botRole, tierInfo);
+        const chances = this.apbsEquipmentGetter.getSpawnChancesByBotRole(botRole, tier);
         let realWhitelist = chances.generation.items;
         if (!this.raidInformation.isBotEnabled(botRole)) {
             realWhitelist = botJsonTemplate.generation.items;

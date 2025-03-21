@@ -5,15 +5,61 @@ import { StaticRouterModService } from "@spt/services/mod/staticRouter/StaticRou
 import { globalValues } from "../GlobalValues";
 import { kebabToTitle } from "../utils";
 import PresetWeightingsConfig from "../../config/PresetWeightings.json";
+import { Ixyz } from "@spt/models/eft/common/Ixyz";
+import {
+  deleteBotSpawn,
+  updateBotSpawn,
+} from "../SpawnZoneChanges/updateUtils";
 
 export const setupRoutes = (container: DependencyContainer) => {
   const staticRouterModService = container.resolve<StaticRouterModService>(
     "StaticRouterModService"
   );
 
-  // const dynamicRouterModService = container.resolve<DynamicRouterModService>(
-  //   "DynamicRouterModService"
-  // );
+  interface AddSpawnRequest {
+    map: string;
+    position: Ixyz;
+    type: "player" | "pmc" | "scav" | "sniper";
+  }
+
+  staticRouterModService.registerStaticRouter(
+    `moarAddBotSpawn`,
+    [
+      {
+        url: "/moar/addBotSpawn",
+        action: async (
+          url: string,
+          req: AddSpawnRequest,
+          sessionID,
+          output
+        ) => {
+          updateBotSpawn(req.map, req.position, req.type);
+          return "success";
+        },
+      },
+    ],
+    "moarAddBotSpawn"
+  );
+
+  staticRouterModService.registerStaticRouter(
+    `moarDeleteBotSpawn`,
+    [
+      {
+        url: "/moar/deleteBotSpawn",
+        action: async (
+          url: string,
+          req: AddSpawnRequest,
+          sessionID,
+          output
+        ) => {
+          // console.log(req);
+          deleteBotSpawn(req.map, req.position, req.type);
+          return "success";
+        },
+      },
+    ],
+    "moarDeleteBotSpawn"
+  );
 
   // Make buildwaves run on game end
   staticRouterModService.registerStaticRouter(

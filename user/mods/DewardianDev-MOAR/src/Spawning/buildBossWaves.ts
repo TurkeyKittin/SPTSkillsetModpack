@@ -1,9 +1,11 @@
 import { ILocation } from "@spt/models/eft/common/ILocation";
 import _config from "../../config/config.json";
 import bossConfig from "../../config/bossConfig.json";
+import advancedConfig from "../../config/advancedConfig.json";
 import mapConfig from "../../config/mapConfig.json";
 import {
   bossesToRemoveFromPool,
+  bossPerformanceHash,
   configLocations,
   mainBossNameList,
   originalMapList,
@@ -55,6 +57,22 @@ export function buildBossWaves(
       ].base.BossLocationSpawn.filter(
         (boss) => !bossesToRemoveFromPool.has(boss.BossName)
       );
+
+      // Performance changes
+      if (advancedConfig.EnableBossPerformanceImprovements) {
+        locationList[indx].base.BossLocationSpawn.forEach((Boss, bIndex) => {
+          if (Boss.BossChance < 1) return;
+          if (!!bossPerformanceHash[Boss.BossName || ""]) {
+            const varsToUpdate: Record<string, any> =
+              bossPerformanceHash[Boss.BossName];
+
+            locationList[indx].base.BossLocationSpawn[bIndex] = {
+              ...Boss,
+              ...varsToUpdate,
+            };
+          }
+        });
+      }
 
       const location = locationList[indx];
 
@@ -248,24 +266,60 @@ export function buildBossWaves(
 
       bossesToAdd.length &&
         console.log(
-          `[MOAR] Adding the following bosses to map ${
-            configLocations[index]
+          `[MOAR] Adding the following bosses to map ${configLocations[index]
           }: ${bossesToAdd.map(({ BossName }) => BossName)}`
         );
       // console.log(locationList[index].base.BossLocationSpawn.length);
 
+      const bossesToSkip = new Set(["sectantPriest", "pmcBot"]);
       // Apply the percentages on all bosses, cull those that won't spawn, make all bosses 100 chance that remain.
       locationList[index].base.BossLocationSpawn = locationList[
         index
-      ].base.BossLocationSpawn.filter(({ BossChance, BossName }, bossIndex) => {
-        if (BossChance < 100 && BossChance / 100 < Math.random()) {
+      ].base.BossLocationSpawn.map(
+        ({ BossChance, BossName, TriggerId }, bossIndex) => {
+          if (BossChance < 1) {
+            return locationList[index].base.BossLocationSpawn[bossIndex];
+          }
+          if (
+            !TriggerId &&
+            !bossesToSkip.has(BossName) &&
+            BossChance < 100
+          ) {
+            if (
+              BossChance / 100 < Math.random()) {
+              locationList[index].base.BossLocationSpawn[
+                bossIndex
+              ].BossChance = 0;
+
+              locationList[index].base.BossLocationSpawn[bossIndex].ForceSpawn =
+                false;
+
+              locationList[index].base.BossLocationSpawn[
+                bossIndex
+              ].IgnoreMaxBots = false;
+            } else {
+              locationList[index].base.BossLocationSpawn[
+                bossIndex
+              ].BossChance = 100;
+            }
+          }
+          return locationList[index].base.BossLocationSpawn[bossIndex];
+        }
+      ).filter(({ BossChance, BossName, ...rest }) => {
+        if (BossChance < 1) {
           return false;
         }
-        return true;
-      }).map((boss) => ({ ...boss, ...{ BossChance: 100 } }));
+        return true
+      });
 
-      // if (mapName === "customs")
-      //   console.log(mapName, locationList[index].base.BossLocationSpawn);
+      // if (mapName === "lighthouse") {
+      //   console.log(
+      //     locationList[index].base.BossLocationSpawn.map(
+      //       ({ BossName, BossChance }) => ({ BossName, BossChance })
+      //     )
+      //   );
+      // }
+
     });
 
     if (hasChangedBossSpawns) {

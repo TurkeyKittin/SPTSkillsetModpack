@@ -1,14 +1,25 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.mod = void 0;
 // Custom
 const Logging_1 = require("./Enums/Logging");
 const InstanceManager_1 = require("./InstanceManager");
 const ModConfig_1 = require("./Globals/ModConfig");
+const ConfigTypes_1 = require("C:/snapshot/project/obj/models/enums/ConfigTypes");
+const semver_1 = require("C:/snapshot/project/node_modules/semver");
+const path_1 = __importDefault(require("path"));
 class APBS {
     instance = new InstanceManager_1.InstanceManager();
     preSptLoad(container) {
         const start = performance.now();
+        const logger = container.resolve("WinstonLogger");
+        if (!this.validSptVersion(container)) {
+            logger.error(`[APBS] This version of APBS was not made for your version of SPT. Disabling. Requires ${this.validMinimumSptVersion(container)} or higher.`);
+            return;
+        }
         this.instance.preSptLoad(container, "APBS");
         // Set Mod Configuration Settings
         this.instance.modConfig.serverLogDetails();
@@ -63,6 +74,21 @@ class APBS {
         }
         const timeTaken = performance.now() - start;
         this.instance.apbsLogger.log(Logging_1.Logging.DEBUG, `${timeTaken.toFixed(2)}ms for APBS.postSptLoad`);
+    }
+    validSptVersion(container) {
+        const vfs = container.resolve("VFS");
+        const configServer = container.resolve("ConfigServer");
+        const sptConfig = configServer.getConfig(ConfigTypes_1.ConfigTypes.CORE);
+        const sptVersion = globalThis.G_SPTVERSION || sptConfig.sptVersion;
+        const packageJsonPath = path_1.default.join(__dirname, "../package.json");
+        const modSptVersion = JSON.parse(vfs.readFile(packageJsonPath)).sptVersion;
+        return (0, semver_1.satisfies)(sptVersion, modSptVersion);
+    }
+    validMinimumSptVersion(container) {
+        const vfs = container.resolve("VFS");
+        const packageJsonPath = path_1.default.join(__dirname, "../package.json");
+        const modSptVersion = JSON.parse(vfs.readFile(packageJsonPath)).sptVersion;
+        return (0, semver_1.minVersion)(modSptVersion);
     }
 }
 exports.mod = new APBS();

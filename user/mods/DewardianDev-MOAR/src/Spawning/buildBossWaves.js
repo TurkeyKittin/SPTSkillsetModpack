@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.buildBossWaves = buildBossWaves;
 const bossConfig_json_1 = __importDefault(require("../../config/bossConfig.json"));
+const advancedConfig_json_1 = __importDefault(require("../../config/advancedConfig.json"));
 const mapConfig_json_1 = __importDefault(require("../../config/mapConfig.json"));
 const constants_1 = require("./constants");
 const utils_1 = require("./utils");
@@ -30,6 +31,20 @@ function buildBossWaves(config, locationList) {
         else {
             //Remove all other spawns from pool now that we have the spawns zone list
             locationList[indx].base.BossLocationSpawn = locationList[indx].base.BossLocationSpawn.filter((boss) => !constants_1.bossesToRemoveFromPool.has(boss.BossName));
+            // Performance changes
+            if (advancedConfig_json_1.default.EnableBossPerformanceImprovements) {
+                locationList[indx].base.BossLocationSpawn.forEach((Boss, bIndex) => {
+                    if (Boss.BossChance < 1)
+                        return;
+                    if (!!constants_1.bossPerformanceHash[Boss.BossName || ""]) {
+                        const varsToUpdate = constants_1.bossPerformanceHash[Boss.BossName];
+                        locationList[indx].base.BossLocationSpawn[bIndex] = {
+                            ...Boss,
+                            ...varsToUpdate,
+                        };
+                    }
+                });
+            }
             const location = locationList[indx];
             const defaultBossSettings = mapConfig_json_1.default?.[constants_1.configLocations[indx]]?.defaultBossSettings;
             // Sets bosses spawn chance from settings
@@ -167,15 +182,39 @@ function buildBossWaves(config, locationList) {
             bossesToAdd.length &&
                 console.log(`[MOAR] Adding the following bosses to map ${constants_1.configLocations[index]}: ${bossesToAdd.map(({ BossName }) => BossName)}`);
             // console.log(locationList[index].base.BossLocationSpawn.length);
+            const bossesToSkip = new Set(["sectantPriest", "pmcBot"]);
             // Apply the percentages on all bosses, cull those that won't spawn, make all bosses 100 chance that remain.
-            locationList[index].base.BossLocationSpawn = locationList[index].base.BossLocationSpawn.filter(({ BossChance, BossName }, bossIndex) => {
-                if (BossChance < 100 && BossChance / 100 < Math.random()) {
+            locationList[index].base.BossLocationSpawn = locationList[index].base.BossLocationSpawn.map(({ BossChance, BossName, TriggerId }, bossIndex) => {
+                if (BossChance < 1) {
+                    return locationList[index].base.BossLocationSpawn[bossIndex];
+                }
+                if (!TriggerId &&
+                    !bossesToSkip.has(BossName) &&
+                    BossChance < 100) {
+                    if (BossChance / 100 < Math.random()) {
+                        locationList[index].base.BossLocationSpawn[bossIndex].BossChance = 0;
+                        locationList[index].base.BossLocationSpawn[bossIndex].ForceSpawn =
+                            false;
+                        locationList[index].base.BossLocationSpawn[bossIndex].IgnoreMaxBots = false;
+                    }
+                    else {
+                        locationList[index].base.BossLocationSpawn[bossIndex].BossChance = 100;
+                    }
+                }
+                return locationList[index].base.BossLocationSpawn[bossIndex];
+            }).filter(({ BossChance, BossName, ...rest }) => {
+                if (BossChance < 1) {
                     return false;
                 }
                 return true;
-            }).map((boss) => ({ ...boss, ...{ BossChance: 100 } }));
-            // if (mapName === "customs")
-            //   console.log(mapName, locationList[index].base.BossLocationSpawn);
+            });
+            // if (mapName === "lighthouse") {
+            //   console.log(
+            //     locationList[index].base.BossLocationSpawn.map(
+            //       ({ BossName, BossChance }) => ({ BossName, BossChance })
+            //     )
+            //   );
+            // }
         });
         if (hasChangedBossSpawns) {
             console.log(`[MOAR]: --- Adjusting default boss spawn rates complete --- \n`);

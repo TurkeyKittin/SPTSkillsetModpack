@@ -55,7 +55,7 @@ let APBSStaticRouterHooks = class APBSStaticRouterHooks {
                         }
                     }
                     catch (err) {
-                        this.apbsLogger.log(Logging_1.Logging.WARN, "Bot Router hook failed.\n", `${err.stack}`);
+                        this.apbsLogger.log(Logging_1.Logging.ERR, "Bot Router hook failed.\n", `${err.stack}`);
                     }
                     return output;
                 }
@@ -75,7 +75,7 @@ let APBSStaticRouterHooks = class APBSStaticRouterHooks {
                         }
                     }
                     catch (err) {
-                        this.apbsLogger.log(Logging_1.Logging.WARN, "Match Start Router hook failed.\n", `${err.stack}`);
+                        this.apbsLogger.log(Logging_1.Logging.ERR, "Match Start Router hook failed.\n", `${err.stack}`);
                     }
                     return output;
                 }
@@ -91,7 +91,7 @@ let APBSStaticRouterHooks = class APBSStaticRouterHooks {
                         this.raidInformation.freshProfile = (fullProfile.info.wipe === true) ? true : false;
                     }
                     catch (err) {
-                        this.apbsLogger.log(Logging_1.Logging.WARN, "Game Start Router hook failed.\n", `${err.stack}`);
+                        this.apbsLogger.log(Logging_1.Logging.ERR, "Game Start Router hook failed.\n", `${err.stack}`);
                     }
                     return output;
                 }
@@ -107,7 +107,7 @@ let APBSStaticRouterHooks = class APBSStaticRouterHooks {
                         this.raidInformation.freshProfile = (fullProfile.info.wipe === true) ? true : false;
                     }
                     catch (err) {
-                        this.apbsLogger.log(Logging_1.Logging.WARN, "Profile Status Router hook failed.\n", `${err.stack}`);
+                        this.apbsLogger.log(Logging_1.Logging.ERR, "Profile Status Router hook failed.\n", `${err.stack}`);
                     }
                     return output;
                 }

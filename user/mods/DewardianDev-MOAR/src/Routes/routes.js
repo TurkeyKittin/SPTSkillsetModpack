@@ -9,11 +9,28 @@ const Spawning_1 = require("../Spawning/Spawning");
 const GlobalValues_1 = require("../GlobalValues");
 const utils_1 = require("../utils");
 const PresetWeightings_json_1 = __importDefault(require("../../config/PresetWeightings.json"));
+const updateUtils_1 = require("../SpawnZoneChanges/updateUtils");
 const setupRoutes = (container) => {
     const staticRouterModService = container.resolve("StaticRouterModService");
-    // const dynamicRouterModService = container.resolve<DynamicRouterModService>(
-    //   "DynamicRouterModService"
-    // );
+    staticRouterModService.registerStaticRouter(`moarAddBotSpawn`, [
+        {
+            url: "/moar/addBotSpawn",
+            action: async (url, req, sessionID, output) => {
+                (0, updateUtils_1.updateBotSpawn)(req.map, req.position, req.type);
+                return "success";
+            },
+        },
+    ], "moarAddBotSpawn");
+    staticRouterModService.registerStaticRouter(`moarDeleteBotSpawn`, [
+        {
+            url: "/moar/deleteBotSpawn",
+            action: async (url, req, sessionID, output) => {
+                // console.log(req);
+                (0, updateUtils_1.deleteBotSpawn)(req.map, req.position, req.type);
+                return "success";
+            },
+        },
+    ], "moarDeleteBotSpawn");
     // Make buildwaves run on game end
     staticRouterModService.registerStaticRouter(`moarUpdater`, [
         {

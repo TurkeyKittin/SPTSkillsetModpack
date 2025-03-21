@@ -19,7 +19,6 @@ const tsyringe_1 = require("C:/snapshot/project/node_modules/tsyringe");
 const APBSEquipmentGetter_1 = require("../Utils/APBSEquipmentGetter");
 const APBSTierGetter_1 = require("../Utils/APBSTierGetter");
 const APBSMethodHolder_1 = require("./APBSMethodHolder");
-const ModConfig_1 = require("../Globals/ModConfig");
 const RandomUtil_1 = require("C:/snapshot/project/obj/utils/RandomUtil");
 let APBSInternalMagazineInventoryMagGen = class APBSInternalMagazineInventoryMagGen {
     botWeaponGeneratorHelper;
@@ -42,11 +41,12 @@ let APBSInternalMagazineInventoryMagGen = class APBSInternalMagazineInventoryMag
     }
     process(inventoryMagGen) {
         let bulletCount = this.botWeaponGeneratorHelper.getRandomizedBulletCount(inventoryMagGen.getMagCount(), inventoryMagGen.getMagazineTemplate());
-        if (ModConfig_1.ModConfig.config.generalConfig.enableBotsToRollAmmoAgain && this.randomUtil.getChance100(ModConfig_1.ModConfig.config.generalConfig.chanceToRollAmmoAgain)) {
+        const rerollConfig = inventoryMagGen.getRerollDetails();
+        if (rerollConfig.enable && this.randomUtil.getChance100(rerollConfig.chance)) {
             const weapon = inventoryMagGen.getWeaponTemplate();
-            const tierInfo = this.apbsTierGetter.getTierByLevel(inventoryMagGen.getBotLevel());
-            const ammoTable = this.apbsEquipmentGetter.getAmmoByBotRole(inventoryMagGen.getBotRole(), tierInfo);
-            const rerolledAmmo = this.apbsMethodHolder.getWeightedCompatibleAmmo(ammoTable, weapon);
+            const ammoTable = this.apbsEquipmentGetter.getAmmoByBotRole(inventoryMagGen.getBotRole(), inventoryMagGen.getTierNumber());
+            const ammoCaliber = inventoryMagGen.getAmmoTemplate()._props.Caliber;
+            const rerolledAmmo = this.apbsMethodHolder.apbsGetWeightedCompatibleAmmo(ammoTable, ammoCaliber, weapon);
             if (bulletCount > 20) {
                 bulletCount = this.randomUtil.getInt(10, bulletCount);
             }

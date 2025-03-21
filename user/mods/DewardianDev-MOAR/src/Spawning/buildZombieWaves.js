@@ -35,7 +35,7 @@ function buildZombieWaves(config, locationList, bots) {
         config.debug &&
             escapeTimeLimitRatio !== 1 &&
             console.log(`${map} Zombie wave count changed from ${zombieWaveCount} to ${zombieTotalWaveCount} due to escapeTimeLimit adjustment`);
-        const zombieWaves = (0, utils_1.buildZombie)(zombieTotalWaveCount, location.EscapeTimeLimit, zombieWaveDistribution, 9999);
+        const zombieWaves = (0, utils_1.buildZombie)(zombieTotalWaveCount, location.EscapeTimeLimit * 60, zombieWaveDistribution, 9999);
         debug &&
             console.log(constants_1.configLocations[indx], " generated ", zombieWaves.length, "Zombies");
         location.BossLocationSpawn.push(...zombieWaves);

@@ -18,9 +18,11 @@ import { buildBossWaves } from "./buildBossWaves";
 import buildZombieWaves from "./buildZombieWaves";
 import buildScavMarksmanWaves from "./buildScavMarksmanWaves";
 import buildPmcs from "./buildPmcs";
-import { setEscapeTimeOverrides } from "./utils";
+import { enforceSmoothing, setEscapeTimeOverrides } from "./utils";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
 import updateSpawnLocations from "./updateSpawnLocations";
+import marksmanChanges from "./marksmanChanges";
+import advancedConfig from "../../config/advancedConfig.json";
 
 export const buildWaves = (container: DependencyContainer) => {
   const configServer = container.resolve<ConfigServer>("ConfigServer");
@@ -40,7 +42,7 @@ export const buildWaves = (container: DependencyContainer) => {
 
   const databaseServer = container.resolve<DatabaseServer>("DatabaseServer");
 
-  const { locations, bots, globals } = databaseServer.getTables();
+  const { locations, bots } = databaseServer.getTables();
 
   let config = cloneDeep(globalValues.baseConfig) as typeof _config;
 
@@ -71,6 +73,8 @@ export const buildWaves = (container: DependencyContainer) => {
   console.log(
     globalValues.forcedPreset === "custom"
       ? "custom"
+      : globalValues.forcedPreset
+      ? globalValues.forcedPreset
       : globalValues.currentPreset
   );
 
@@ -131,12 +135,21 @@ export const buildWaves = (container: DependencyContainer) => {
     rezervbase: { pmcbot: { min: 0, max: 0 } },
   };
 
+  if (config.startingPmcs && (!config.randomSpawns || config.spawnSmoothing)) {
+    Logger.warning(
+      `[MOAR] Starting pmcs turned on, turning off cascade system and smoothing.\n`
+    );
+    config.spawnSmoothing = false;
+    config.randomSpawns = true;
+  }
+
+  if (advancedConfig.MarksmanDifficultyChanges) {
+    marksmanChanges(bots);
+  }
+
   updateSpawnLocations(locationList, config);
 
   setEscapeTimeOverrides(locationList, _mapConfig, Logger, config);
-
-  // Make main waves
-  buildScavMarksmanWaves(config, locationList, botConfig);
 
   // BOSS RELATED STUFF!
   buildBossWaves(config, locationList);
@@ -147,6 +160,16 @@ export const buildWaves = (container: DependencyContainer) => {
   }
 
   buildPmcs(config, locationList);
+
+  // Make main waves
+  buildScavMarksmanWaves(config, locationList, botConfig);
+
+  // enableSmoothing
+  if (config.spawnSmoothing) {
+    enforceSmoothing(locationList);
+  }
+
+  // saveToFile(locations.bigmap.base.SpawnPointParams, "spawns.json");
 
   originalMapList.forEach((name, index) => {
     if (!locations[name]) {

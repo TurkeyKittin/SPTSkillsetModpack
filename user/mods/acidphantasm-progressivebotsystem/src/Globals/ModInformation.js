@@ -35,7 +35,7 @@ class ModInformation {
     testMode = false;
     testBotRole = ["pmcusec", "pmcbear"];
     testTrader = "100000000000000000000000";
-    testLevelLock = true;
+    testLevelLock = false;
     clearAssortPreRaid = true;
 }
 exports.ModInformation = ModInformation;
