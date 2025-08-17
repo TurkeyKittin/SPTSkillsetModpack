@@ -4,8 +4,8 @@ services:
       context: .
       dockerfile: ./Dockerfile
       args:
-        FIKA_VERSION: v2.3.6
-        SPT_VERSION: 3.10.5
-        SKILLSET_BRANCH: skillz
+        FIKA_VERSION: v2.4.8
+        SPT_VERSION: 3.11.3
+        SKILLSET_BRANCH: 3.11
     ports:
       - '6969:6969'
