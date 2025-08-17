@@ -5,18 +5,19 @@ You're no longer the only PMC running around placing markers and collecting ques
 **---------- Mod Compatibility ----------**
 
 **REQUIRES:**
-* [BigBrain](https://hub.sp-tarkov.com/files/file/1219-bigbrain/) (1.2.0 or later)
-* [Waypoints](https://hub.sp-tarkov.com/files/file/1119-waypoints-expanded-bot-patrols-and-navmesh/) (1.6.2 or later)
+* [BigBrain](https://hub.sp-tarkov.com/files/file/1219-bigbrain/) (1.3.2 or later)
+* [Waypoints](https://hub.sp-tarkov.com/files/file/1119-waypoints-expanded-bot-patrols-and-navmesh/) (1.7.1 or later)
 
 **Highly Recommended:**
-* [SAIN](https://hub.sp-tarkov.com/files/file/1062-sain-2-0-solarint-s-ai-modifications-full-ai-combat-system-replacement/) (3.2.0 or later recommended)
-* [Looting Bots](https://hub.sp-tarkov.com/files/file/1096-looting-bots/) (1.4.0 or later recommended)
+* [SAIN](https://hub.sp-tarkov.com/files/file/1062-sain-2-0-solarint-s-ai-modifications-full-ai-combat-system-replacement/) (4.0.3 or later recommended)
+* [Looting Bots](https://hub.sp-tarkov.com/files/file/1096-looting-bots/) (1.5.2 or later recommended)
 
 **Partially compatible with:**
-* **Fika** (Requires client version 0.9.8962.33287 or later) (If you're using the Questing Bots spawning system, you must disable `Enforced Spawn Limits` in the F12 menu for Fika)
-* [Traveler](https://hub.sp-tarkov.com/files/file/1212-traveler/), [Entry Point Selector](https://hub.sp-tarkov.com/files/file/2291-entry-point-selector-2-0/), and similar mods that significantly reduce spawn points (You MUST use another mod like [SWAG + DONUTS](https://hub.sp-tarkov.com/files/file/878-swag-donuts-dynamic-spawn-waves-and-custom-spawn-points/) to manage bot spawning when using this mod. Otherwise, bots will spawn right in front of you.) 
+* **Fika** (If you're using the Questing Bots spawning system, you must disable `Enforced Spawn Limits` in the F12 menu for Fika)
+* [Path to Tarkov](https://hub.sp-tarkov.com/files/file/569-path-to-tarkov/), [Traveler](https://hub.sp-tarkov.com/files/file/1212-traveler/), [Entry Point Selector](https://hub.sp-tarkov.com/files/file/2291-entry-point-selector-2-0/), and similar mods that significantly reduce spawn points (You MUST use another mod like [SWAG + DONUTS](https://hub.sp-tarkov.com/files/file/878-swag-donuts-dynamic-spawn-waves-and-custom-spawn-points/) to manage bot spawning when using this mod. Otherwise, bots will spawn right in front of you.) 
 * [Realism](https://hub.sp-tarkov.com/files/file/606-spt-realism-mod/) (You must disable Realism's bot-spawning changes when using the Questing Bots spawning system)
 * [Please Just Fight](https://hub.sp-tarkov.com/files/file/2652-please-just-fight/) (This mod should only be used if you're not using the Questing Bots spawning system)
+* [Declutterer](https://hub.sp-tarkov.com/files/file/2838-simple-declutter/) (Causes crashes for some people; use at your own risk)
 
 **NOT compatible with:**
 * [AI Limit](https://hub.sp-tarkov.com/files/file/793-ai-limit/) or any other mods that disable AI in a similar manner. This mod relies on the AI being active throughout the entire map. **Starting with 0.2.10, Questing Bots has its own AI Limiter feature.** Please see the tab below for more information.
@@ -31,6 +32,7 @@ You're no longer the only PMC running around placing markers and collecting ques
 * [MOAR](https://hub.sp-tarkov.com/files/file/1059-moar-bots-spawning-difficulty/)
 * [Better Spawns Plus](https://hub.sp-tarkov.com/files/file/1002-better-spawns-plus/)
 * [Reality](https://hub.sp-tarkov.com/files/file/2585-reality/)
+* [Acid's Bot Placement System](https://hub.sp-tarkov.com/files/file/2782-abps-acid-s-bot-placement-system/)
 
 **---------- Overview ----------**
 
@@ -209,7 +211,7 @@ If Scav spawns are blocked by either the **Permitted Scav Spawn Rate** or **Max 
 **Questing Options:**
 * **questing.enabled**: Completely enable or disable questing. 
 * **questing.bot_pathing_update_interval_ms**: The interval (in milliseconds) at which each bot will recalculate its path to its current objective. If this value is very low, performance will be impacted. If this value is very high, the bot will not react to obstacles changing as quickly (i.e. doors being unlocked). By default, this is **100** ms.
-* **questing.brain_layer_priorities.xxx**: The priority numbers assigned to the "brain" layers for this mod. **Do not change these unless you know what you're doing!**
+* **questing.brain_layer_priorities.xxx.xxx**: The priority numbers assigned to the "brain" layers for this mod. One group is of priorities is used when SAIN is installed, and the other is used when SAIN is not installed. **Do not change these unless you know what you're doing!**
 * **questing.quest_selection_timeout**: If a quest cannot be selected for a bot after trying for this amount of time (in seconds), the mod will give up and write an error message.
 * **questing.btr_run_distance**: Override value (in meters) for the EFT setting that makes bots "avoid danger" when they're near the BTR. The default EFT value is 40m, and the default value of this setting is **10** m.
 * **questing.allowed_bot_types_for_questing.scav**: If Scavs are allowed to quest. This is **false** by default.
@@ -281,18 +283,20 @@ If Scav spawns are blocked by either the **Permitted Scav Spawn Rate** or **Max 
 * **questing.bot_questing_requirements.break_for_looting.max_time_to_start_looting**: The duration of each break (in seconds). If one of the [Looting Bots](https://hub.sp-tarkov.com/files/file/1096-looting-bots/) brain layers is not active after this time, the bot will resume questing. This is **2** s by default. 
 * **questing.bot_questing_requirements.break_for_looting.max_loot_scan_time**: The maximum time that bots will be allowed to search for loot via [Looting Bots](https://hub.sp-tarkov.com/files/file/1096-looting-bots/). If the bot hasn't found any loot within this time, it will continue questing. If it has found loot, it will not continue questing until it's completely finished with looting. This is **4** s by default. 
 * **questing.bot_questing_requirements.break_for_looting.max_distance_from_boss**: The maximum distance (in meters) that a follower will be allowed to travel from its boss while looting. If the follower exceeds this distance, it will be forced to stop looting and regroup. This is **75** m by default. 
-* **questing.bot_questing_requirements.break_for_looting.max_sain_version_for_resetting_decisions**: A string defining the maximum version of [SAIN](https://hub.sp-tarkov.com/files/file/1062-sain-2-0-solarint-s-ai-modifications-full-ai-combat-system-replacement/) that still requires bots' decisions to be reset when instructing them to loot. Otherwise, they will get stuck in SAIN's combat layers instead of looting for an extended period of time. This is **"2.2.1.99"** by default. **Do not change this unless you know what you're doing!**
 * **questing.bot_questing_requirements.max_follower_distance.max_wait_time**: The maximum time (in seconds) that a bot's followers are allowed to be too far from it before it will stop questing and regroup. This is **5** s by default. 
 * **questing.bot_questing_requirements.max_follower_distance.min_regroup_time**: The minimum time (in seconds) that a bot will be forced to regroup with its followers if it's too far from them. After this time, the bot will be allowed to patrol its area instead. This is **1** s by default. 
 * **questing.bot_questing_requirements.max_follower_distance.regroup_pause_time**: When a boss reaches its nearest follower while regrouping, it will stop regrouping for this amount of time (in seconds). After that delay, it will continue regrouping if required, or it will continue questing. This delay is to prevent bosses from standing completely still while waiting for the rest of their followers to regroup. This is **2** s by default. 
+* **questing.bot_questing_requirements.max_follower_distance.target_position_variation_allowed**: The allowed variation in a follower's target location (typically its boss's position) before the bot will need to update its path. This allows bots to go to locations near their bosses instead of constantly recalculating their paths whenever their boss moves. This is **3** m by default. 
 * **questing.bot_questing_requirements.max_follower_distance.target_range_questing.min/max**: The allowed range of distances (in meters) that followers will try to be from their boss while questing. If a follower needs to get closer to its boss, it will try to get within the **min** distance (**7** m by default) of it. After that, it will be allowed to wander up to the **max** distance (**12** m by default) from it.
 * **questing.bot_questing_requirements.max_follower_distance.target_range_combat.min/max**: The same as **questing.bot_questing_requirements.max_follower_distance.target_range_questing.min/max** but for when the bot's group is in combat. The default **min** distance is **20** m, and the default **max** distance is **30** m.
 * **questing.bot_questing_requirements.max_follower_distance.nearest**: If the bot has any followers, it will not be allowed to quest if its nearest follower is more than this distance (in meters) from it. This is **25** m by default. 
 * **questing.bot_questing_requirements.max_follower_distance.furthest**: If the bot has any followers, it will not be allowed to quest if its furthest follower is more than this distance (in meters) from it. This is **40** m by default. 
+* **questing.extraction_requirements.use_sain_for_extracting**: If [SAIN](https://hub.sp-tarkov.com/files/file/1062-sain-2-0-solarint-s-ai-modifications-full-ai-combat-system-replacement/) should be used to control extract behavior for bots. Otherwise, vanilla EFT logic will be used. This is **false** by default. 
 * **questing.extraction_requirements.min_alive_time**: The minimum time (in seconds) a bot must wait after spawning before it will be allowed to extract. This is **60** s by default.
-* **questing.extraction_requirements.must_extract_time_remaining**: The time remaining in the raid (in seconds) after which bots will be unable to select new quest objectives and must extract instead. Requires [SAIN](https://hub.sp-tarkov.com/files/file/1062-sain-2-0-solarint-s-ai-modifications-full-ai-combat-system-replacement/) 2.1.7 or later. By default, this is **300** s. 
-* **questing.extraction_requirements.total_quests.min/max**: The minimum and maximum quests that a bot must complete before being instructed to extract. The actual number is randomly selected between this range. Requires [SAIN](https://hub.sp-tarkov.com/files/file/1062-sain-2-0-solarint-s-ai-modifications-full-ai-combat-system-replacement/) 2.1.7 or later. Bots can still be instructed to extract if they satisfy their **questing.extraction_requirements.EFT_quests.min/max** requirement. 
-* **questing.extraction_requirements.EFT_quests.min/max**: The minimum and maximum EFT quests that a bot must complete before being instructed to extract. The actual number is randomly selected between this range. Requires [SAIN](https://hub.sp-tarkov.com/files/file/1062-sain-2-0-solarint-s-ai-modifications-full-ai-combat-system-replacement/) 2.1.7 or later. Bots can still be instructed to extract if they satisfy their **questing.extraction_requirements.total_quests.min/max** requirement. 
+* **questing.extraction_requirements.must_extract_time_remaining**: The time remaining in the raid (in seconds) after which bots will be unable to select new quest objectives and must extract instead. By default, this is **300** s. 
+* **questing.extraction_requirements.total_quests.min/max**: The minimum and maximum quests that a bot must complete before being instructed to extract. The actual number is randomly selected between this range. Bots can still be instructed to extract if they satisfy their **questing.extraction_requirements.EFT_quests.min/max** requirement. 
+* **questing.extraction_requirements.EFT_quests.min/max**: The minimum and maximum EFT quests that a bot must complete before being instructed to extract. The actual number is randomly selected between this range. Bots can still be instructed to extract if they satisfy their **questing.extraction_requirements.total_quests.min/max** requirement. 
+* **questing.sprinting_limitations.enable_debounce_time**: After a bot stops sprinting, it will not be allowed to sprint again for this many seconds. This is **3** s by default.
 * **questing.sprinting_limitations.stamina.min**: The lower stamina threshold (as a fraction of max stamina) below which bots will not be allowed to sprint. This is **0.1** by default.
 * **questing.sprinting_limitations.stamina.max**: The upper stamina threshold (as a fraction of max stamina) above which bots will always be allowed to sprint. If a bot's stamina drops below **questing.sprinting_limitations.stamina.min**, it won't be allowed to sprint again until its stamina raises back to this level or higher. This is **0.5** by default.
 * **questing.sprinting_limitations.sharp_path_corners.distance**: If a bot is within this distance (in meters) of a sharp corner in its path, it will not be allowed to sprint. This was mainly implemented to prevent bots from shuffle-running around stairwells. This is **2** m by default.
@@ -313,7 +317,6 @@ If Scav spawns are blocked by either the **Permitted Scav Spawn Rate** or **Max 
 * **questing.bot_quests.airdrop_bot_interest_time**: The time (in seconds) after an airdop lands during which bots can go to it via an "Airdrop Chaser" quest. This is **420** s by default. 
 * **questing.bot_quests.elimination_quest_search_time**: The time (in seconds) a bot will wait before selecting another quest after reaching each objective in an elimination EFT quest. This is **60** s by default. 
 * **questing.bot_quests.lightkeeper_island_quests.enabled**: If bots are able to perform quests on Lightkeeper Island. This is **true** by default.
-* **questing.bot_quests.lightkeeper_island_quests.min_sain_version**: If [SAIN](https://hub.sp-tarkov.com/files/file/1062-sain-2-0-solarint-s-ai-modifications-full-ai-combat-system-replacement/) is loaded, it must be at least this version for bots to be able to perform Lightkeeper quests. If [SAIN](https://hub.sp-tarkov.com/files/file/1062-sain-2-0-solarint-s-ai-modifications-full-ai-combat-system-replacement/) is below this version, bots may not respect alliance changes correct when they enter/exit the bridge. This is **"3.1.0.99"** by default. **Do not change this unless you know what you're doing!**
 * **questing.bot_quests.eft_quests.xxx**: The settings to apply to all quests based on EFT's quests. 
 * **questing.bot_quests.spawn_rush.xxx**: The settings to apply to the "Spawn Rush" quest. 
 * **questing.bot_quests.spawn_point_wander.xxx**: The settings to apply to the "Spawn Point Wandering" quest.
@@ -372,6 +375,14 @@ If Scav spawns are blocked by either the **Permitted Scav Spawn Rate** or **Max 
 
 **---------- Known Issues ----------**
 
+**Vanilla EFT Issues in SPT 3.11:**
+* Bots sometimes "teleport" through doors
+* Bots shudder while unlocking doors
+* Bots sometimes rapidly accelerate and decelerate while moving (especially when following bosses)
+
+**General:**
+* A flicker occurs whenever EFT spawns bots, even when the Questing Bots spawning system is disabled
+
 **Objective System:**
 * Mods that add a lot of new quests may cause latency issues that may result in game stability problems and stuttering
 * Bots tend to get trapped in certain areas. Known areas:
@@ -386,6 +397,7 @@ If Scav spawns are blocked by either the **Permitted Scav Spawn Rate** or **Max 
 * Bots sometimes unlock doors for no reason if they can't properly resolve their quest locations.
 * A *"Destroying GameObjects immediately is not permitted during physics trigger/contact, animation event callbacks or OnValidate. You must use Destroy instead."* error will sometimes appear in the game console after a bot unlocks a door. This can be ignored. 
 * Player-level ranges for some quests are not reasonable, so bots may do late-game quests at low player levels and vice versa. This is because EFT has no minimum level defined for several quest lines.
+* Extraction via Questing Bots is only partially implemented
 
 **---------- Credits ----------**
 
@@ -394,5 +406,6 @@ If Scav spawns are blocked by either the **Permitted Scav Spawn Rate** or **Max 
 * Thanks to [nooky](https://hub.sp-tarkov.com/user/29062-nooky/) for lots of help with testing and ensuring this mod remains compatible with [SWAG + DONUTS](https://hub.sp-tarkov.com/files/file/878-swag-donuts-dynamic-spawn-waves-and-custom-spawn-points/). 
 * Thanks to [Skwizzy](https://hub.sp-tarkov.com/user/31303-skwizzy/) for help with adding interop capability to [Looting Bots](https://hub.sp-tarkov.com/files/file/1096-looting-bots/).
 * Thanks to [Solarint](https://hub.sp-tarkov.com/user/30697-solarint/) for help with improving interop capability to [SAIN](https://hub.sp-tarkov.com/files/file/1062-sain-2-0-solarint-s-ai-modifications-full-ai-combat-system-replacement/) and working with me to balance bot questing vs. combat behavior.
+* Thanks to [ozen](https://github.com/ozen-m) for help with testing and contributing to SPT 3.11 updates.
 * Thanks to everyone else on Discord who helped to test the many alpha releases of this mod and provided feedback to make it better. There are too many people to name, but you're all awesome. 
 * Of course, thanks to the SPT development team who made this possible in the first place. 

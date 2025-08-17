@@ -2,9 +2,9 @@
   "Name": "I Like Pain [Modified]",
   "Description": "[Modified] Bots react faster, are more accurate, and can see further.",
   "Creator": "user",
-  "SAINVersion": "3.2.1",
-  "SAINPresetVersion": "3.2.1",
-  "DateCreated": "03/13/2025 00:00:00",
+  "SAINVersion": "4.1.3",
+  "SAINPresetVersion": "4.1.3",
+  "DateCreated": "08/05/2025 00:00:00",
   "BaseSAINDifficulty": "veryhard",
   "IsCustom": true,
   "CanEditName": true

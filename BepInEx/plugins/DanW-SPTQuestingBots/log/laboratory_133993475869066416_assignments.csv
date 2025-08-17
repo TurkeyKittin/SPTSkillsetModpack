@@ -1,0 +1,9 @@
+Bot Name,Bot Nickname,Bot Difficulty,Bot Level,Assignment Status,Quest Name,Objective Name,Step Number,Start Time,End Time
+Bot1,"Mock Shelter",easy,8,Active,"Server Room","Server Room: Objective #4","1","20:58:02","N/A",
+Bot2,"3371",hard,18,Pending,"Containment Block Bedroom","Containment Block Bedroom: Objective #1","2","20:58:02","N/A",
+Bot3,"Waffle",easy,15,Active,"Boss Hunter (pmcBot)","Spawn Point (-157.57 2.71 -222.76)","1","20:58:02","N/A",
+Bot4,"HeresJohnny",easy,18,Failed,"Conference Room","Conference Room: Objective #4","1","20:58:02","20:58:33",
+Bot5,"Fershte",easy,17,Failed,"Sewage Conduit Pump Switch","Sewage Conduit Pump Switch: Objective #1","1","20:58:03","20:58:12",
+Bot6,"SKINNY BEPIS GAMING",easy,15,Failed,"Red Room","Red Room: Objective #1","1","20:58:03","20:58:07",
+Bot7,"TarkovBasement",easy,12,Failed,"Security Office","Security Office: Objective #1","1","20:58:04","20:58:06",
+Bot8,"TEOA",easy,20,Pending,"Boss Hunter (pmcBot)","Spawn Point (-213.12 0.05 -378.76)","1","20:58:05","N/A",

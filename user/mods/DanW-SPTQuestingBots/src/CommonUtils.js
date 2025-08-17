@@ -18,6 +18,10 @@ class CommonUtils {
         // Get all translations for the current locale
         this.translations = this.localeService.getLocaleDb();
     }
+    logDebug(message, alwaysShow = false) {
+        if (config_json_1.default.enabled || alwaysShow)
+            this.logger.debug(this.debugMessagePrefix + message);
+    }
     logInfo(message, alwaysShow = false) {
         if (config_json_1.default.enabled || alwaysShow)
             this.logger.info(this.debugMessagePrefix + message);

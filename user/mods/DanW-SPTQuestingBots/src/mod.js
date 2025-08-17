@@ -10,8 +10,10 @@ const CommonUtils_1 = require("./CommonUtils");
 const BotLocationUtil_1 = require("./BotLocationUtil");
 const PMCConversionUtil_1 = require("./PMCConversionUtil");
 const ConfigTypes_1 = require("C:/snapshot/project/obj/models/enums/ConfigTypes");
+const GameEditions_1 = require("C:/snapshot/project/obj/models/enums/GameEditions");
+const MemberCategory_1 = require("C:/snapshot/project/obj/models/enums/MemberCategory");
 const modName = "SPTQuestingBots";
-const spawningModNames = ["SWAG", "DewardianDev-MOAR", "PreyToLive-BetterSpawnsPlus", "RealPlayerSpawn"];
+const spawningModNames = ["SWAG", "DewardianDev-MOAR", "PreyToLive-BetterSpawnsPlus", "RealPlayerSpawn", "acidphantasm-botplacementsystem"];
 class QuestingBots {
     commonUtils;
     botUtil;
@@ -22,10 +24,12 @@ class QuestingBots {
     databaseTables;
     localeService;
     questHelper;
-    vfs;
+    fileSystem;
     httpResponseUtil;
     randomUtil;
+    weightedRandomHelper;
     botController;
+    botNameService;
     iBotConfig;
     iPmcConfig;
     iLocationConfig;
@@ -44,17 +48,6 @@ class QuestingBots {
         if (!config_json_1.default.enabled) {
             return;
         }
-        // Apply a scalar factor to the SPT-AKI PMC conversion chances
-        dynamicRouterModService.registerDynamicRouter(`DynamicAdjustPMCConversionChances${modName}`, [{
-                url: "/QuestingBots/AdjustPMCConversionChances/",
-                action: async (url) => {
-                    const urlParts = url.split("/");
-                    const factor = Number(urlParts[urlParts.length - 2]);
-                    const verify = JSON.parse(urlParts[urlParts.length - 1].toLowerCase());
-                    this.pmcConversionUtil.adjustAllPmcConversionChances(factor, verify);
-                    return JSON.stringify({ resp: "OK" });
-                }
-            }], "AdjustPMCConversionChances");
         // Apply a scalar factor to the SPT-AKI PScav conversion chance
         dynamicRouterModService.registerDynamicRouter(`DynamicAdjustPScavChance${modName}`, [{
                 url: "/QuestingBots/AdjustPScavChance/",
@@ -105,7 +98,7 @@ class QuestingBots {
         // Intercept the EFT bot-generation request to include a PScav conversion chance
         container.afterResolution("BotCallbacks", (_t, result) => {
             result.generateBots = async (url, info, sessionID) => {
-                const bots = await this.generateBots({ conditions: info.conditions }, sessionID, this.randomUtil.getChance100(info.PScavChance));
+                const bots = await this.generateBots({ conditions: info.conditions }, sessionID, info.GeneratePScav);
                 return this.httpResponseUtil.getBody(bots);
             };
         }, { frequency: "Always" });
@@ -115,17 +108,19 @@ class QuestingBots {
         this.databaseServer = container.resolve("DatabaseServer");
         this.localeService = container.resolve("LocaleService");
         this.questHelper = container.resolve("QuestHelper");
-        this.vfs = container.resolve("VFS");
+        this.fileSystem = container.resolve("FileSystemSync");
         this.httpResponseUtil = container.resolve("HttpResponseUtil");
         this.randomUtil = container.resolve("RandomUtil");
+        this.weightedRandomHelper = container.resolve("WeightedRandomHelper");
         this.botController = container.resolve("BotController");
+        this.botNameService = container.resolve("BotNameService");
         this.iBotConfig = this.configServer.getConfig(ConfigTypes_1.ConfigTypes.BOT);
         this.iPmcConfig = this.configServer.getConfig(ConfigTypes_1.ConfigTypes.PMC);
         this.iLocationConfig = this.configServer.getConfig(ConfigTypes_1.ConfigTypes.LOCATION);
         this.databaseTables = this.databaseServer.getTables();
         this.commonUtils = new CommonUtils_1.CommonUtils(this.logger, this.databaseTables, this.localeService);
-        this.botUtil = new BotLocationUtil_1.BotUtil(this.commonUtils, this.databaseTables, this.iLocationConfig, this.iBotConfig);
-        this.pmcConversionUtil = new PMCConversionUtil_1.PMCConversionUtil(this.commonUtils, this.iPmcConfig);
+        this.botUtil = new BotLocationUtil_1.BotUtil(this.commonUtils, this.databaseTables, this.iLocationConfig, this.iBotConfig, this.iPmcConfig);
+        this.pmcConversionUtil = new PMCConversionUtil_1.PMCConversionUtil(this.commonUtils, this.iPmcConfig, this.iBotConfig);
         if (!config_json_1.default.enabled) {
             return;
         }
@@ -166,15 +161,17 @@ class QuestingBots {
         // Remove all of BSG's PvE-only boss waves
         this.botUtil.disablePvEBossWaves();
         // Currently these are all PMC waves, which are unnecessary with PMC spawns in this mod
-        this.botUtil.disableCustomBossWaves();
+        this.botUtil.disableBotWaves(this.iLocationConfig.customWaves.boss, "boss");
         // Disable all of the extra Scavs that spawn into Factory
-        this.botUtil.disableCustomScavWaves();
+        this.botUtil.disableBotWaves(this.iLocationConfig.customWaves.normal, "Scav");
+        // Disable SPT's PMC wave generator
+        this.botUtil.disableBotWaves(this.iPmcConfig.customPmcWaves, "PMC");
         // Use EFT's bot caps instead of SPT's
         this.botUtil.useEFTBotCaps();
         // If Rogues don't spawn immediately, PMC spawns will be significantly delayed
-        if (config_json_1.default.bot_spawns.limit_initial_boss_spawns.disable_rogue_delay) {
-            this.commonUtils.logInfo("Removing SPT Rogue spawn delay...");
+        if (config_json_1.default.bot_spawns.limit_initial_boss_spawns.disable_rogue_delay && (this.iLocationConfig.rogueLighthouseSpawnTimeSettings.waitTimeSeconds > -1)) {
             this.iLocationConfig.rogueLighthouseSpawnTimeSettings.waitTimeSeconds = -1;
+            this.commonUtils.logInfo("Removed SPT Rogue spawn delay");
         }
         this.commonUtils.logInfo("Configuring game for bot spawning...done.");
     }
@@ -183,27 +180,51 @@ class QuestingBots {
         if (!shouldBePScavGroup) {
             return bots;
         }
-        const pmcNames = [
-            ...this.databaseTables.bots.types.usec.firstName,
-            ...this.databaseTables.bots.types.bear.firstName
-        ];
         for (const bot in bots) {
-            if (info.conditions[0].Role !== "assault") {
+            if (bots[bot].Info.Settings.Role !== "assault") {
+                this.commonUtils.logDebug(`Tried generating a player Scav, but a bot with role ${bots[bot].Info.Settings.Role} was returned`);
                 continue;
             }
-            bots[bot].Info.Nickname = `${bots[bot].Info.Nickname} (${this.randomUtil.getArrayValue(pmcNames)})`;
+            this.botNameService.addRandomPmcNameToBotMainProfileNicknameProperty(bots[bot]);
+            this.setRandomisedGameVersionAndCategory(bots[bot].Info);
         }
         return bots;
     }
+    setRandomisedGameVersionAndCategory(botInfo) {
+        /* SPT CODE - BotGenerator.setRandomisedGameVersionAndCategory(bot.Info) */
+        // Special case
+        if (botInfo.Nickname?.toLowerCase() === "nikita") {
+            botInfo.GameVersion = GameEditions_1.GameEditions.UNHEARD;
+            botInfo.MemberCategory = MemberCategory_1.MemberCategory.DEVELOPER;
+            return botInfo.GameVersion;
+        }
+        // Choose random weighted game version for bot
+        botInfo.GameVersion = this.weightedRandomHelper.getWeightedValue(this.iPmcConfig.gameVersionWeight);
+        // Choose appropriate member category value
+        switch (botInfo.GameVersion) {
+            case GameEditions_1.GameEditions.EDGE_OF_DARKNESS:
+                botInfo.MemberCategory = MemberCategory_1.MemberCategory.UNIQUE_ID;
+                break;
+            case GameEditions_1.GameEditions.UNHEARD:
+                botInfo.MemberCategory = MemberCategory_1.MemberCategory.UNHEARD;
+                break;
+            default:
+                // Everyone else gets a weighted randomised category
+                botInfo.MemberCategory = Number.parseInt(this.weightedRandomHelper.getWeightedValue(this.iPmcConfig.accountTypeWeight), 10);
+        }
+        // Ensure selected category matches
+        botInfo.SelectedMemberCategory = botInfo.MemberCategory;
+        return botInfo.GameVersion;
+    }
     doesFileIntegrityCheckPass() {
         const path = `${__dirname}/..`;
-        if (this.vfs.exists(`${path}/quests/`)) {
+        if (this.fileSystem.exists(`${path}/quests/`)) {
             this.commonUtils.logWarning("Found obsolete quests folder 'user\\mods\\DanW-SPTQuestingBots\\quests'. Only quest files in 'BepInEx\\plugins\\DanW-SPTQuestingBots\\quests' will be used.");
         }
-        if (this.vfs.exists(`${path}/log/`)) {
+        if (this.fileSystem.exists(`${path}/log/`)) {
             this.commonUtils.logWarning("Found obsolete log folder 'user\\mods\\DanW-SPTQuestingBots\\log'. Logs are now saved in 'BepInEx\\plugins\\DanW-SPTQuestingBots\\log'.");
         }
-        if (this.vfs.exists(`${path}/../../../BepInEx/plugins/SPTQuestingBots.dll`)) {
+        if (this.fileSystem.exists(`${path}/../../../BepInEx/plugins/SPTQuestingBots.dll`)) {
             this.commonUtils.logError("Please remove BepInEx/plugins/SPTQuestingBots.dll from the previous version of this mod and restart the server, or it will NOT work correctly.");
             return false;
         }

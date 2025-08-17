@@ -10,12 +10,14 @@ class BotUtil {
     databaseTables;
     iLocationConfig;
     iBotConfig;
+    iPmcConfig;
     static pmcRoles = ["pmcBEAR", "pmcUSEC"];
-    constructor(commonUtils, databaseTables, iLocationConfig, iBotConfig) {
+    constructor(commonUtils, databaseTables, iLocationConfig, iBotConfig, iPmcConfig) {
         this.commonUtils = commonUtils;
         this.databaseTables = databaseTables;
         this.iLocationConfig = iLocationConfig;
         this.iBotConfig = iBotConfig;
+        this.iPmcConfig = iPmcConfig;
     }
     adjustAllBotHostilityChances() {
         if (!config_json_1.default.bot_spawns.pmc_hostility_adjustments.enabled) {
@@ -25,6 +27,8 @@ class BotUtil {
         for (const location in this.databaseTables.locations) {
             this.adjustAllBotHostilityChancesForLocation(this.databaseTables.locations[location]);
         }
+        this.adjustSptPmcHostilityChances(this.iPmcConfig.hostilitySettings["pmcusec"]);
+        this.adjustSptPmcHostilityChances(this.iPmcConfig.hostilitySettings["pmcbear"]);
         if (config_json_1.default.bot_spawns.pmc_hostility_adjustments.pmcs_always_hostile_against_scavs) {
             this.databaseTables.bots.types.assault.difficulty.easy.Mind.ENEMY_BOT_TYPES = BotUtil.pmcRoles;
             this.databaseTables.bots.types.assault.difficulty.normal.Mind.ENEMY_BOT_TYPES = BotUtil.pmcRoles;
@@ -39,6 +43,7 @@ class BotUtil {
             this.databaseTables.bots.types.marksman.difficulty.hard.Mind.ENEMY_BOT_TYPES = BotUtil.pmcRoles;
             this.databaseTables.bots.types.marksman.difficulty.impossible.Mind.ENEMY_BOT_TYPES = BotUtil.pmcRoles;
         }
+        this.commonUtils.logInfo("Adjusting bot hostility chances...done.");
     }
     adjustAllBotHostilityChancesForLocation(location) {
         if ((location.base === undefined) || (location.base.BotLocationModifier === undefined)) {
@@ -50,7 +55,7 @@ class BotUtil {
         }
         for (const botType in settings) {
             if (!BotUtil.pmcRoles.includes(settings[botType].BotRole)) {
-                this.commonUtils.logWarning(`Did not adjust ${settings[botType].BotRole} hostility settings on ${location.base.Name}`);
+                //this.commonUtils.logWarning(`Did not adjust ${settings[botType].BotRole} hostility settings on ${location.base.Name}`);
                 continue;
             }
             this.adjustBotHostilityChances(settings[botType]);
@@ -100,13 +105,30 @@ class BotUtil {
             settings.ChancedEnemies.push(newEnemy);
         }
     }
+    adjustSptPmcHostilityChances(settings) {
+        settings.savageEnemyChance = config_json_1.default.bot_spawns.pmc_hostility_adjustments.global_scav_enemy_chance;
+        if (config_json_1.default.bot_spawns.pmc_hostility_adjustments.pmcs_always_hostile_against_scavs) {
+            settings.savagePlayerBehaviour = "AlwaysEnemies";
+        }
+        for (const chancedEnemy in settings.chancedEnemies) {
+            if (config_json_1.default.bot_spawns.pmc_hostility_adjustments.pmc_enemy_roles.includes(settings.chancedEnemies[chancedEnemy].Role)) {
+                settings.chancedEnemies[chancedEnemy].EnemyChance = 100;
+                continue;
+            }
+        }
+        if (config_json_1.default.bot_spawns.pmc_hostility_adjustments.pmcs_always_hostile_against_pmcs) {
+            settings.bearEnemyChance = 100;
+            settings.usecEnemyChance = 100;
+        }
+    }
     disablePvEBossWaves() {
-        this.commonUtils.logInfo("Disabling PvE boss waves...");
         let removedWaves = 0;
         for (const location in this.databaseTables.locations) {
             removedWaves += this.removePvEBossWavesFromLocation(this.databaseTables.locations[location]);
         }
-        this.commonUtils.logInfo(`Disabled ${removedWaves} PvE boss waves`);
+        if (removedWaves > 0) {
+            this.commonUtils.logInfo(`Disabled ${removedWaves} PvE boss waves`);
+        }
     }
     removePvEBossWavesFromLocation(location) {
         let removedWaves = 0;
@@ -125,13 +147,15 @@ class BotUtil {
         location.base.BossLocationSpawn = modifiedBossLocationSpawn;
         return removedWaves;
     }
-    disableCustomBossWaves() {
-        this.commonUtils.logInfo("Disabling custom boss waves...");
-        this.iLocationConfig.customWaves.boss = {};
-    }
-    disableCustomScavWaves() {
-        this.commonUtils.logInfo("Disabling custom Scav waves...");
-        this.iLocationConfig.customWaves.normal = {};
+    disableBotWaves(waves, botType) {
+        let originalWaves = 0;
+        for (const location in waves) {
+            originalWaves += waves[location].length;
+            waves[location] = [];
+        }
+        if (originalWaves > 0) {
+            this.commonUtils.logInfo(`Disabled ${originalWaves} custom ${botType} waves`);
+        }
     }
     useEFTBotCaps() {
         for (const location in this.iBotConfig.maxBotCap) {
@@ -147,7 +171,9 @@ class BotUtil {
             const fixedAdjustment = config_json_1.default.bot_spawns.bot_cap_adjustments.map_specific_adjustments[location];
             this.iBotConfig.maxBotCap[location] += fixedAdjustment;
             const newCap = this.iBotConfig.maxBotCap[location];
-            this.commonUtils.logInfo(`Updated bot cap for ${location} to ${newCap} (Original SPT: ${originalSPTCap}, EFT: ${eftCap}, fixed adjustment: ${fixedAdjustment})`);
+            if (newCap !== originalSPTCap) {
+                this.commonUtils.logInfo(`Updated bot cap for ${location} to ${newCap} (Original SPT: ${originalSPTCap}, EFT: ${eftCap}, fixed adjustment: ${fixedAdjustment})`);
+            }
         }
     }
 }

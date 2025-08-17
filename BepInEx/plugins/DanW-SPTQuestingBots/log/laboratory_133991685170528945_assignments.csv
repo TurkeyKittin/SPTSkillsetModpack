@@ -1,0 +1,10 @@
+Bot Name,Bot Nickname,Bot Difficulty,Bot Level,Assignment Status,Quest Name,Objective Name,Step Number,Start Time,End Time
+Bot45,"Traveler",normal,17,Failed,"Admin Office","Admin Office: Objective #3","1","19:11:25","19:14:05",
+Bot47,"Borkel",normal,2,Failed,"Sewage Conduit Pump Switch","Sewage Conduit Pump Switch: Objective #1","1","19:11:25","19:11:31",
+Bot47,"Borkel",normal,2,Failed,"Medical Block Elevator Power Switch","Medical Block Elevator Power Switch: Objective #1","1","19:11:32","19:13:11",
+Bot49,"Tariyihika",normal,8,Failed,"Don’t Believe Your Eyes","Zone Halloween_lab_section1","1","19:11:25","19:11:51",
+Bot46,"TechHappy",normal,16,Failed,"Beneath The Streets","Zone Control_room","1","19:11:25","19:14:26",
+Bot48,"冰淇淋",easy,18,Failed,"Beneath The Streets","Zone Dome","1","19:11:26","19:11:53",
+Bot51,"ShiftedFocus",normal,8,Pending,"Sewage Conduit Pump Switch","Sewage Conduit Pump Switch: Objective #1","1","19:11:26","N/A",
+Bot50,"DeadLeaves",normal,19,Failed,"Negotiation Room","Negotiation Room: Objective #1","1","19:11:26","19:12:23",
+Bot52,"AcidPhantasm",normal,17,Failed,"Containment Block Entrance Camping","Containment Block Entrance Camping: Objective #2","1","19:11:27","19:11:47",

@@ -1,0 +1,11 @@
+{
+  "Name": "Death Wish [Modified]",
+  "Description": "[Modified] Prepare To Die. Bots have almost no scatter, get less recoil from their weapon while shooting, are more accurate, and react deadly fast.",
+  "Creator": "user",
+  "SAINVersion": "4.1.3",
+  "SAINPresetVersion": "4.1.3",
+  "DateCreated": "08/08/2025 00:00:00",
+  "BaseSAINDifficulty": "deathwish",
+  "IsCustom": true,
+  "CanEditName": true
+}
